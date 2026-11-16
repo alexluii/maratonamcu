@@ -87,8 +87,11 @@ var items=[];
 P.forEach(function(ph){ph[1].forEach(function(x){items.push({t:x[0],h:x[1],s:x[2],u:x[3]})})});
 var total=items.filter(function(i){return !i.u}).length;
 function rid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
-var K="mcu-codici-v1",S={me:{i:rid(),n:"",d:{},u:0},f:{}},tab="io";
+var DB_URL="",ROOM="amici-mcu"; // DB_URL: indirizzo del database online (vuoto = solo codici)
+var online=false,pulling=false,pushT=null;
+var K="mcu-codici-v1",S={me:{i:rid(),n:"",d:{},u:0},f:{},h:{}},tab="io";
 try{var r0=JSON.parse(localStorage.getItem(K)||"null");if(r0&&r0.me&&r0.f)S=r0}catch(e){}
+S.h=S.h||{};
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
 function $(id){return document.getElementById(id)}
 function msg(t){$("msg").textContent=t||""}
@@ -119,14 +122,14 @@ function importCode(t){
     if(!m||typeof m.i!=="string"||!m.i||m.i.length>24)return"Backup non valido.";
     S.me={i:m.i,n:cn(m.n),d:toMap(m.d),u:Number(m.u)||0};S.f={};
     Object.keys(f).slice(0,60).forEach(function(k){var x=cleanF({i:k,n:f[k]&&f[k].n,d:f[k]&&f[k].d,u:f[k]&&f[k].u});if(x){S.f[k]={n:x.n,d:x.d,u:x.u}}});
-    save(false);return"Backup ripristinato: progressi e amici sono tornati.";
+    save(false);push();return"Backup ripristinato: progressi e amici sono tornati.";
   }
   var o=r.o;
   if(o.i===S.me.i)return"Questo è il tuo stesso codice.";
   var x=cleanF(o);if(!x)return"Codice non valido.";
   var old=S.f[o.i];
   if(old&&old.u>x.u)return"Hai già una versione più recente di "+old.n+".";
-  S.f[o.i]={n:x.n,d:x.d,u:x.u};save(false);
+  S.f[o.i]={n:x.n,d:x.d,u:x.u};delete S.h[o.i];save(false);
   return(old?"Aggiornato: ":"Aggiunto: ")+x.n;
 }
 function copy(txt,ta){
@@ -155,36 +158,35 @@ function field(box,label,ro,val,rows){
   var ta=h("textarea");ta.rows=rows;ta.readOnly=ro;ta.value=val;ta.setAttribute("aria-label",label);
   box.appendChild(ta);return ta;
 }
-function renderFriends(){
-  var el=$("app");el.textContent="";
-  var c0=valid(myArr()).length;
-  $("stat").textContent=c0+" di "+total+" titoli visti";
-  $("fill").style.width=(100*c0/total)+"%";
-  var b1=h("section","box");
-  b1.appendChild(h("p","k","Il tuo nickname"));
-  var ni=h("input");ni.type="text";ni.maxLength=24;ni.placeholder="Come ti vedranno gli amici";ni.value=S.me.n;ni.setAttribute("aria-label","Nickname");
-  ni.addEventListener("change",function(){S.me.n=cn(ni.value);save();mc.value=myCode();msg("Nickname salvato.")});
-  b1.appendChild(ni);
-  var mc=field(b1,"Il tuo codice",true,myCode(),3);
-  var bc=h("button",null,"Copia il mio codice");bc.type="button";
-  bc.addEventListener("click",function(){copy(mc.value,mc).then(function(ok){msg(ok?"Codice copiato. Mandalo agli amici.":"Tieni premuto sul codice, seleziona tutto e copia.")})});
-  b1.appendChild(bc);
-  b1.appendChild(h("p","m","Il codice cambia ogni volta che spunti un titolo: rimandalo agli amici quando vuoi aggiornarli."));
-  el.appendChild(b1);
-  var b2=h("section","box");
-  var inp=field(b2,"Aggiungi un amico",false,"",3);inp.placeholder="Incolla qui il codice dell’amico";
-  var ba=h("button",null,"Aggiungi");ba.type="button";
-  ba.addEventListener("click",function(){var t=inp.value;if(!t.trim()){msg("Incolla prima un codice.");return}var r=importCode(t);renderFriends();msg(r)});
-  b2.appendChild(ba);
-  b2.appendChild(h("p","m","Lo stesso campo serve per ripristinare un backup."));
-  el.appendChild(b2);
-  var b3=h("section","box");
-  var bk=field(b3,"Backup completo",true,backupCode(),3);
-  var bb=h("button",null,"Copia il backup");bb.type="button";
-  bb.addEventListener("click",function(){copy(bk.value,bk).then(function(ok){msg(ok?"Backup copiato. Salvalo nelle note o in una chat.":"Tieni premuto sul backup, seleziona tutto e copia.")})});
-  b3.appendChild(bb);
-  b3.appendChild(h("p","m","Se Safari cancella i dati, incolla il backup nel campo qui sopra e ritrovi progressi e amici."));
-  el.appendChild(b3);
+function dbUrl(p){return DB_URL.replace(/\/+$/,"")+"/rooms/"+ROOM+(p?"/"+p:"")+".json"}
+function setSync(){var e=$("sy");if(e)e.textContent=!DB_URL?"":(online?"Sincronizzato con gli amici: si aggiorna da solo.":"Connessione non riuscita, riprovo…")}
+function push(){
+  if(!DB_URL)return;
+  clearTimeout(pushT);
+  pushT=setTimeout(function(){
+    fetch(dbUrl(S.me.i),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({n:S.me.n,d:myArr(),u:S.me.u||Date.now()})})
+      .then(function(r){online=r.ok;setSync()}).catch(function(){online=false;setSync()});
+  },500);
+}
+function pull(){
+  if(!DB_URL||pulling||document.hidden)return;
+  pulling=true;
+  fetch(dbUrl()).then(function(r){if(!r.ok)throw new Error("http");return r.json()}).then(function(all){
+    online=true;
+    if(all&&typeof all==="object"){
+      var ch=false;
+      Object.keys(all).forEach(function(k){
+        if(k===S.me.i||S.h[k])return;
+        var v=all[k]||{},x=cleanF({i:k,n:v.n,d:v.d,u:v.u}),old=S.f[k];
+        if(x&&(!old||x.u>old.u)){S.f[k]={n:x.n,d:x.d,u:x.u};ch=true}
+      });
+      if(ch){save(false);drawList()}
+    }
+    setSync();
+  }).catch(function(){online=false;setSync()}).then(function(){pulling=false});
+}
+function drawList(){
+  var el=$("fl");if(!el)return;el.textContent="";
   var list=[{id:S.me.i,me:1,n:S.me.n||"Tu",d:valid(myArr()),u:S.me.u}];
   Object.keys(S.f).forEach(function(k){list.push({id:k,n:S.f[k].n,d:valid(S.f[k].d),u:S.f[k].u})});
   list.sort(function(a,b){return b.d.length-a.d.length});
@@ -200,12 +202,54 @@ function renderFriends(){
       var rm=h("button",null,"Rimuovi");rm.type="button";var arm=false;
       rm.addEventListener("click",function(){
         if(!arm){arm=true;rm.textContent="Tocca ancora";setTimeout(function(){arm=false;rm.textContent="Rimuovi"},4000);return}
-        delete S.f[f.id];save(false);renderFriends();
+        S.h[f.id]=1;delete S.f[f.id];save(false);drawList();
       });
       body.appendChild(document.createElement("br"));body.appendChild(rm);
     }
     d.appendChild(av);d.appendChild(body);el.appendChild(d);
   });
+}
+function renderFriends(){
+  var el=$("app");el.textContent="";
+  var c0=valid(myArr()).length;
+  $("stat").textContent=c0+" di "+total+" titoli visti";
+  $("fill").style.width=(100*c0/total)+"%";
+  var fl=h("div");fl.id="fl";
+  var b1=h("section","box"),mc=null;
+  b1.appendChild(h("p","k","Il tuo nickname"));
+  var ni=h("input");ni.type="text";ni.maxLength=24;ni.placeholder="Come ti vedranno gli amici";ni.value=S.me.n;ni.setAttribute("aria-label","Nickname");
+  function setNick(){S.me.n=cn(ni.value);save();push();if(mc)mc.value=myCode();drawList()}
+  ni.addEventListener("input",setNick);ni.addEventListener("change",setNick);
+  b1.appendChild(ni);
+  var sy=h("p","m");sy.id="sy";b1.appendChild(sy);
+  if(!DB_URL){
+    mc=field(b1,"Il tuo codice",true,myCode(),3);
+    var bc=h("button",null,"Copia il mio codice");bc.type="button";
+    bc.addEventListener("click",function(){setNick();copy(mc.value,mc).then(function(ok){msg(ok?"Codice copiato. Mandalo agli amici.":"Tieni premuto sul codice, seleziona tutto e copia.")})});
+    b1.appendChild(bc);
+    b1.appendChild(h("p","m","Il codice cambia ogni volta che spunti un titolo: rimandalo agli amici quando vuoi aggiornarli."));
+  }
+  el.appendChild(b1);setSync();
+  if(DB_URL)el.appendChild(fl);
+  if(!DB_URL){
+    var b2=h("section","box");
+    var inp=field(b2,"Aggiungi un amico",false,"",3);inp.placeholder="Incolla qui il codice dell’amico";
+    var ba=h("button",null,"Aggiungi");ba.type="button";
+    ba.addEventListener("click",function(){var t=inp.value;if(!t.trim()){msg("Incolla prima un codice.");return}var r=importCode(t);renderFriends();msg(r)});
+    b2.appendChild(ba);
+    b2.appendChild(h("p","m","Lo stesso campo serve per ripristinare un backup."));
+    el.appendChild(b2);
+  }
+  var b3=h("section","box");
+  var bk=field(b3,"Backup completo",true,backupCode(),3);
+  var bb=h("button",null,"Copia il backup");bb.type="button";
+  bb.addEventListener("click",function(){copy(bk.value,bk).then(function(ok){msg(ok?"Backup copiato. Salvalo nelle note o in una chat.":"Tieni premuto sul backup, seleziona tutto e copia.")})});
+  b3.appendChild(bb);
+  b3.appendChild(h("p","m","Se Safari cancella i dati, incolla il backup"+(DB_URL?" qui sotto":" nel campo qui sopra")+" e ritrovi i tuoi progressi."));
+  if(DB_URL){var ib=field(b3,"Ripristina da backup",false,"",2);ib.placeholder="Incolla qui il backup";var br=h("button",null,"Ripristina");br.type="button";br.addEventListener("click",function(){if(!ib.value.trim()){msg("Incolla prima il backup.");return}var r=importCode(ib.value);renderFriends();msg(r)});b3.appendChild(br)}
+  el.appendChild(b3);
+  if(!DB_URL)el.appendChild(fl);
+  drawList();
 }
 function render(){
   $("tIo").setAttribute("aria-pressed",tab==="io");
@@ -215,7 +259,7 @@ function render(){
 $("app").addEventListener("change",function(e){
   var id=e.target.getAttribute("data-i");if(id===null)return;
   if(e.target.checked)S.me.d[id]=1;else delete S.me.d[id];
-  save();render();
+  save();push();render();
   var el=document.querySelector('input[data-i="'+id+'"]');if(el)el.focus({preventScroll:true});
 });
 $("tIo").addEventListener("click",function(){tab="io";msg("");render()});
@@ -223,9 +267,10 @@ $("tAm").addEventListener("click",function(){tab="am";msg("");render()});
 var rb=$("reset"),armed=false;
 rb.addEventListener("click",function(){
   if(!armed){armed=true;rb.textContent="Tocca ancora per azzerare";setTimeout(function(){armed=false;rb.textContent="Azzera i miei progressi"},4000);return}
-  S.me.d={};save();render();armed=false;rb.textContent="Azzera i miei progressi";
+  S.me.d={};save();push();render();armed=false;rb.textContent="Azzera i miei progressi";
 });
 render();
+if(DB_URL){if(S.me.u>0)push();pull();setInterval(pull,5000)}
 </script>
 </body>
 </html>
