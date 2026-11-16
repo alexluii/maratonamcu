@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maratona MCU con gli amici</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8edf4;--panel:#f8fafd;--ink:#101626;--mute:#556078;--red:#d6232f;--gold:#e0a800;--line:#c5cfdf;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1220;--panel:#171d31;--ink:#eef1f8;--mute:#9aa4bd;--red:#ff4553;--gold:#ffc82e;--line:#2a3350;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1220;--panel:#171d31;--ink:#eef1f8;--mute:#9aa4bd;--red:#ff4553;--gold:#ffc82e;--line:#2a3350;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 "Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--bg);padding:12px 16px 10px;border-bottom:1px solid var(--line)}
+.wrap{max-width:640px;margin:0 auto}
+h1{font:400 30px/1.05 Anton,Impact,"Arial Narrow",sans-serif;letter-spacing:.02em;margin:0 0 6px}
+#stat{margin:0 0 8px;font-weight:600;font-size:15px}
+.bar{height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--red);transition:width .25s}
+.tabs{display:flex;gap:8px;margin-top:10px}
+.tabs button{flex:1;padding:9px 0}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+#msg{margin:10px 16px 0;padding:10px 12px;background:var(--panel);border-left:5px solid var(--gold);border-radius:3px;font-size:14px}
+#msg:empty{display:none}
+main{padding:0 12px 28px}
+h2{display:flex;justify-content:space-between;align-items:baseline;font:400 23px/1.1 Anton,Impact,"Arial Narrow",sans-serif;letter-spacing:.02em;margin:26px 4px 8px}
+h2 small{font:600 14px "Source Sans 3",system-ui,sans-serif;color:var(--mute);letter-spacing:0}
+ul{list-style:none;margin:0;padding:0}
+li{margin:0 0 6px}
+li label{display:grid;grid-template-columns:24px 1fr auto;gap:12px;align-items:center;padding:12px 12px 12px 14px;background:var(--panel);border-left:5px solid var(--ink);border-radius:3px;cursor:pointer}
+li.s label{border-left-color:var(--red)}
+li input{width:22px;height:22px;margin:0;accent-color:var(--red)}
+.t{font-weight:600}
+.h{color:var(--mute);font-variant-numeric:tabular-nums;font-size:14px;text-align:right}
+li.d label{opacity:.55}
+li.d .t{text-decoration:line-through}
+li.n label{outline:2px solid var(--gold);outline-offset:1px}
+li.u label{cursor:default;border-left-style:dashed}
+.box{margin:16px 0 0;padding:12px 14px;background:var(--panel);border-left:5px solid var(--ink);border-radius:3px}
+.box p{margin:0 0 6px}
+.k{font-weight:600}
+.m{color:var(--mute);font-size:14px}
+.box input,.box textarea{display:block;width:100%;margin:0 0 8px;padding:10px;font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:2px solid var(--ink);border-radius:3px}
+.box textarea{resize:vertical;word-break:break-all;font-size:13px}
+.fr{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:center;padding:12px 14px;margin:12px 0 0;background:var(--panel);border-left:5px solid var(--ink);border-radius:3px}
+.av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--red);font:400 18px Anton,Impact,sans-serif}
+.fr b{display:flex;justify-content:space-between;gap:8px}
+.fr .bar{margin:6px 0 4px}
+.fr small{color:var(--mute);font-size:14px}
+.fr button{margin-top:6px;padding:4px 10px;font-size:13px}
+footer{max-width:640px;margin:0 auto;padding:4px 16px 32px;color:var(--mute);font-size:14px}
+button{font:600 15px "Source Sans 3",system-ui,sans-serif;color:var(--ink);background:transparent;border:2px solid var(--ink);border-radius:3px;padding:10px 16px;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>Maratona MCU</h1>
+<p id="stat"></p>
+<div class="bar"><i id="fill"></i></div>
+<div class="tabs">
+<button type="button" id="tIo" aria-pressed="true">La mia lista</button>
+<button type="button" id="tAm" aria-pressed="false">Amici</button>
+</div>
+</div></header>
+<div class="wrap"><p id="msg"></p></div>
+<main class="wrap" id="app"></main>
+<footer>
+<p>Barra rossa a sinistra: serie TV. Barra scura: film. Il riquadro dorato indica il prossimo da guardare. Solo i titoli essenziali, in ordine cronologico.</p>
+<button id="reset" type="button">Azzera i miei progressi</button>
+</footer>
+<script>
+// [titolo, ore, serie, in uscita]
+var P=[
+["Prima del 2008",[["Captain America: Il primo Vendicatore",2.1],["Captain Marvel",2.1]]],
+["Fase 1",[["Iron Man",2.1],["Iron Man 2",2.1],["L’incredibile Hulk",1.9],["Thor",1.9],["The Avengers",2.4]]],
+["Fase 2",[["Iron Man 3",2.2],["Thor: The Dark World",1.9],["Captain America: The Winter Soldier",2.3],["Guardians of the Galaxy",2],["Guardians of the Galaxy Vol. 2",2.3],["Avengers: Age of Ultron",2.4],["Ant-Man",2]]],
+["Fase 3",[["Captain America: Civil War",2.5],["Black Widow",2.2],["Black Panther",2.2],["Spider-Man: Homecoming",2.2],["Doctor Strange",1.9],["Thor: Ragnarok",2.2],["Ant-Man and the Wasp",2],["Avengers: Infinity War",2.5]]],
+["Fase 4",[["Avengers: Endgame",3],["WandaVision",5.4,1],["The Falcon and the Winter Soldier",5,1],["Loki, stagione 1",4.8,1],["Spider-Man: Far From Home",2.2],["Hawkeye",4.7,1],["Eternals",2.6],["Shang-Chi",2.2],["Spider-Man: No Way Home",2.5],["Doctor Strange in the Multiverse of Madness",2.1],["Ms. Marvel",4.5,1],["Thor: Love and Thunder",2],["Black Panther: Wakanda Forever",2.7],["Echo",3.4,1],["Guardians of the Galaxy Holiday Special",0.7],["Ant-Man and the Wasp: Quantumania",2.1],["Guardians of the Galaxy Vol. 3",2.5]]],
+["Fase 5",[["The Marvels",1.8],["Loki, stagione 2",5,1],["Deadpool & Wolverine",2.1],["Agatha All Along",6.3,1],["Captain America: Brave New World",2],["Thunderbolts*",2.1]]],
+["Fase 6",[["Spider-Man: Brand New Day",2.2],["I Fantastici Quattro: Gli inizi",2.2],["Avengers: Doomsday",2.5,0,1]]]
+];
+var items=[];
+P.forEach(function(ph){ph[1].forEach(function(x){items.push({t:x[0],h:x[1],s:x[2],u:x[3]})})});
+var total=items.filter(function(i){return !i.u}).length;
+function rid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
+var K="mcu-codici-v1",S={me:{i:rid(),n:"",d:{},u:0},f:{}},tab="io";
+try{var r0=JSON.parse(localStorage.getItem(K)||"null");if(r0&&r0.me&&r0.f)S=r0}catch(e){}
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+function $(id){return document.getElementById(id)}
+function msg(t){$("msg").textContent=t||""}
+function h(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function save(stamp){if(stamp!==false)S.me.u=Date.now();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
+function myArr(){return Object.keys(S.me.d).map(Number).sort(function(a,b){return a-b})}
+function valid(a){return a.filter(function(i){return Number.isInteger(i)&&items[i]&&!items[i].u})}
+function toMap(a){var m={};valid(Array.isArray(a)?a:[]).forEach(function(i){m[i]=1});return m}
+function cn(s){return typeof s==="string"?s.replace(/\s+/g," ").trim().slice(0,24):""}
+function enc(p,o){var b=new TextEncoder().encode(JSON.stringify(o)),s="";b.forEach(function(c){s+=String.fromCharCode(c)});return p+btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
+function dec(c){
+  c=(c||"").replace(/\s+/g,"");var p=c.slice(0,5);
+  if(p!=="MCU1."&&p!=="MCU2.")return null;
+  try{var s=atob(c.slice(5).replace(/-/g,"+").replace(/_/g,"/")),b=new Uint8Array(s.length);
+    for(var i=0;i<s.length;i++)b[i]=s.charCodeAt(i);
+    return{p:p,o:JSON.parse(new TextDecoder().decode(b))}}catch(e){return null}
+}
+function myCode(){return enc("MCU1.",{i:S.me.i,n:S.me.n,d:myArr(),u:S.me.u||Date.now()})}
+function backupCode(){return enc("MCU2.",{me:{i:S.me.i,n:S.me.n,d:myArr(),u:S.me.u},f:S.f})}
+function cleanF(o){
+  if(!o||typeof o.i!=="string"||!o.i||o.i.length>24)return null;
+  return{n:cn(o.n)||"Amico",d:valid(Array.isArray(o.d)?o.d:[]),u:Number(o.u)||Date.now()};
+}
+function importCode(t){
+  var r=dec(t);if(!r||!r.o||typeof r.o!=="object")return"Codice non valido. Incolla il codice completo, che inizia con MCU.";
+  if(r.p==="MCU2."){
+    var m=r.o.me,f=r.o.f||{};
+    if(!m||typeof m.i!=="string"||!m.i||m.i.length>24)return"Backup non valido.";
+    S.me={i:m.i,n:cn(m.n),d:toMap(m.d),u:Number(m.u)||0};S.f={};
+    Object.keys(f).slice(0,60).forEach(function(k){var x=cleanF({i:k,n:f[k]&&f[k].n,d:f[k]&&f[k].d,u:f[k]&&f[k].u});if(x){S.f[k]={n:x.n,d:x.d,u:x.u}}});
+    save(false);return"Backup ripristinato: progressi e amici sono tornati.";
+  }
+  var o=r.o;
+  if(o.i===S.me.i)return"Questo è il tuo stesso codice.";
+  var x=cleanF(o);if(!x)return"Codice non valido.";
+  var old=S.f[o.i];
+  if(old&&old.u>x.u)return"Hai già una versione più recente di "+old.n+".";
+  S.f[o.i]={n:x.n,d:x.d,u:x.u};save(false);
+  return(old?"Aggiornato: ":"Aggiunto: ")+x.n;
+}
+function copy(txt,ta){
+  function fb(){ta.focus();ta.select();ta.setSelectionRange(0,99999);var ok=false;try{ok=document.execCommand("copy")}catch(e){}return ok}
+  if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(txt).then(function(){return true},function(){return fb()});
+  return Promise.resolve(fb());
+}
+function nextOf(done){for(var i=0;i<items.length;i++){if(!items[i].u&&done.indexOf(i)<0)return items[i].t}return null}
+function renderMine(){
+  var i=0,seen=0,left=0,c=0,html="",nextSet=false;
+  P.forEach(function(ph){
+    var pc=0,pt=0,rw="";
+    ph[1].forEach(function(){
+      var id=i++,x=items[id],d=!!S.me.d[id]&&!x.u,cls=(x.s?"s ":"")+(d?"d ":"")+(x.u?"u ":"");
+      if(!x.u){pt++;if(d){seen+=x.h;pc++;c++}else{left+=x.h;if(!nextSet){nextSet=true;cls+="n "}}}
+      rw+='<li class="'+cls+'"><label><input type="checkbox" data-i="'+id+'"'+(d?" checked":"")+(x.u?" disabled":"")+'><span class="t">'+x.t+'</span><span class="h">'+(x.u?"18 dic 2026":x.h+" h")+'</span></label></li>';
+    });
+    html+='<h2>'+ph[0]+'<small>'+pc+'/'+pt+'</small></h2><ul>'+rw+'</ul>';
+  });
+  $("app").innerHTML=html;
+  $("stat").textContent=c+" di "+total+" titoli visti · "+Math.round(left)+" ore rimaste";
+  $("fill").style.width=(seen+left?100*seen/(seen+left):0)+"%";
+}
+function field(box,label,ro,val,rows){
+  box.appendChild(h("p","k",label));
+  var ta=h("textarea");ta.rows=rows;ta.readOnly=ro;ta.value=val;ta.setAttribute("aria-label",label);
+  box.appendChild(ta);return ta;
+}
+function renderFriends(){
+  var el=$("app");el.textContent="";
+  var c0=valid(myArr()).length;
+  $("stat").textContent=c0+" di "+total+" titoli visti";
+  $("fill").style.width=(100*c0/total)+"%";
+  var b1=h("section","box");
+  b1.appendChild(h("p","k","Il tuo nickname"));
+  var ni=h("input");ni.type="text";ni.maxLength=24;ni.placeholder="Come ti vedranno gli amici";ni.value=S.me.n;ni.setAttribute("aria-label","Nickname");
+  ni.addEventListener("change",function(){S.me.n=cn(ni.value);save();mc.value=myCode();msg("Nickname salvato.")});
+  b1.appendChild(ni);
+  var mc=field(b1,"Il tuo codice",true,myCode(),3);
+  var bc=h("button",null,"Copia il mio codice");bc.type="button";
+  bc.addEventListener("click",function(){copy(mc.value,mc).then(function(ok){msg(ok?"Codice copiato. Mandalo agli amici.":"Tieni premuto sul codice, seleziona tutto e copia.")})});
+  b1.appendChild(bc);
+  b1.appendChild(h("p","m","Il codice cambia ogni volta che spunti un titolo: rimandalo agli amici quando vuoi aggiornarli."));
+  el.appendChild(b1);
+  var b2=h("section","box");
+  var inp=field(b2,"Aggiungi un amico",false,"",3);inp.placeholder="Incolla qui il codice dell’amico";
+  var ba=h("button",null,"Aggiungi");ba.type="button";
+  ba.addEventListener("click",function(){var t=inp.value;if(!t.trim()){msg("Incolla prima un codice.");return}var r=importCode(t);renderFriends();msg(r)});
+  b2.appendChild(ba);
+  b2.appendChild(h("p","m","Lo stesso campo serve per ripristinare un backup."));
+  el.appendChild(b2);
+  var b3=h("section","box");
+  var bk=field(b3,"Backup completo",true,backupCode(),3);
+  var bb=h("button",null,"Copia il backup");bb.type="button";
+  bb.addEventListener("click",function(){copy(bk.value,bk).then(function(ok){msg(ok?"Backup copiato. Salvalo nelle note o in una chat.":"Tieni premuto sul backup, seleziona tutto e copia.")})});
+  b3.appendChild(bb);
+  b3.appendChild(h("p","m","Se Safari cancella i dati, incolla il backup nel campo qui sopra e ritrovi progressi e amici."));
+  el.appendChild(b3);
+  var list=[{id:S.me.i,me:1,n:S.me.n||"Tu",d:valid(myArr()),u:S.me.u}];
+  Object.keys(S.f).forEach(function(k){list.push({id:k,n:S.f[k].n,d:valid(S.f[k].d),u:S.f[k].u})});
+  list.sort(function(a,b){return b.d.length-a.d.length});
+  list.forEach(function(f){
+    var d=h("div","fr"),av=h("div","av",(f.n||"?").charAt(0).toUpperCase());
+    var body=h("div"),top=h("b");
+    top.appendChild(h("span",null,f.me?f.n+" (tu)":f.n));top.appendChild(h("span",null,f.d.length+"/"+total));
+    var bar=h("div","bar"),fi=h("i");fi.style.width=(100*f.d.length/total)+"%";bar.appendChild(fi);
+    var n=nextOf(f.d),when=f.u?" · aggiornato il "+new Date(f.u).toLocaleDateString("it-IT",{day:"numeric",month:"short"}):"";
+    body.appendChild(top);body.appendChild(bar);
+    body.appendChild(h("small",null,(n?"Prossimo: "+n:"Maratona finita!")+(f.me?"":when)));
+    if(!f.me){
+      var rm=h("button",null,"Rimuovi");rm.type="button";var arm=false;
+      rm.addEventListener("click",function(){
+        if(!arm){arm=true;rm.textContent="Tocca ancora";setTimeout(function(){arm=false;rm.textContent="Rimuovi"},4000);return}
+        delete S.f[f.id];save(false);renderFriends();
+      });
+      body.appendChild(document.createElement("br"));body.appendChild(rm);
+    }
+    d.appendChild(av);d.appendChild(body);el.appendChild(d);
+  });
+}
+function render(){
+  $("tIo").setAttribute("aria-pressed",tab==="io");
+  $("tAm").setAttribute("aria-pressed",tab==="am");
+  if(tab==="io")renderMine();else renderFriends();
+}
+$("app").addEventListener("change",function(e){
+  var id=e.target.getAttribute("data-i");if(id===null)return;
+  if(e.target.checked)S.me.d[id]=1;else delete S.me.d[id];
+  save();render();
+  var el=document.querySelector('input[data-i="'+id+'"]');if(el)el.focus({preventScroll:true});
+});
+$("tIo").addEventListener("click",function(){tab="io";msg("");render()});
+$("tAm").addEventListener("click",function(){tab="am";msg("");render()});
+var rb=$("reset"),armed=false;
+rb.addEventListener("click",function(){
+  if(!armed){armed=true;rb.textContent="Tocca ancora per azzerare";setTimeout(function(){armed=false;rb.textContent="Azzera i miei progressi"},4000);return}
+  S.me.d={};save();render();armed=false;rb.textContent="Azzera i miei progressi";
+});
+render();
+</script>
+</body>
+</html>
