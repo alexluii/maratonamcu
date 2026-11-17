@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Maratona MCU con gli amici</title>
 <meta name="color-scheme" content="light dark">
-<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=Instrument+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800;900&family=Instrument+Sans:wght@400;600;700&family=Yellowtail&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#eceef9;--panel:#ffffff;--ink:#0b1030;--mute:#586188;--red:#d6243a;--amber:#ffb627;--star:#b87800;--line:#d6dbef;--track:#cfd4ea;--cell:#b7bee0;--focus:#1b3bd6;--glass:rgba(255,255,255,.84);
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -125,6 +125,14 @@ li.u label{cursor:default;border-left-style:dashed}
 .anim .fr .bar i{animation:grow 1s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--n)*80ms + .2s)}
 @keyframes fin{from{opacity:0;transform:translateY(16px)}}
 @keyframes grow{from{transform:scaleX(0)}}
+.credit{display:flex;flex-direction:column;align-items:flex-start;gap:0;margin:0 0 14px;color:var(--mute);font:600 13px/1.2 "Instrument Sans",system-ui,sans-serif}
+.cr-a b{display:inline-block;margin:0 2px;font:400 30px/1 Yellowtail,"Brush Script MT",cursive;color:var(--amber);transform:rotate(-3deg) translateY(2px);text-shadow:0 0 18px color-mix(in srgb,var(--amber) 45%,transparent)}
+.cr-b{display:flex;align-items:center;gap:7px;margin-top:2px;font:400 13px "Instrument Sans",system-ui,sans-serif;color:var(--mute)}
+.cr-b::before{content:"";width:22px;height:1px;background:var(--amber)}
+.cr-b b{font:900 17px/1 "Big Shoulders Display",Impact,sans-serif;letter-spacing:.2em;color:var(--ink)}
+.cr-b i{display:inline-block;font-style:normal;color:#ff4b5c;animation:lub 1.6s ease-in-out infinite}
+@keyframes lub{0%,60%,100%{transform:scale(1)}20%{transform:scale(1.35)}40%{transform:scale(1.1)}}
+@media (prefers-reduced-motion:reduce){.cr-b i{animation:none}}
 footer{max-width:640px;margin:0 auto;padding:8px 16px 120px;color:var(--mute);font-size:14px}
 button{font:600 15px "Instrument Sans",system-ui,sans-serif;color:var(--ink);background:transparent;border:2px solid var(--ink);border-radius:12px;padding:10px 16px;cursor:pointer}
 button.pri{color:#0b1030;background:var(--amber);border-color:var(--amber)}
@@ -148,6 +156,7 @@ li.u label{opacity:1}li.u .t{opacity:.7}
 </head>
 <body class="boot">
 <header class="hero"><div class="wrap">
+<p class="credit"><span class="cr-a">Sito creato da <b>Alessandro</b> per gli amici</span><span class="cr-b">creato con il <b>LOCU</b> <i aria-label="amore">♥</i></span></p>
 <h1 aria-label="Maratona MCU"><span class="ln"><span>Maratona</span></span><span class="ln"><span>MCU</span></span></h1>
 <p id="stat"></p>
 <div class="reel" id="reel" role="img"><div class="cells" id="cells"></div></div>
