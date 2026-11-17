@@ -152,6 +152,13 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-vi
 li.u label{opacity:1}li.u .t{opacity:.7}
 #toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,20px);max-width:90vw;padding:12px 16px;border-radius:12px;background:#111a30;color:#fff;font:600 14px "Instrument Sans",system-ui,sans-serif;opacity:0;pointer-events:none;transition:.35s;z-index:40;box-shadow:0 8px 30px rgba(0,0,0,.35)}
 #toast.on{opacity:1;transform:translate(-50%,0)}
+.adm{display:flex;gap:8px}
+.viewbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 14px;padding:10px 12px 10px 14px;border-radius:12px;background:color-mix(in srgb,var(--amber) 18%,transparent);border:1px solid var(--amber);font:600 14px "Instrument Sans",system-ui,sans-serif}
+.viewbar button,.rmr button{font:600 13px "Instrument Sans",system-ui,sans-serif}
+.tk-b.ro{display:flex;align-items:center;justify-content:center;opacity:.7;cursor:default}
+.rmh{margin:22px 4px 8px;font:800 18px "Big Shoulders Display",Impact,sans-serif;color:var(--mute)}
+.rmr{display:flex;align-items:center;gap:8px;padding:8px 4px;color:var(--mute)}
+.rmr span{flex:1}
 </style>
 </head>
 <body class="boot">
@@ -296,13 +303,26 @@ function copy(txt,ta){
 }
 function nextOf(done){for(var i=0;i<items.length;i++){if(!items[i].u&&done.indexOf(items[i].id)<0)return items[i].t}return null}
 var prevD=null,enterNext=true,tearing=false;
-function mineStats(){var seen=0,left=0,c=0,nx=null;items.forEach(function(x){if(x.u)return;if(S.me.d[x.id]){seen+=x.h;c++}else{left+=x.h;if(!nx)nx=x}});return{seen:seen,left:left,c:c,nx:nx}}
+var ADMIN_ID="6cc8a464307af04f0723",viewing=null,REM={},lastAll={};
+function isAdmin(){return !!(S.acct&&S.acct.id===ADMIN_ID)}
+function D(){return viewing?viewing.d:S.me.d}
+function remUrl(id){return DB_URL.replace(/\/+$/,"")+"/removed/"+ROOM+(id?"/"+id:"")+".json"}
+function setRemoved(id,on){
+  if(!isAdmin())return Promise.resolve();
+  var q=on?putJ(remUrl(id),true):fetch(remUrl(id),{method:"DELETE"}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status)});
+  return q.then(function(){if(on)REM[id]=true;else delete REM[id];delete S.f[id];pull(true);drawList()}).catch(function(e){msg("Operazione non riuscita ("+(e&&e.message||e)+")")});
+}
+function viewUser(id){
+  if(!isAdmin())return;var v=lastAll[id]||S.f[id];if(!v)return;
+  viewing={id:id,n:v.n,d:toMap(Array.isArray(v.d)?v.d:[])};prevD=null;tab="io";msg("");render();window.scrollTo(0,0);
+}
+function mineStats(){var seen=0,left=0,c=0,nx=null;items.forEach(function(x){if(x.u)return;if(D()[x.id]){seen+=x.h;c++}else{left+=x.h;if(!nx)nx=x}});return{seen:seen,left:left,c:c,nx:nx}}
 function drawHero(m,fresh){
   $("stat").textContent=m.nx?(m.c===0?"Ancora nessun titolo visto su "+total+". Servono circa "+Math.round(m.left)+" ore.":m.c+(m.c===1?" titolo visto":" titoli visti")+" su "+total+". Mancano circa "+Math.round(m.left)+" ore."):"Hai visto tutti i "+total+" titoli.";
   var html="",k=0;
   items.forEach(function(x){
     var cl="";
-    if(x.u)cl="u";else if(S.me.d[x.id])cl="d"+(fresh&&fresh[x.id]?" pop":"");else if(m.nx&&m.nx.id===x.id)cl="n";
+    if(x.u)cl="u";else if(D()[x.id])cl="d"+(fresh&&fresh[x.id]?" pop":"");else if(m.nx&&m.nx.id===x.id)cl="n";
     html+='<i class="'+cl+'"'+(cl.charAt(0)==="d"?' style="--i:'+(k++)+'"':'')+'></i>';
   });
   $("cells").innerHTML=html;
@@ -315,11 +335,12 @@ function barcode(n){
 }
 function renderMine(){
   var m=mineStats(),nx=m.nx,html="",fresh=null;
-  if(prevD){fresh={};items.forEach(function(x){if(!x.u&&S.me.d[x.id]&&!prevD[x.id])fresh[x.id]=1})}
-  prevD={};items.forEach(function(x){if(S.me.d[x.id])prevD[x.id]=1});
+  if(prevD){fresh={};items.forEach(function(x){if(!x.u&&D()[x.id]&&!prevD[x.id])fresh[x.id]=1})}
+  prevD={};items.forEach(function(x){if(D()[x.id])prevD[x.id]=1});
+  if(viewing){html+='<div class="viewbar"><span>Stai guardando <b>'+viewing.n.replace(/[<>&]/g,"")+'</b> · solo lettura</span><button type="button" data-unview="1">Torna ai miei</button></div>'}
   if(nx){
     var chips='<span>'+fmt(nx.h)+'</span>'+(nx.s?'<span>Serie</span>':'')+(nx.e?'<span>★ Essenziale</span>':'');
-    html+='<div class="tkw"><section class="ticket'+(enterNext?' enter':'')+'" id="tk"><div class="tk-top"><div class="tk-hd"><p class="tk-k">Prossimo da guardare</p><span class="tk-n">N° '+(items.indexOf(nx)+1)+' di '+total+'</span></div><h2 class="tk-t">'+nx.t+'</h2><p class="tk-p">'+P[phOf[nx.id]][0]+'</p><div class="tk-c">'+chips+'</div><span class="stamp" aria-hidden="true">Visto</span></div><div class="tk-bot"><button type="button" class="tk-b" data-next="'+nx.id+'">Segna come visto</button>'+barcode(nx.id)+'</div></section></div>';
+    html+='<div class="tkw"><section class="ticket'+(enterNext?' enter':'')+'" id="tk"><div class="tk-top"><div class="tk-hd"><p class="tk-k">Prossimo da guardare</p><span class="tk-n">N° '+(items.indexOf(nx)+1)+' di '+total+'</span></div><h2 class="tk-t">'+nx.t+'</h2><p class="tk-p">'+P[phOf[nx.id]][0]+'</p><div class="tk-c">'+chips+'</div><span class="stamp" aria-hidden="true">Visto</span></div><div class="tk-bot">'+(viewing?'<span class="tk-b ro">Solo lettura</span>':'<button type="button" class="tk-b" data-next="'+nx.id+'">Segna come visto</button>')+barcode(nx.id)+'</div></section></div>';
   }else{
     html+='<div class="tkw"><section class="ticket done'+(enterNext?' enter':'')+'"><div class="tk-top"><h2 class="tk-t">Maratona finita</h2><p class="tk-p">'+(nextRelease()?"Hai visto tutto quello che è uscito finora. Il prossimo è "+nextRelease().t+", "+dateTxt(nextRelease().r)+".":"Hai visto tutto quello che è uscito finora. Quando uscirà qualcosa di nuovo lo trovi qui.")+'</p></div></section></div>';
   }
@@ -328,9 +349,9 @@ function renderMine(){
   P.forEach(function(ph,pi){
     var pc=0,pt=0,rw="";
     ph[1].forEach(function(r){
-      var x=byId[r[0]],id=x.id,d=!!S.me.d[id]&&!x.u,cls=(x.s?"s ":"")+(d?"d ":"")+(x.u?"u ":"")+(nx&&nx.id===id?"n ":"")+(fresh&&fresh[id]?"just ":"");
+      var x=byId[r[0]],id=x.id,d=!!D()[id]&&!x.u,cls=(x.s?"s ":"")+(d?"d ":"")+(x.u?"u ":"")+(nx&&nx.id===id?"n ":"")+(fresh&&fresh[id]?"just ":"");
       if(!x.u){pt++;if(d)pc++}
-      rw+='<li class="'+cls+'"><label><input type="checkbox" data-i="'+id+'"'+(d?" checked":"")+(x.u?" disabled":"")+'><span class="t">'+(x.e?'<span class="e" title="essenziale">★ </span>':'')+x.t+'</span><span class="h">'+(x.u&&x.r?'<span class="rd">'+LOCK+'<span data-cdt="'+x.r+'">'+cdTxt(x.r)+"</span></span>":fmt(x.h))+'</span></label></li>';
+      rw+='<li class="'+cls+'"><label><input type="checkbox" data-i="'+id+'"'+(d?" checked":"")+((x.u||viewing)?" disabled":"")+'><span class="t">'+(x.e?'<span class="e" title="essenziale">★ </span>':'')+x.t+'</span><span class="h">'+(x.u&&x.r?'<span class="rd">'+LOCK+'<span data-cdt="'+x.r+'">'+cdTxt(x.r)+"</span></span>":fmt(x.h))+'</span></label></li>';
     });
     var open=(pi in openPh)?openPh[pi]:!!(nx&&phOf[nx.id]===pi);
     html+='<details class="ph" data-p="'+pi+'"'+(open?" open":"")+'><summary><span class="pn">'+ph[0]+'</span><small>'+pc+'/'+pt+'</small><span class="pp"><i style="width:'+(pt?Math.round(100*pc/pt):0)+'%"></i></span></summary><ul>'+rw+'</ul></details>';
@@ -339,7 +360,7 @@ function renderMine(){
   drawHero(m,fresh);
 }
 function tear(id){
-  if(tearing)return;tearing=true;
+  if(tearing||viewing)return;tearing=true;
   S.me.d[id]=1;save();push();
   var tk=$("tk"),rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
   if(!tk||rm){tearing=false;render();return}
@@ -358,31 +379,36 @@ function push(){
   clearTimeout(pushT);
   pushT=setTimeout(function(){
     pushT=null;
+    if(REM[S.me.i])return;
     fetch(dbUrl(S.me.i),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({n:S.me.n,d:myArr(),u:S.me.u||Date.now()})})
       .then(function(r){online=r.ok;lastErr=r.ok?"":"HTTP "+r.status;setSync()}).catch(function(e){online=false;lastErr=String(e&&e.message||e);setSync()});
   },500);
 }
-function pull(){
-  if(!DB_URL||!S.acct||pulling||document.hidden)return;
+function pull(force){
+  if(!DB_URL||!S.acct||(pulling&&!force)||document.hidden)return;
   pulling=true;
-  fetch(dbUrl()).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(function(all){
+  Promise.all([getJ(dbUrl()),getJ(remUrl()).catch(function(){return null})]).then(function(res){
+    var all=res[0];REM=(res[1]&&typeof res[1]==="object")?res[1]:{};
     online=true;
     {
-      var ch=false;all=(all&&typeof all==="object")?all:{};
+      var ch=false;all=(all&&typeof all==="object")?all:{};lastAll=all;
       var mine=all[S.me.i],mch=false;
       if(mine&&typeof mine==="object"&&!pushT&&Number(mine.u)>(S.me.u||0)){S.me.d=toMap(valid(Array.isArray(mine.d)?mine.d:[]));S.me.u=Number(mine.u);if(mine.n)S.me.n=cn(mine.n)||S.me.n;save(false);mch=true}
-      else if(S.me.u&&!pushT&&(!mine||Number(mine.u)<S.me.u))push();
-      Object.keys(S.f).forEach(function(k){if(!(k in all)){delete S.f[k];ch=true}});
+      else if(S.me.u&&!pushT&&!REM[S.me.i]&&(!mine||Number(mine.u)<S.me.u))push();
+      if(REM[S.me.i])msg("L'amministratore ti ha rimosso dall'elenco: i tuoi progressi non vengono più condivisi.");
+      Object.keys(S.f).forEach(function(k){if(!(k in all)||REM[k]){delete S.f[k];ch=true}});
       Object.keys(all).forEach(function(k){
-        if(k===S.me.i||S.h[k])return;
+        if(k===S.me.i||S.h[k]||REM[k])return;
         var v=all[k]||{},x=cleanF({i:k,n:v.n,d:v.d,u:v.u}),old=S.f[k];
         if(x&&(!old||x.u>old.u)){S.f[k]={n:x.n,d:x.d,u:x.u};ch=true}
       });
-      if(mch)render();else if(ch){save(false);drawList()}
+      if(viewing&&all[viewing.id]){var nd=toMap(Array.isArray(all[viewing.id].d)?all[viewing.id].d:[]);if(JSON.stringify(nd)!==JSON.stringify(viewing.d)){viewing.d=nd;mch=true}}
+      if(mch)render();else if(ch||isAdmin()){save(false);drawList()}
     }
     setSync();
   }).catch(function(e){online=false;lastErr=String(e&&e.message||e);setSync()}).then(function(){pulling=false});
 }
+
 function hue(t){var x=0;for(var i=0;i<t.length;i++)x=(x*31+t.charCodeAt(i))%360;return x}
 function drawList(){
   var el=$("fl");if(!el)return;el.textContent="";
@@ -397,16 +423,28 @@ function drawList(){
     var n=nextOf(f.d),when=f.u?"Aggiornato il "+new Date(f.u).toLocaleDateString("it-IT",{day:"numeric",month:"short"}):"";
     body.appendChild(top);body.appendChild(bar);
     body.appendChild(h("small",null,n?"Prossimo: "+n:"Maratona finita!"));if(!f.me&&when)body.appendChild(h("small","mt",when));
-    if(!f.me){
+    if(!f.me&&isAdmin()){
+      var bx=h("div","adm"),vw=h("button",null,"Guarda");vw.type="button";vw.addEventListener("click",function(){viewUser(f.id)});
       var rm=h("button",null,"Rimuovi");rm.type="button";var arm=false;
       rm.addEventListener("click",function(){
         if(!arm){arm=true;rm.textContent="Tocca ancora";setTimeout(function(){arm=false;rm.textContent="Rimuovi"},4000);return}
-        S.h[f.id]=1;delete S.f[f.id];save(false);drawList();
+        setRemoved(f.id,true);
       });
-      body.appendChild(document.createElement("br"));body.appendChild(rm);
+      bx.appendChild(vw);bx.appendChild(rm);body.appendChild(bx);
     }
     d.appendChild(av);d.appendChild(body);el.appendChild(d);
   });
+  if(isAdmin()){
+    var rl=Object.keys(REM).filter(function(k){return lastAll[k]});
+    if(rl.length){
+      el.appendChild(h("p","rmh","Rimossi dall'elenco"));
+      rl.forEach(function(k){
+        var row=h("div","rmr"),nm=h("span",null,lastAll[k].n||"?"),g=h("button",null,"Guarda"),rs=h("button",null,"Ripristina");g.type=rs.type="button";
+        g.addEventListener("click",function(){viewUser(k)});rs.addEventListener("click",function(){setRemoved(k,false)});
+        row.appendChild(nm);row.appendChild(g);row.appendChild(rs);el.appendChild(row);
+      });
+    }
+  }
 }
 function sha(str){return crypto.subtle.digest("SHA-256",new TextEncoder().encode(str)).then(function(d){return Array.from(new Uint8Array(d)).map(function(x){return("0"+x.toString(16)).slice(-2)}).join("")})}
 function acctKeys(name,pin){
@@ -452,7 +490,7 @@ function renderFriends(){
     var ex=h("button",null,"Esci");ex.type="button";var arm=false;
     ex.addEventListener("click",function(){
       if(!arm){arm=true;ex.textContent="Tocca ancora per uscire";setTimeout(function(){arm=false;ex.textContent="Esci"},4000);return}
-      S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("Sei uscito. Con nome e PIN rientri quando vuoi.");renderFriends();
+      viewing=null;S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("Sei uscito. Con nome e PIN rientri quando vuoi.");renderFriends();
     });
     b.appendChild(ex);
     el.appendChild(b);
@@ -522,19 +560,21 @@ function renderFriendsCodes(){
   drawList();
 }
 function render(){
+  if(viewing&&!isAdmin())viewing=null;
   $("dock").setAttribute("data-tab",tab);
   $("tIo").setAttribute("aria-pressed",tab==="io");
   $("tAm").setAttribute("aria-pressed",tab==="am");
   if(tab==="io")renderMine();else renderFriends();
 }
 $("app").addEventListener("change",function(e){
-  var id=e.target.getAttribute("data-i");if(id===null)return;
+  var id=e.target.getAttribute("data-i");if(id===null||viewing)return;
   if(e.target.checked)S.me.d[id]=1;else delete S.me.d[id];
   save();push();render();
   var el=document.querySelector('input[data-i="'+id+'"]');if(el)el.focus({preventScroll:true});
 });
 $("app").addEventListener("click",function(e){
   var t=e.target;if(!t||!t.closest)return;
+  if(t.closest("button[data-unview]")){viewing=null;prevD=null;render();return}
   var nb=t.closest("button[data-next]");
   if(nb){tear(nb.getAttribute("data-next"));return}
   var sm=t.closest("summary");
@@ -544,6 +584,7 @@ $("tIo").addEventListener("click",function(){tab="io";msg("");render()});
 $("tAm").addEventListener("click",function(){tab="am";msg("");render()});
 var rb=$("reset"),armed=false;
 rb.addEventListener("click",function(){
+  if(viewing)return;
   if(!armed){armed=true;rb.textContent="Tocca ancora per azzerare";setTimeout(function(){armed=false;rb.textContent="Azzera i miei progressi"},4000);return}
   S.me.d={};save();push();render();armed=false;rb.textContent="Azzera i miei progressi";
 });
