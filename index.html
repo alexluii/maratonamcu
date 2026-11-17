@@ -159,8 +159,8 @@ li.u label{opacity:1}li.u .t{opacity:.7}
 .rmh{margin:22px 4px 8px;font:800 18px "Big Shoulders Display",Impact,sans-serif;color:var(--mute)}
 .rmr{display:flex;align-items:center;gap:8px;padding:8px 4px;color:var(--mute)}
 .rmr span{flex:1}
-.pop{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:20px;background:rgba(5,8,20,.72);backdrop-filter:blur(6px);animation:pfade .3s ease both}
-.pop.out{opacity:0;transition:opacity .25s}
+.mpop{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:20px;background:rgba(5,8,20,.72);backdrop-filter:blur(6px);animation:pfade .3s ease both}
+.mpop.out{opacity:0;transition:opacity .25s}
 @keyframes pfade{from{opacity:0}}
 .pc{position:relative;width:min(420px,100%);padding:26px 24px 22px;border-radius:20px;text-align:center;color:#0b1024;background:linear-gradient(165deg,#ffcb52,#ffb627);box-shadow:0 30px 80px rgba(0,0,0,.5);animation:ppop .55s cubic-bezier(.2,1.3,.35,1) both}
 .pc::before,.pc::after{content:"";position:absolute;left:14px;right:14px;height:6px;background:repeating-linear-gradient(90deg,rgba(11,16,36,.55) 0 7px,transparent 7px 14px);border-radius:2px}
@@ -185,7 +185,7 @@ li.u label{opacity:1}li.u .t{opacity:.7}
 .cf{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 .cf i{position:absolute;top:-14px;width:8px;height:14px;border-radius:2px;animation:fall linear infinite}
 @keyframes fall{to{top:105%;transform:rotate(540deg) translateX(30px)}}
-@media (prefers-reduced-motion:reduce){.pc,.pop,.pbar i{animation:none}}
+@media (prefers-reduced-motion:reduce){.pc,.mpop,.pbar i{animation:none}}
 </style>
 </head>
 <body class="boot">
@@ -391,10 +391,10 @@ function hmTxt(x){var t=hm(x);return t.h+" ore"+(t.m?" e "+t.m+" min":"")}
 function closePop(){var o=document.getElementById("pop");if(o){o.classList.add("out");setTimeout(function(){o.remove()},250)}}
 function openPop(cls,html){
   closePop();
-  var o=document.createElement("div");o.id="pop";o.className="pop "+cls;o.setAttribute("role","dialog");o.setAttribute("aria-modal","true");
+  var o=document.createElement("div");o.id="pop";o.className="mpop "+cls;o.setAttribute("role","dialog");o.setAttribute("aria-modal","true");
   o.innerHTML='<div class="pc">'+html+'<button type="button" class="pb">Continua</button></div>';
   var rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if(cls==="big"&&!rm){var c="",cols=["#ffb627","#ff4b5c","#5ad1b0","#8aa4ff","#fff"];for(var i=0;i<46;i++)c+='<i style="left:'+(Math.random()*100).toFixed(1)+'%;background:'+cols[i%5]+';animation-delay:'+(Math.random()*1.6).toFixed(2)+'s;animation-duration:'+(2.4+Math.random()*2).toFixed(2)+'s;transform:rotate('+Math.round(Math.random()*180)+'deg)"></i>';o.insertAdjacentHTML("afterbegin",'<div class="cf" aria-hidden="true">'+c+'</div>')}
+  if(cls==="mbig"&&!rm){var c="",cols=["#ffb627","#ff4b5c","#5ad1b0","#8aa4ff","#fff"];for(var i=0;i<46;i++)c+='<i style="left:'+(Math.random()*100).toFixed(1)+'%;background:'+cols[i%5]+';animation-delay:'+(Math.random()*1.6).toFixed(2)+'s;animation-duration:'+(2.4+Math.random()*2).toFixed(2)+'s;transform:rotate('+Math.round(Math.random()*180)+'deg)"></i>';o.insertAdjacentHTML("afterbegin",'<div class="cf" aria-hidden="true">'+c+'</div>')}
   o.addEventListener("click",function(e){if(e.target===o||e.target.closest(".pb"))closePop()});
   document.body.appendChild(o);var b=o.querySelector(".pb");if(b)b.focus({preventScroll:true});
 }
@@ -404,14 +404,14 @@ function milestone(id){
   var m=mineStats(),all=m.seen+m.left;
   if(!m.nx){
     var t=hm(all);
-    openPop("big",'<p class="pk">Maratona completata</p><h2 class="pt">Congratulazioni,<br>non hai una vita!</h2><p class="pl">Hai buttato nel c3sso</p><p class="pn2"><b>'+t.h+'</b><span>ore'+(t.m?' e '+t.m+' min':'')+'</span></p><p class="pl">per vedere tutto l’MCU uscito finora.</p>');
+    openPop("mbig",'<p class="pk">Maratona completata</p><h2 class="pt">Congratulazioni,<br>non hai una vita!</h2><p class="pl">Hai buttato nel c3sso</p><p class="pn2"><b>'+t.h+'</b><span>ore'+(t.m?' e '+t.m+' min':'')+'</span></p><p class="pl">per vedere tutto l’MCU uscito finora.</p>');
     return;
   }
   var pi=phOf[id],done=true,any=false;
   P[pi][1].forEach(function(r){var x=byId[r[0]];if(!x.u){any=true;if(!S.me.d[x.id])done=false}});
   if(!any||!done)return;
   var pc=Math.round(100*m.seen/all);
-  openPop("ph",'<p class="pk">Capitolo chiuso</p><h2 class="pt sm">'+P[pi][0]+'</h2><div class="pr"><div><b>'+hm(m.seen).h+'<small>h '+pad2(hm(m.seen).m)+'m</small></b><span>già viste</span></div><div><b>'+hm(m.left).h+'<small>h '+pad2(hm(m.left).m)+'m</small></b><span>ancora da vedere</span></div></div><div class="pbar" aria-hidden="true"><i style="width:'+pc+'%"></i></div><p class="pl">Sei al '+pc+'% della maratona.</p>');
+  openPop("mph",'<p class="pk">Capitolo chiuso</p><h2 class="pt sm">'+P[pi][0]+'</h2><div class="pr"><div><b>'+hm(m.seen).h+'<small>h '+pad2(hm(m.seen).m)+'m</small></b><span>già viste</span></div><div><b>'+hm(m.left).h+'<small>h '+pad2(hm(m.left).m)+'m</small></b><span>ancora da vedere</span></div></div><div class="pbar" aria-hidden="true"><i style="width:'+pc+'%"></i></div><p class="pl">'+(pc<1?"Hai appena iniziato la maratona.":"Sei al "+pc+"% della maratona.")+'</p>');
 }
 function tear(id){
   if(tearing||viewing)return;tearing=true;
