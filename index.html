@@ -348,6 +348,7 @@ function push(){
   if(!DB_URL||!S.acct)return;
   clearTimeout(pushT);
   pushT=setTimeout(function(){
+    pushT=null;
     fetch(dbUrl(S.me.i),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({n:S.me.n,d:myArr(),u:S.me.u||Date.now()})})
       .then(function(r){online=r.ok;lastErr=r.ok?"":"HTTP "+r.status;setSync()}).catch(function(e){online=false;lastErr=String(e&&e.message||e);setSync()});
   },500);
@@ -359,13 +360,16 @@ function pull(){
     online=true;
     {
       var ch=false;all=(all&&typeof all==="object")?all:{};
+      var mine=all[S.me.i],mch=false;
+      if(mine&&typeof mine==="object"&&!pushT&&Number(mine.u)>(S.me.u||0)){S.me.d=toMap(valid(Array.isArray(mine.d)?mine.d:[]));S.me.u=Number(mine.u);if(mine.n)S.me.n=cn(mine.n)||S.me.n;save(false);mch=true}
+      else if(S.me.u&&!pushT&&(!mine||Number(mine.u)<S.me.u))push();
       Object.keys(S.f).forEach(function(k){if(!(k in all)){delete S.f[k];ch=true}});
       Object.keys(all).forEach(function(k){
         if(k===S.me.i||S.h[k])return;
         var v=all[k]||{},x=cleanF({i:k,n:v.n,d:v.d,u:v.u}),old=S.f[k];
         if(x&&(!old||x.u>old.u)){S.f[k]={n:x.n,d:x.d,u:x.u};ch=true}
       });
-      if(ch){save(false);drawList()}
+      if(mch)render();else if(ch){save(false);drawList()}
     }
     setSync();
   }).catch(function(e){online=false;lastErr=String(e&&e.message||e);setSync()}).then(function(){pulling=false});
@@ -548,8 +552,8 @@ if(window.matchMedia&&matchMedia("(hover:hover) and (pointer:fine)").matches){
 }
 setTimeout(function(){document.body.classList.remove("boot")},2800);
 render();
-if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{push();pull()}setInterval(pull,5000)}
-refreshUpcoming();setInterval(refreshUpcoming,3600000);setInterval(tick,1000);
+if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}setInterval(pull,5000)}
+refreshUpcoming();setInterval(refreshUpcoming,3600000);setInterval(tick,1000);document.addEventListener("visibilitychange",function(){if(!document.hidden)pull()});
 </script>
 </body>
 </html>
