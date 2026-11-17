@@ -303,7 +303,7 @@ function copy(txt,ta){
 }
 function nextOf(done){for(var i=0;i<items.length;i++){if(!items[i].u&&done.indexOf(items[i].id)<0)return items[i].t}return null}
 var prevD=null,enterNext=true,tearing=false;
-var ADMIN_ID="6cc8a464307af04f0723",viewing=null,REM={},lastAll={};
+var remSig=null,ADMIN_ID="6cc8a464307af04f0723",viewing=null,REM={},lastAll={};
 function isAdmin(){return !!(S.acct&&S.acct.id===ADMIN_ID)}
 function D(){return viewing?viewing.d:S.me.d}
 function remUrl(id){return DB_URL.replace(/\/+$/,"")+"/removed/"+ROOM+(id?"/"+id:"")+".json"}
@@ -403,7 +403,8 @@ function pull(force){
         if(x&&(!old||x.u>old.u)){S.f[k]={n:x.n,d:x.d,u:x.u};ch=true}
       });
       if(viewing&&all[viewing.id]){var nd=toMap(Array.isArray(all[viewing.id].d)?all[viewing.id].d:[]);if(JSON.stringify(nd)!==JSON.stringify(viewing.d)){viewing.d=nd;mch=true}}
-      if(mch)render();else if(ch||isAdmin()){save(false);drawList()}
+      var rs=Object.keys(REM).sort().join(",");if(rs!==remSig){remSig=rs;ch=true}
+      if(mch)render();else if(ch){save(false);drawList()}
     }
     setSync();
   }).catch(function(e){online=false;lastErr=String(e&&e.message||e);setSync()}).then(function(){pulling=false});
