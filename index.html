@@ -137,16 +137,11 @@ button.pri{color:#0b1030;background:var(--amber);border-color:var(--amber)}
 .dock svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
-.cdcard{margin:0 0 18px;padding:18px 18px 16px;border-radius:18px;color:#fff;background:linear-gradient(160deg,#c3202c,#7d1019);position:relative;overflow:hidden}
-.cdcard::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 11px,rgba(255,255,255,.04) 11px 12px);pointer-events:none}
-.cd-k{margin:0;font:600 13px "Instrument Sans",system-ui,sans-serif;opacity:.85}
-.cd-t{margin:4px 0 12px;font:900 clamp(30px,9vw,42px)/.95 "Big Shoulders Display",Impact,"Arial Narrow",sans-serif}
-.cd{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.cd span{background:rgba(0,0,0,.28);border-radius:10px;padding:8px 4px;text-align:center}
-.cd b{display:block;font:800 clamp(28px,9vw,40px)/1 "Big Shoulders Display",Impact,sans-serif;font-variant-numeric:tabular-nums}
-.cd small{font-size:11px;opacity:.8}
-.cd-d{margin:12px 0 0;font-size:13px;opacity:.9}
-.rd{font-variant-numeric:tabular-nums}
+.rd,.lb-c{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:6px;background:#d6232f;color:#fff;font:700 13px/1 "Instrument Sans",system-ui,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lk{width:12px;height:12px;fill:currentColor;stroke:currentColor;flex:none}
+.lockbar{display:flex;align-items:center;gap:10px;margin:14px 2px 2px;padding:8px 10px 8px 14px;border-radius:12px;border:1px solid var(--cell);color:var(--mute);font:600 14px "Instrument Sans",system-ui,sans-serif}
+.lb-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:inherit}
+li.u label{opacity:1}li.u .t{opacity:.7}
 #toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,20px);max-width:90vw;padding:12px 16px;border-radius:12px;background:#111a30;color:#fff;font:600 14px "Instrument Sans",system-ui,sans-serif;opacity:0;pointer-events:none;transition:.35s;z-index:40;box-shadow:0 8px 30px rgba(0,0,0,.35)}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 </style>
@@ -222,14 +217,13 @@ function parts(r){var ms=Math.max(0,r-Date.now()),s=Math.floor(ms/1000);return[M
 function dayTxt(r){var d=parts(r)[0];return d>1?"tra "+d+" giorni":d===1?"domani":"oggi"}
 function dateTxt(r){return new Date(r).toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"})}
 function nextRelease(){var b=null;items.forEach(function(x){if(x.u&&x.r&&(!b||x.r<b.r))b=x});return b}
+var LOCK='<svg class="lk" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.3 7V5a2.7 2.7 0 0 1 5.4 0v2" fill="none" stroke-width="1.6"/></svg>';
+function cdTxt(r){var p=parts(r);return(p[0]?p[0]+"g ":"")+pad2(p[1])+":"+pad2(p[2])+":"+pad2(p[3])}
 function cdCard(){
   var x=nextRelease();if(!x)return"";
-  var p=parts(x.r),L=["giorni","ore","minuti","secondi"],h="";
-  p.forEach(function(v,i){h+='<span><b data-cu="'+i+'">'+(i?pad2(v):v)+'</b><small>'+L[i]+'</small></span>'});
-  return'<section class="cdcard" aria-label="Conto alla rovescia"><p class="cd-k">In arrivo al cinema</p><h2 class="cd-t">'+x.t+'</h2><div class="cd" data-r="'+x.r+'" role="timer">'+h+'</div><p class="cd-d">'+dateTxt(x.r)+'. Allo scadere si sblocca da solo.</p></section>';
+  return'<div class="lockbar" role="timer">'+LOCK+'<span class="lb-t">'+x.t+'</span><span class="lb-c">'+LOCK+'<span data-cdt="'+x.r+'">'+cdTxt(x.r)+'</span></span></div>';
 }
 function tick(){
-  var cd=document.querySelector(".cd[data-r]");
   var ch=refreshLock();
   if(ch.length){
     var n=ch.map(function(x){return x.t}).join(", ");
@@ -237,7 +231,7 @@ function tick(){
     var t=$("toast");if(t){t.textContent="Sbloccato: "+n+". Ora puoi segnarlo come visto.";t.classList.add("on");setTimeout(function(){t.classList.remove("on")},6000)}
     return;
   }
-  if(cd&&!document.hidden){var p=parts(+cd.getAttribute("data-r"));cd.querySelectorAll("[data-cu]").forEach(function(e){var i=+e.getAttribute("data-cu");e.textContent=i?pad2(p[i]):p[i]})}
+  if(!document.hidden)document.querySelectorAll("[data-cdt]").forEach(function(e){e.textContent=cdTxt(+e.getAttribute("data-cdt"))});
 }
 function fmt(h){var m=Math.round(h*60);if(m<60)return m+" min";var hh=Math.floor(m/60),mm=m%60;return hh+"h"+(mm?" "+(mm<10?"0":"")+mm+"m":"")}
 function rid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
@@ -314,20 +308,20 @@ function renderMine(){
   var m=mineStats(),nx=m.nx,html="",fresh=null;
   if(prevD){fresh={};items.forEach(function(x){if(!x.u&&S.me.d[x.id]&&!prevD[x.id])fresh[x.id]=1})}
   prevD={};items.forEach(function(x){if(S.me.d[x.id])prevD[x.id]=1});
-  html+=cdCard();
   if(nx){
     var chips='<span>'+fmt(nx.h)+'</span>'+(nx.s?'<span>Serie</span>':'')+(nx.e?'<span>★ Essenziale</span>':'');
     html+='<div class="tkw"><section class="ticket'+(enterNext?' enter':'')+'" id="tk"><div class="tk-top"><div class="tk-hd"><p class="tk-k">Prossimo da guardare</p><span class="tk-n">N° '+(items.indexOf(nx)+1)+' di '+total+'</span></div><h2 class="tk-t">'+nx.t+'</h2><p class="tk-p">'+P[phOf[nx.id]][0]+'</p><div class="tk-c">'+chips+'</div><span class="stamp" aria-hidden="true">Visto</span></div><div class="tk-bot"><button type="button" class="tk-b" data-next="'+nx.id+'">Segna come visto</button>'+barcode(nx.id)+'</div></section></div>';
   }else{
     html+='<div class="tkw"><section class="ticket done'+(enterNext?' enter':'')+'"><div class="tk-top"><h2 class="tk-t">Maratona finita</h2><p class="tk-p">'+(nextRelease()?"Hai visto tutto quello che è uscito finora. Il prossimo è "+nextRelease().t+", "+dateTxt(nextRelease().r)+".":"Hai visto tutto quello che è uscito finora. Quando uscirà qualcosa di nuovo lo trovi qui.")+'</p></div></section></div>';
   }
+
   enterNext=false;
   P.forEach(function(ph,pi){
     var pc=0,pt=0,rw="";
     ph[1].forEach(function(r){
       var x=byId[r[0]],id=x.id,d=!!S.me.d[id]&&!x.u,cls=(x.s?"s ":"")+(d?"d ":"")+(x.u?"u ":"")+(nx&&nx.id===id?"n ":"")+(fresh&&fresh[id]?"just ":"");
       if(!x.u){pt++;if(d)pc++}
-      rw+='<li class="'+cls+'"><label><input type="checkbox" data-i="'+id+'"'+(d?" checked":"")+(x.u?" disabled":"")+'><span class="t">'+(x.e?'<span class="e" title="essenziale">★ </span>':'')+x.t+'</span><span class="h">'+(x.u&&x.r?'<span class="rd" data-rr="'+x.r+'">'+dayTxt(x.r)+"</span>":fmt(x.h))+'</span></label></li>';
+      rw+='<li class="'+cls+'"><label><input type="checkbox" data-i="'+id+'"'+(d?" checked":"")+(x.u?" disabled":"")+'><span class="t">'+(x.e?'<span class="e" title="essenziale">★ </span>':'')+x.t+'</span><span class="h">'+(x.u&&x.r?'<span class="rd">'+LOCK+'<span data-cdt="'+x.r+'">'+cdTxt(x.r)+"</span></span>":fmt(x.h))+'</span></label></li>';
     });
     var open=(pi in openPh)?openPh[pi]:!!(nx&&phOf[nx.id]===pi);
     html+='<details class="ph" data-p="'+pi+'"'+(open?" open":"")+'><summary><span class="pn">'+ph[0]+'</span><small>'+pc+'/'+pt+'</small><span class="pp"><i style="width:'+(pt?Math.round(100*pc/pt):0)+'%"></i></span></summary><ul>'+rw+'</ul></details>';
