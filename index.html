@@ -137,6 +137,18 @@ button.pri{color:#0b1030;background:var(--amber);border-color:var(--amber)}
 .dock svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.cdcard{margin:0 0 18px;padding:18px 18px 16px;border-radius:18px;color:#fff;background:linear-gradient(160deg,#c3202c,#7d1019);position:relative;overflow:hidden}
+.cdcard::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 11px,rgba(255,255,255,.04) 11px 12px);pointer-events:none}
+.cd-k{margin:0;font:600 13px "Instrument Sans",system-ui,sans-serif;opacity:.85}
+.cd-t{margin:4px 0 12px;font:900 clamp(30px,9vw,42px)/.95 "Big Shoulders Display",Impact,"Arial Narrow",sans-serif}
+.cd{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cd span{background:rgba(0,0,0,.28);border-radius:10px;padding:8px 4px;text-align:center}
+.cd b{display:block;font:800 clamp(28px,9vw,40px)/1 "Big Shoulders Display",Impact,sans-serif;font-variant-numeric:tabular-nums}
+.cd small{font-size:11px;opacity:.8}
+.cd-d{margin:12px 0 0;font-size:13px;opacity:.9}
+.rd{font-variant-numeric:tabular-nums}
+#toast{position:fixed;left:50%;bottom:92px;transform:translate(-50%,20px);max-width:90vw;padding:12px 16px;border-radius:12px;background:#111a30;color:#fff;font:600 14px "Instrument Sans",system-ui,sans-serif;opacity:0;pointer-events:none;transition:.35s;z-index:40;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+#toast.on{opacity:1;transform:translate(-50%,0)}
 </style>
 </head>
 <body class="boot">
@@ -146,6 +158,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-vi
 <div class="reel" id="reel" role="img"><div class="cells" id="cells"></div></div>
 </div></header>
 <div class="wrap"><p id="msg"></p></div>
+<div id="toast" role="status" aria-live="polite"></div>
 <main class="wrap" id="app"></main>
 <footer>
 <p>Barra rossa a sinistra: serie TV. Le altre righe sono film e speciali. La stella indica i titoli essenziali per la storia principale. Tutti i titoli sono in ordine cronologico.</p>
@@ -172,13 +185,60 @@ var P=[
 ["Fase 4 — Nuovi inizi",[[22,"Avengers: Endgame",3,"E"],[117,"Avengers: Endgame Encore",3.1],[23,"WandaVision",5.4,"SE"],[24,"The Falcon and the Winter Soldier",5,"SE"],[25,"Loki, stagione 1",4.8,"SE"],[118,"What If…?, stagione 1",4.7,"S"],[119,"Agents of S.H.I.E.L.D., stagione 6",9.2,"S"],[120,"Agents of S.H.I.E.L.D., stagione 7",9.2,"S"],[26,"Spider-Man: Far From Home",2.2,"E"]]],
 ["Fase 4 — Il multiverso si apre",[[121,"The Daily Bugle, stagione 1",0.3],[27,"Hawkeye",4.7,"SE"],[28,"Eternals",2.6,"E"],[29,"Shang-Chi",2.2,"E"],[122,"Venom: Let There Be Carnage",1.6],[123,"The Daily Bugle, stagione 2",0.3],[30,"Spider-Man: No Way Home",2.5,"E"],[124,"Spider-Man: Across the Spider-Verse",2.3],[125,"The Daily Bugle, stagione 3",0.08],[126,"Morbius",1.7],[31,"Doctor Strange in the Multiverse of Madness",2.1,"E"],[127,"Moon Knight",4.8,"S"],[32,"Ms. Marvel",4.5,"SE"],[33,"Thor: Love and Thunder",2,"E"],[34,"Black Panther: Wakanda Forever",2.7,"E"],[128,"She-Hulk",5.2,"S"],[35,"Echo",3.4,"SE"],[129,"Ironheart",4.8,"S"],[130,"Werewolf by Night",0.9],[36,"Guardians of the Galaxy Holiday Special",0.7,"E"],[131,"I Am Groot, stagione 1",0.4],[132,"I Am Groot, stagione 2",0.4],[37,"Ant-Man and the Wasp: Quantumania",2.1,"E"],[38,"Guardians of the Galaxy Vol. 3",2.5,"E"]]],
 ["Fase 5 — La guerra del multiverso",[[133,"Venom: The Last Dance",1.8],[134,"Secret Invasion",4.3,"S"],[39,"The Marvels",1.8,"E"],[135,"Marvel Zombies",2.1,"S"],[40,"Loki, stagione 2",5,"SE"],[136,"What If…?, stagione 2",4.5,"S"],[137,"What If…?, stagione 3",3.9,"S"],[41,"Deadpool & Wolverine",2.1,"E"],[42,"Agatha All Along",6.3,"SE"],[138,"Daredevil: Born Again, stagione 1",7.2,"S"],[43,"Captain America: Brave New World",2,"E"],[44,"Thunderbolts*",2.1,"E"]]],
-["Fase 6 — Doomsday",[[139,"Wonder Man",4.2,"S"],[140,"Daredevil: Born Again, stagione 2",6.5,"S"],[141,"The Punisher: One Last Kill",1],[45,"Spider-Man: Brand New Day",2.2,"E"],[142,"VisionQuest",6,"S"],[46,"I Fantastici Quattro: Gli inizi",2.2,"E"],[47,"Avengers: Doomsday",2.5,"EU"]]]
+["Fase 6 — Doomsday",[[139,"Wonder Man",4.2,"S"],[140,"Daredevil: Born Again, stagione 2",6.5,"S"],[141,"The Punisher: One Last Kill",1],[45,"Spider-Man: Brand New Day",2.2,"E"],[142,"VisionQuest",6,"S"],[46,"I Fantastici Quattro: Gli inizi",2.2,"E"],[47,"Avengers: Doomsday",2.5,"EU",[2026,12,18]]]],
+["In arrivo",[[143,"Avengers: Secret Wars",2.5,"EU",[2027,12,17]]]]
 ];
-var items=[];
-P.forEach(function(ph){ph[1].forEach(function(x){var f=x[3]||"";items.push({id:x[0],t:x[1],h:x[2],s:f.indexOf("S")>=0,e:f.indexOf("E")>=0,u:f.indexOf("U")>=0})})});
-var byId={};items.forEach(function(i){byId[i.id]=i});
-var phOf={},openPh={};P.forEach(function(ph,pi){ph[1].forEach(function(r){phOf[r[0]]=pi})});
-var total=items.filter(function(i){return !i.u}).length;
+var items=[],byId={},phOf={},openPh={},total=0;
+function relOf(r){return r&&r.length===3?new Date(r[0],r[1]-1,r[2]).getTime():0}
+function refreshLock(){var now=Date.now(),ch=[];items.forEach(function(x){if(x.r){var u=now<x.r;if(x.u&&!u)ch.push(x);x.u=u}});total=items.filter(function(i){return !i.u}).length;return ch}
+function buildItems(){
+  items=[];byId={};phOf={};
+  P.forEach(function(ph,pi){ph[1].forEach(function(x){var f=x[3]||"",r=relOf(x[4]);var it={id:x[0],t:x[1],h:x[2],s:f.indexOf("S")>=0,e:f.indexOf("E")>=0,u:f.indexOf("U")>=0,r:r};items.push(it);byId[it.id]=it;phOf[it.id]=pi})});
+  refreshLock();
+}
+buildItems();
+// Prossime uscite: elenco opzionale online (nodo "upcoming" nel database) e, se c'è una chiave, TMDB
+var TMDB_KEY="624b48e6e14cc37f76b3dc06287b90e6"; // chiave gratuita di themoviedb.org (vuoto = disattivato)
+function addUpcoming(list){
+  var ph=P[P.length-1][1],have={},ch=false;
+  P.forEach(function(p){p[1].forEach(function(x){have[x[1].toLowerCase()]=1})});
+  list.forEach(function(u){
+    if(!u||typeof u.t!=="string"||!u.r||!/^\d{4}-\d{2}-\d{2}$/.test(u.r)||!(u.id>=143))return;
+    if(have[u.t.toLowerCase()]||byId[u.id])return;var q=u.r.split("-"),rt=new Date(+q[0],q[1]-1,+q[2]).getTime();if(items.some(function(i){return i.r===rt}))return;
+    var d=u.r.split("-");ph.push([u.id,u.t.slice(0,80),Number(u.h)>0?Number(u.h):2.2,"U"+(u.s?"S":""),[+d[0],+d[1],+d[2]]]);have[u.t.toLowerCase()]=1;ch=true;
+  });
+  if(ch){ph.sort(function(a,b){return relOf(a[4])-relOf(b[4])});buildItems();render()}
+}
+function refreshUpcoming(){
+  if(DB_URL)fetch(DB_URL.replace(/\/+$/,"")+"/upcoming.json").then(function(r){return r.ok?r.json():null}).then(function(o){
+    if(o&&typeof o==="object")addUpcoming(Object.keys(o).map(function(k){var v=o[k]||{};return{id:Number(v.id)||0,t:v.t,r:v.r,h:v.h,s:v.s}}));
+  }).catch(function(){});
+  if(TMDB_KEY)fetch("https://api.themoviedb.org/3/discover/movie?api_key="+TMDB_KEY+"&language=it-IT&with_companies=420&primary_release_date.gte="+new Date().toISOString().slice(0,10)+"&sort_by=primary_release_date.asc").then(function(r){return r.json()}).then(function(o){
+    addUpcoming((o.results||[]).map(function(m){return{id:5000000+m.id,t:m.title,r:m.release_date}}));
+  }).catch(function(){});
+}
+function pad2(n){return(n<10?"0":"")+n}
+function parts(r){var ms=Math.max(0,r-Date.now()),s=Math.floor(ms/1000);return[Math.floor(s/86400),Math.floor(s%86400/3600),Math.floor(s%3600/60),s%60]}
+function dayTxt(r){var d=parts(r)[0];return d>1?"tra "+d+" giorni":d===1?"domani":"oggi"}
+function dateTxt(r){return new Date(r).toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"})}
+function nextRelease(){var b=null;items.forEach(function(x){if(x.u&&x.r&&(!b||x.r<b.r))b=x});return b}
+function cdCard(){
+  var x=nextRelease();if(!x)return"";
+  var p=parts(x.r),L=["giorni","ore","minuti","secondi"],h="";
+  p.forEach(function(v,i){h+='<span><b data-cu="'+i+'">'+(i?pad2(v):v)+'</b><small>'+L[i]+'</small></span>'});
+  return'<section class="cdcard" aria-label="Conto alla rovescia"><p class="cd-k">In arrivo al cinema</p><h2 class="cd-t">'+x.t+'</h2><div class="cd" data-r="'+x.r+'" role="timer">'+h+'</div><p class="cd-d">'+dateTxt(x.r)+'. Allo scadere si sblocca da solo.</p></section>';
+}
+function tick(){
+  var cd=document.querySelector(".cd[data-r]");
+  var ch=refreshLock();
+  if(ch.length){
+    var n=ch.map(function(x){return x.t}).join(", ");
+    if(tab==="io")render();
+    var t=$("toast");if(t){t.textContent="Sbloccato: "+n+". Ora puoi segnarlo come visto.";t.classList.add("on");setTimeout(function(){t.classList.remove("on")},6000)}
+    return;
+  }
+  if(cd&&!document.hidden){var p=parts(+cd.getAttribute("data-r"));cd.querySelectorAll("[data-cu]").forEach(function(e){var i=+e.getAttribute("data-cu");e.textContent=i?pad2(p[i]):p[i]})}
+}
 function fmt(h){var m=Math.round(h*60);if(m<60)return m+" min";var hh=Math.floor(m/60),mm=m%60;return hh+"h"+(mm?" "+(mm<10?"0":"")+mm+"m":"")}
 function rid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
 var DB_URL="https://maratona-579e6-default-rtdb.europe-west1.firebasedatabase.app",ROOM="amici-mcu"; // DB_URL: indirizzo del database online (vuoto = solo codici)
@@ -254,11 +314,12 @@ function renderMine(){
   var m=mineStats(),nx=m.nx,html="",fresh=null;
   if(prevD){fresh={};items.forEach(function(x){if(!x.u&&S.me.d[x.id]&&!prevD[x.id])fresh[x.id]=1})}
   prevD={};items.forEach(function(x){if(S.me.d[x.id])prevD[x.id]=1});
+  html+=cdCard();
   if(nx){
     var chips='<span>'+fmt(nx.h)+'</span>'+(nx.s?'<span>Serie</span>':'')+(nx.e?'<span>★ Essenziale</span>':'');
     html+='<div class="tkw"><section class="ticket'+(enterNext?' enter':'')+'" id="tk"><div class="tk-top"><div class="tk-hd"><p class="tk-k">Prossimo da guardare</p><span class="tk-n">N° '+(items.indexOf(nx)+1)+' di '+total+'</span></div><h2 class="tk-t">'+nx.t+'</h2><p class="tk-p">'+P[phOf[nx.id]][0]+'</p><div class="tk-c">'+chips+'</div><span class="stamp" aria-hidden="true">Visto</span></div><div class="tk-bot"><button type="button" class="tk-b" data-next="'+nx.id+'">Segna come visto</button>'+barcode(nx.id)+'</div></section></div>';
   }else{
-    html+='<div class="tkw"><section class="ticket done'+(enterNext?' enter':'')+'"><div class="tk-top"><h2 class="tk-t">Maratona finita</h2><p class="tk-p">Hai visto tutto quello che è uscito finora. Avengers: Doomsday arriva il 18 dicembre 2026.</p></div></section></div>';
+    html+='<div class="tkw"><section class="ticket done'+(enterNext?' enter':'')+'"><div class="tk-top"><h2 class="tk-t">Maratona finita</h2><p class="tk-p">'+(nextRelease()?"Hai visto tutto quello che è uscito finora. Il prossimo è "+nextRelease().t+", "+dateTxt(nextRelease().r)+".":"Hai visto tutto quello che è uscito finora. Quando uscirà qualcosa di nuovo lo trovi qui.")+'</p></div></section></div>';
   }
   enterNext=false;
   P.forEach(function(ph,pi){
@@ -266,7 +327,7 @@ function renderMine(){
     ph[1].forEach(function(r){
       var x=byId[r[0]],id=x.id,d=!!S.me.d[id]&&!x.u,cls=(x.s?"s ":"")+(d?"d ":"")+(x.u?"u ":"")+(nx&&nx.id===id?"n ":"")+(fresh&&fresh[id]?"just ":"");
       if(!x.u){pt++;if(d)pc++}
-      rw+='<li class="'+cls+'"><label><input type="checkbox" data-i="'+id+'"'+(d?" checked":"")+(x.u?" disabled":"")+'><span class="t">'+(x.e?'<span class="e" title="essenziale">★ </span>':'')+x.t+'</span><span class="h">'+(x.u?"18 dic 2026":fmt(x.h))+'</span></label></li>';
+      rw+='<li class="'+cls+'"><label><input type="checkbox" data-i="'+id+'"'+(d?" checked":"")+(x.u?" disabled":"")+'><span class="t">'+(x.e?'<span class="e" title="essenziale">★ </span>':'')+x.t+'</span><span class="h">'+(x.u&&x.r?'<span class="rd" data-rr="'+x.r+'">'+dayTxt(x.r)+"</span>":fmt(x.h))+'</span></label></li>';
     });
     var open=(pi in openPh)?openPh[pi]:!!(nx&&phOf[nx.id]===pi);
     html+='<details class="ph" data-p="'+pi+'"'+(open?" open":"")+'><summary><span class="pn">'+ph[0]+'</span><small>'+pc+'/'+pt+'</small><span class="pp"><i style="width:'+(pt?Math.round(100*pc/pt):0)+'%"></i></span></summary><ul>'+rw+'</ul></details>';
@@ -494,6 +555,7 @@ if(window.matchMedia&&matchMedia("(hover:hover) and (pointer:fine)").matches){
 setTimeout(function(){document.body.classList.remove("boot")},2800);
 render();
 if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{push();pull()}setInterval(pull,5000)}
+refreshUpcoming();setInterval(refreshUpcoming,3600000);setInterval(tick,1000);
 </script>
 </body>
 </html>
