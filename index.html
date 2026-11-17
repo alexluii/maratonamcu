@@ -26,14 +26,17 @@ h1{font:400 30px/1.05 Anton,Impact,"Arial Narrow",sans-serif;letter-spacing:.02e
 #msg{margin:10px 16px 0;padding:10px 12px;background:var(--panel);border-left:5px solid var(--gold);border-radius:3px;font-size:14px}
 #msg:empty{display:none}
 main{padding:0 12px 28px}
-h2{display:flex;justify-content:space-between;align-items:baseline;font:400 23px/1.1 Anton,Impact,"Arial Narrow",sans-serif;letter-spacing:.02em;margin:26px 4px 8px}
+h2{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font:400 23px/1.1 Anton,Impact,"Arial Narrow",sans-serif;letter-spacing:.02em;margin:26px 4px 8px}
 h2 small{font:600 14px "Source Sans 3",system-ui,sans-serif;color:var(--mute);letter-spacing:0}
 ul{list-style:none;margin:0;padding:0}
 li{margin:0 0 6px}
 li label{display:grid;grid-template-columns:24px 1fr auto;gap:12px;align-items:center;padding:12px 12px 12px 14px;background:var(--panel);border-left:5px solid var(--ink);border-radius:3px;cursor:pointer}
 li.s label{border-left-color:var(--red)}
 li input{width:22px;height:22px;margin:0;accent-color:var(--red)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row button{flex:1}
 .t{font-weight:600}
+.e{color:var(--gold)}
 .h{color:var(--mute);font-variant-numeric:tabular-nums;font-size:14px;text-align:right}
 li.d label{opacity:.55}
 li.d .t{text-decoration:line-through}
@@ -69,26 +72,36 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 <div class="wrap"><p id="msg"></p></div>
 <main class="wrap" id="app"></main>
 <footer>
-<p>Barra rossa a sinistra: serie TV. Barra scura: film. Il riquadro dorato indica il prossimo da guardare. Solo i titoli essenziali, in ordine cronologico.</p>
+<p>Barra rossa a sinistra: serie TV. Barra scura: film e speciali. La stella indica i titoli essenziali per la storia principale. Il riquadro dorato indica il prossimo da guardare. Tutti i titoli, in ordine cronologico.</p>
 <button id="reset" type="button">Azzera i miei progressi</button>
 </footer>
 <script>
-// [titolo, ore, serie, in uscita]
+// [id stabile, titolo, ore, S=serie E=essenziale U=in uscita]
 var P=[
-["Prima del 2008",[["Captain America: Il primo Vendicatore",2.1],["Captain Marvel",2.1]]],
-["Fase 1",[["Iron Man",2.1],["Iron Man 2",2.1],["L’incredibile Hulk",1.9],["Thor",1.9],["The Avengers",2.4]]],
-["Fase 2",[["Iron Man 3",2.2],["Thor: The Dark World",1.9],["Captain America: The Winter Soldier",2.3],["Guardians of the Galaxy",2],["Guardians of the Galaxy Vol. 2",2.3],["Avengers: Age of Ultron",2.4],["Ant-Man",2]]],
-["Fase 3",[["Captain America: Civil War",2.5],["Black Widow",2.2],["Black Panther",2.2],["Spider-Man: Homecoming",2.2],["Doctor Strange",1.9],["Thor: Ragnarok",2.2],["Ant-Man and the Wasp",2],["Avengers: Infinity War",2.5]]],
-["Fase 4",[["Avengers: Endgame",3],["WandaVision",5.4,1],["The Falcon and the Winter Soldier",5,1],["Loki, stagione 1",4.8,1],["Spider-Man: Far From Home",2.2],["Hawkeye",4.7,1],["Eternals",2.6],["Shang-Chi",2.2],["Spider-Man: No Way Home",2.5],["Doctor Strange in the Multiverse of Madness",2.1],["Ms. Marvel",4.5,1],["Thor: Love and Thunder",2],["Black Panther: Wakanda Forever",2.7],["Echo",3.4,1],["Guardians of the Galaxy Holiday Special",0.7],["Ant-Man and the Wasp: Quantumania",2.1],["Guardians of the Galaxy Vol. 3",2.5]]],
-["Fase 5",[["The Marvels",1.8],["Loki, stagione 2",5,1],["Deadpool & Wolverine",2.1],["Agatha All Along",6.3,1],["Captain America: Brave New World",2],["Thunderbolts*",2.1]]],
-["Fase 6",[["Spider-Man: Brand New Day",2.2],["I Fantastici Quattro: Gli inizi",2.2],["Avengers: Doomsday",2.5,0,1]]]
+["Prima del 1950",[[0,"Captain America: Il primo Vendicatore",2.1,"E"],[48,"Marvel One-Shot: Agent Carter",0.3],[49,"Agent Carter, stagione 1",5.6,"S"],[50,"Agent Carter, stagione 2",7.1,"S"]]],
+["Anni ’90",[[1,"Captain Marvel",2.1,"E"]]],
+["La saga Fox degli X-Men",[[51,"X-Men: First Class",2.2],[52,"X-Men Origins: Wolverine",1.8],[53,"X-Men",1.7],[54,"X2: X-Men United",2.2],[55,"X-Men: The Last Stand",1.7],[56,"The Wolverine",2.1],[57,"X-Men: Days of Future Past",2.2],[58,"X-Men: Apocalypse",2.4],[59,"Dark Phoenix",1.9],[60,"Blade",2],[61,"Blade II",2]]],
+["Anni 2000 e 2010",[[62,"Blade: Trinity",1.9],[63,"Blade: The Series, stagione 1",9.3,"S"],[64,"Spider-Man",2],[65,"Spider-Man 2",2.1],[66,"Spider-Man 3",2.3],[67,"The Amazing Spider-Man",2.3],[68,"The Amazing Spider-Man 2",2.4],[69,"Daredevil (2003)",1.7],[70,"Elektra",1.6],[71,"Fantastic Four (2005)",1.8],[72,"Fantastic Four: Rise of the Silver Surfer",1.5]]],
+["Universi alternativi",[[73,"Spider-Man: Into the Spider-Verse",2]]],
+["Fase 1 — The Avengers Initiative",[[2,"Iron Man",2.1,"E"],[3,"Iron Man 2",2.1,"E"],[4,"L’incredibile Hulk",1.9,"E"],[74,"The Consultant",0.07],[75,"A Funny Thing Happened on the Way to Thor’s Hammer",0.07],[5,"Thor",1.9,"E"],[6,"The Avengers",2.4,"E"],[76,"Item 47",0.2]]],
+["Fase 2 — HYDRA e le Gemme dell’Infinito",[[7,"Iron Man 3",2.2,"E"],[8,"Thor: The Dark World",1.9,"E"],[77,"Agents of S.H.I.E.L.D., stagione 1 (ep. 1–16)",11.4,"S"],[78,"All Hail the King",0.2,"E"],[9,"Captain America: The Winter Soldier",2.3,"E"],[79,"Agents of S.H.I.E.L.D., stagione 1 (ep. 17–22)",4.3,"S"],[10,"Guardians of the Galaxy",2,"E"],[11,"Guardians of the Galaxy Vol. 2",2.3,"E"],[80,"Agents of S.H.I.E.L.D., stagione 2 (ep. 1–19)",13.5,"S"]]],
+["Fase 3A — Eroi di strada",[[81,"Daredevil, stagione 1",11.7,"S"],[82,"Jessica Jones, stagione 1",11.1,"S"],[12,"Avengers: Age of Ultron",2.4,"E"],[83,"Agents of S.H.I.E.L.D., stagione 2 (ep. 20–22)",2.1,"S"],[84,"WHiH Newsfront, stagione 1",0.3],[13,"Ant-Man",2,"E"]]],
+["Fase 3B — Civil War e conseguenze",[[85,"Agents of S.H.I.E.L.D., stagione 3 (ep. 1–19)",13.5,"S"],[86,"Daredevil, stagione 2",11.7,"S"],[87,"WHiH Newsfront, stagione 2",0.3],[14,"Captain America: Civil War",2.5,"E"],[88,"Agents of S.H.I.E.L.D., stagione 3 (ep. 20–22)",2.1,"S"],[89,"Team Thor",0.07],[90,"Team Thor: Part 2",0.03],[91,"Luke Cage, stagione 1",11.7,"S"],[92,"Iron Fist, stagione 1",11.9,"S"],[93,"The Defenders",6.6,"S"],[15,"Black Widow",2.2,"E"],[94,"Eyes of Wakanda",2.1,"S"],[16,"Black Panther",2.2,"E"],[17,"Spider-Man: Homecoming",2.2,"E"],[95,"The Punisher, stagione 1",11.3,"S"],[18,"Doctor Strange",1.9,"E"],[96,"Cloak & Dagger, stagione 1",7.1,"S"],[97,"Agents of S.H.I.E.L.D., stagione 4",15.7,"S"],[98,"Agents of S.H.I.E.L.D.: Slingshot",0.5,"S"],[99,"Inhumans",5.6,"S"],[100,"Jessica Jones, stagione 2",11,"S"],[101,"Luke Cage, stagione 2",12.7,"S"],[102,"Iron Fist, stagione 2",8.6,"S"],[103,"Daredevil, stagione 3",10.9,"S"],[104,"Cloak & Dagger, stagione 2",7,"S"],[105,"Deadpool",1.8]]],
+["Il futuro (2029)",[[106,"Logan",2.3],[107,"Deadpool 2",2]]],
+["Fase 3C — Ragnarok e Infinity War",[[108,"Agents of S.H.I.E.L.D., stagione 5",15.6,"S"],[109,"Runaways, stagione 1",8.2,"S"],[110,"Runaways, stagione 2",10.2,"S"],[111,"Runaways, stagione 3",8,"S"],[19,"Thor: Ragnarok",2.2,"E"],[112,"Team Darryl",0.07],[113,"The Punisher, stagione 2",11.4,"S"],[114,"Jessica Jones, stagione 3",10.8,"S"],[115,"Venom",1.9],[20,"Ant-Man and the Wasp",2,"E"],[21,"Avengers: Infinity War",2.5,"E"],[116,"Helstrom",8.3,"S"]]],
+["Fase 4 — Nuovi inizi",[[22,"Avengers: Endgame",3,"E"],[117,"Avengers: Endgame Encore",3.1],[23,"WandaVision",5.4,"SE"],[24,"The Falcon and the Winter Soldier",5,"SE"],[25,"Loki, stagione 1",4.8,"SE"],[118,"What If…?, stagione 1",4.7,"S"],[119,"Agents of S.H.I.E.L.D., stagione 6",9.2,"S"],[120,"Agents of S.H.I.E.L.D., stagione 7",9.2,"S"],[26,"Spider-Man: Far From Home",2.2,"E"]]],
+["Fase 4 — Il multiverso si apre",[[121,"The Daily Bugle, stagione 1",0.3],[27,"Hawkeye",4.7,"SE"],[28,"Eternals",2.6,"E"],[29,"Shang-Chi",2.2,"E"],[122,"Venom: Let There Be Carnage",1.6],[123,"The Daily Bugle, stagione 2",0.3],[30,"Spider-Man: No Way Home",2.5,"E"],[124,"Spider-Man: Across the Spider-Verse",2.3],[125,"The Daily Bugle, stagione 3",0.08],[126,"Morbius",1.7],[31,"Doctor Strange in the Multiverse of Madness",2.1,"E"],[127,"Moon Knight",4.8,"S"],[32,"Ms. Marvel",4.5,"SE"],[33,"Thor: Love and Thunder",2,"E"],[34,"Black Panther: Wakanda Forever",2.7,"E"],[128,"She-Hulk",5.2,"S"],[35,"Echo",3.4,"SE"],[129,"Ironheart",4.8,"S"],[130,"Werewolf by Night",0.9],[36,"Guardians of the Galaxy Holiday Special",0.7,"E"],[131,"I Am Groot, stagione 1",0.4],[132,"I Am Groot, stagione 2",0.4],[37,"Ant-Man and the Wasp: Quantumania",2.1,"E"],[38,"Guardians of the Galaxy Vol. 3",2.5,"E"]]],
+["Fase 5 — La guerra del multiverso",[[133,"Venom: The Last Dance",1.8],[134,"Secret Invasion",4.3,"S"],[39,"The Marvels",1.8,"E"],[135,"Marvel Zombies",2.1,"S"],[40,"Loki, stagione 2",5,"SE"],[136,"What If…?, stagione 2",4.5,"S"],[137,"What If…?, stagione 3",3.9,"S"],[41,"Deadpool & Wolverine",2.1,"E"],[42,"Agatha All Along",6.3,"SE"],[138,"Daredevil: Born Again, stagione 1",7.2,"S"],[43,"Captain America: Brave New World",2,"E"],[44,"Thunderbolts*",2.1,"E"]]],
+["Fase 6 — Doomsday",[[139,"Wonder Man",4.2,"S"],[140,"Daredevil: Born Again, stagione 2",6.5,"S"],[141,"The Punisher: One Last Kill",1],[45,"Spider-Man: Brand New Day",2.2,"E"],[142,"VisionQuest",6,"S"],[46,"I Fantastici Quattro: Gli inizi",2.2,"E"],[47,"Avengers: Doomsday",2.5,"EU"]]]
 ];
 var items=[];
-P.forEach(function(ph){ph[1].forEach(function(x){items.push({t:x[0],h:x[1],s:x[2],u:x[3]})})});
+P.forEach(function(ph){ph[1].forEach(function(x){var f=x[3]||"";items.push({id:x[0],t:x[1],h:x[2],s:f.indexOf("S")>=0,e:f.indexOf("E")>=0,u:f.indexOf("U")>=0})})});
+var byId={};items.forEach(function(i){byId[i.id]=i});
 var total=items.filter(function(i){return !i.u}).length;
+function fmt(h){return h<0.15?Math.round(h*60)+" min":h+" h"}
 function rid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
-var DB_URL="",ROOM="amici-mcu"; // DB_URL: indirizzo del database online (vuoto = solo codici)
-var online=false,pulling=false,pushT=null;
+var DB_URL="https://maratona-579e6-default-rtdb.europe-west1.firebasedatabase.app",ROOM="amici-mcu"; // DB_URL: indirizzo del database online (vuoto = solo codici)
+var online=null,pulling=false,pushT=null,lastErr="";
 var K="mcu-codici-v1",S={me:{i:rid(),n:"",d:{},u:0},f:{},h:{}},tab="io";
 try{var r0=JSON.parse(localStorage.getItem(K)||"null");if(r0&&r0.me&&r0.f)S=r0}catch(e){}
 S.h=S.h||{};
@@ -98,7 +111,7 @@ function msg(t){$("msg").textContent=t||""}
 function h(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
 function save(stamp){if(stamp!==false)S.me.u=Date.now();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
 function myArr(){return Object.keys(S.me.d).map(Number).sort(function(a,b){return a-b})}
-function valid(a){return a.filter(function(i){return Number.isInteger(i)&&items[i]&&!items[i].u})}
+function valid(a){return a.filter(function(i){return Number.isInteger(i)&&byId[i]&&!byId[i].u})}
 function toMap(a){var m={};valid(Array.isArray(a)?a:[]).forEach(function(i){m[i]=1});return m}
 function cn(s){return typeof s==="string"?s.replace(/\s+/g," ").trim().slice(0,24):""}
 function enc(p,o){var b=new TextEncoder().encode(JSON.stringify(o)),s="";b.forEach(function(c){s+=String.fromCharCode(c)});return p+btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
@@ -137,17 +150,17 @@ function copy(txt,ta){
   if(navigator.clipboard&&navigator.clipboard.writeText)return navigator.clipboard.writeText(txt).then(function(){return true},function(){return fb()});
   return Promise.resolve(fb());
 }
-function nextOf(done){for(var i=0;i<items.length;i++){if(!items[i].u&&done.indexOf(i)<0)return items[i].t}return null}
+function nextOf(done){for(var i=0;i<items.length;i++){if(!items[i].u&&done.indexOf(items[i].id)<0)return items[i].t}return null}
 function renderMine(){
-  var i=0,seen=0,left=0,c=0,html="",nextSet=false;
+  var seen=0,left=0,c=0,html="",nextSet=false;
   P.forEach(function(ph){
     var pc=0,pt=0,rw="";
-    ph[1].forEach(function(){
-      var id=i++,x=items[id],d=!!S.me.d[id]&&!x.u,cls=(x.s?"s ":"")+(d?"d ":"")+(x.u?"u ":"");
+    ph[1].forEach(function(r){
+      var x=byId[r[0]],id=x.id,d=!!S.me.d[id]&&!x.u,cls=(x.s?"s ":"")+(d?"d ":"")+(x.u?"u ":"");
       if(!x.u){pt++;if(d){seen+=x.h;pc++;c++}else{left+=x.h;if(!nextSet){nextSet=true;cls+="n "}}}
-      rw+='<li class="'+cls+'"><label><input type="checkbox" data-i="'+id+'"'+(d?" checked":"")+(x.u?" disabled":"")+'><span class="t">'+x.t+'</span><span class="h">'+(x.u?"18 dic 2026":x.h+" h")+'</span></label></li>';
+      rw+='<li class="'+cls+'"><label><input type="checkbox" data-i="'+id+'"'+(d?" checked":"")+(x.u?" disabled":"")+'><span class="t">'+(x.e?'<span class="e" title="essenziale">★ </span>':'')+x.t+'</span><span class="h">'+(x.u?"18 dic 2026":fmt(x.h))+'</span></label></li>';
     });
-    html+='<h2>'+ph[0]+'<small>'+pc+'/'+pt+'</small></h2><ul>'+rw+'</ul>';
+    html+='<h2><span>'+ph[0]+'</span><small>'+pc+'/'+pt+'</small></h2><ul>'+rw+'</ul>';
   });
   $("app").innerHTML=html;
   $("stat").textContent=c+" di "+total+" titoli visti · "+Math.round(left)+" ore rimaste";
@@ -159,22 +172,23 @@ function field(box,label,ro,val,rows){
   box.appendChild(ta);return ta;
 }
 function dbUrl(p){return DB_URL.replace(/\/+$/,"")+"/rooms/"+ROOM+(p?"/"+p:"")+".json"}
-function setSync(){var e=$("sy");if(e)e.textContent=!DB_URL?"":(online?"Sincronizzato con gli amici: si aggiorna da solo.":"Connessione non riuscita, riprovo…")}
+function setSync(){var e=$("sy");if(e)e.textContent=!DB_URL?"":(online===null?"Sincronizzazione…":online?"Sincronizzato con gli amici: si aggiorna da solo.":"Connessione non riuscita"+(lastErr?" ("+lastErr+")":"")+", riprovo…")}
 function push(){
-  if(!DB_URL)return;
+  if(!DB_URL||!S.acct)return;
   clearTimeout(pushT);
   pushT=setTimeout(function(){
     fetch(dbUrl(S.me.i),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({n:S.me.n,d:myArr(),u:S.me.u||Date.now()})})
-      .then(function(r){online=r.ok;setSync()}).catch(function(){online=false;setSync()});
+      .then(function(r){online=r.ok;lastErr=r.ok?"":"HTTP "+r.status;setSync()}).catch(function(e){online=false;lastErr=String(e&&e.message||e);setSync()});
   },500);
 }
 function pull(){
-  if(!DB_URL||pulling||document.hidden)return;
+  if(!DB_URL||!S.acct||pulling||document.hidden)return;
   pulling=true;
-  fetch(dbUrl()).then(function(r){if(!r.ok)throw new Error("http");return r.json()}).then(function(all){
+  fetch(dbUrl()).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).then(function(all){
     online=true;
-    if(all&&typeof all==="object"){
-      var ch=false;
+    {
+      var ch=false;all=(all&&typeof all==="object")?all:{};
+      Object.keys(S.f).forEach(function(k){if(!(k in all)){delete S.f[k];ch=true}});
       Object.keys(all).forEach(function(k){
         if(k===S.me.i||S.h[k])return;
         var v=all[k]||{},x=cleanF({i:k,n:v.n,d:v.d,u:v.u}),old=S.f[k];
@@ -183,7 +197,7 @@ function pull(){
       if(ch){save(false);drawList()}
     }
     setSync();
-  }).catch(function(){online=false;setSync()}).then(function(){pulling=false});
+  }).catch(function(e){online=false;lastErr=String(e&&e.message||e);setSync()}).then(function(){pulling=false});
 }
 function drawList(){
   var el=$("fl");if(!el)return;el.textContent="";
@@ -209,7 +223,80 @@ function drawList(){
     d.appendChild(av);d.appendChild(body);el.appendChild(d);
   });
 }
+function sha(str){return crypto.subtle.digest("SHA-256",new TextEncoder().encode(str)).then(function(d){return Array.from(new Uint8Array(d)).map(function(x){return("0"+x.toString(16)).slice(-2)}).join("")})}
+function acctKeys(name,pin){
+  var nm=name.replace(/\s+/g," ").trim().slice(0,24),l=nm.toLowerCase();
+  return Promise.all([sha("id:"+l+":"+pin),sha("nm:"+l)]).then(function(r){return{id:r[0].slice(0,20),nk:r[1].slice(0,20),name:nm}});
+}
+function aUrl(nk){return DB_URL.replace(/\/+$/,"")+"/accounts/"+ROOM+"/"+nk+".json"}
+function getJ(u){return fetch(u).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})}
+function putJ(u,v){return fetch(u,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(v)}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})}
+function doCreate(name,pin){
+  return acctKeys(name,pin).then(function(k){
+    return getJ(aUrl(k.nk)).then(function(ex){
+      if(ex)throw new Error("taken");
+      return putJ(aUrl(k.nk),{id:k.id}).then(function(){
+        S.acct={name:k.name,id:k.id};S.me.i=k.id;S.me.n=k.name;S.me.u=Date.now();S.f={};S.h={};save(false);
+        return putJ(dbUrl(k.id),{n:S.me.n,d:myArr(),u:S.me.u});
+      });
+    });
+  });
+}
+function doLogin(name,pin){
+  return acctKeys(name,pin).then(function(k){
+    return getJ(aUrl(k.nk)).then(function(ex){
+      if(!ex||ex.id!==k.id)throw new Error("bad");
+      return getJ(dbUrl(k.id)).then(function(rec){
+        var r=rec||{};
+        S.acct={name:k.name,id:k.id};
+        S.me={i:k.id,n:cn(r.n)||k.name,d:toMap(r.d),u:Number(r.u)||Date.now()};
+        S.f={};S.h={};save(false);
+      });
+    });
+  });
+}
 function renderFriends(){
+  if(!DB_URL)return renderFriendsCodes();
+  var el=$("app");el.textContent="";
+  var c0=valid(myArr()).length;
+  $("stat").textContent=c0+" di "+total+" titoli visti";
+  $("fill").style.width=(100*c0/total)+"%";
+  var b=h("section","box");
+  if(S.acct){
+    b.appendChild(h("p","k","Account: "+S.acct.name));
+    var sy=h("p","m");sy.id="sy";b.appendChild(sy);
+    var ex=h("button",null,"Esci");ex.type="button";var arm=false;
+    ex.addEventListener("click",function(){
+      if(!arm){arm=true;ex.textContent="Tocca ancora per uscire";setTimeout(function(){arm=false;ex.textContent="Esci"},4000);return}
+      S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("Sei uscito. Con nome e PIN rientri quando vuoi.");renderFriends();
+    });
+    b.appendChild(ex);
+    el.appendChild(b);
+    var fl=h("div");fl.id="fl";el.appendChild(fl);setSync();drawList();pull();
+    return;
+  }
+  b.appendChild(h("p","k","Il tuo account"));
+  b.appendChild(h("p","m","Scegli un nome e un PIN di 4–8 cifre. Con lo stesso nome e PIN entri da qualsiasi telefono e ritrovi i tuoi progressi. Il PIN protegge poco: non usarne uno che usi altrove."));
+  var ni=h("input");ni.type="text";ni.maxLength=24;ni.placeholder="Nome";ni.setAttribute("aria-label","Nome");ni.autocomplete="off";
+  var pi=h("input");pi.type="password";pi.maxLength=8;pi.placeholder="PIN (4–8 cifre)";pi.setAttribute("aria-label","PIN");pi.setAttribute("inputmode","numeric");pi.autocomplete="off";
+  b.appendChild(ni);b.appendChild(pi);
+  var row=h("div","row"),bc=h("button",null,"Crea account"),bl=h("button",null,"Accedi");bc.type="button";bl.type="button";
+  row.appendChild(bc);row.appendChild(bl);b.appendChild(row);el.appendChild(b);
+  function go(fn,okMsg){
+    var nm=ni.value.replace(/\s+/g," ").trim(),pin=pi.value.trim();
+    if(!nm){msg("Scrivi un nome.");return}
+    if(!/^\d{4,8}$/.test(pin)){msg("Il PIN deve avere da 4 a 8 cifre.");return}
+    bc.disabled=bl.disabled=true;msg("Un attimo…");
+    fn(nm,pin).then(function(){render();msg(okMsg);pull()}).catch(function(e){
+      bc.disabled=bl.disabled=false;
+      var m=e&&e.message;
+      msg(m==="taken"?"Questo nome è già in uso. Se è tuo, tocca Accedi.":m==="bad"?"Nome o PIN non corretti.":"Connessione non riuscita ("+(m||"errore")+"). Riprova.");
+    });
+  }
+  bc.addEventListener("click",function(){go(doCreate,"Account creato. I tuoi progressi ora sono condivisi.")});
+  bl.addEventListener("click",function(){go(doLogin,"Bentornato! Progressi ripristinati.")});
+}
+function renderFriendsCodes(){
   var el=$("app");el.textContent="";
   var c0=valid(myArr()).length;
   $("stat").textContent=c0+" di "+total+" titoli visti";
@@ -270,7 +357,7 @@ rb.addEventListener("click",function(){
   S.me.d={};save();push();render();armed=false;rb.textContent="Azzera i miei progressi";
 });
 render();
-if(DB_URL){if(S.me.u>0)push();pull();setInterval(pull,5000)}
+if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{push();pull()}setInterval(pull,5000)}
 </script>
 </body>
 </html>
