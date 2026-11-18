@@ -155,10 +155,22 @@ function doneOf(u){return(Array.isArray(u.d)?u.d:[]).filter(function(i){return N
 
 /* ---------- dati ---------- */
 var LOADERR=null;
+function migrateGroups(){
+  return GET("groupIndex").catch(function(){return null}).then(function(ix){
+    ix=obj(ix);var q=[];
+    Object.keys(ST.groups).forEach(function(gid){
+      var g=ST.groups[gid];if(!g||typeof g!=="object")return;
+      if(g.ph){var ng=Object.assign({},g);delete ng.ph;q.push(PUT("groupSec/"+gid,{ph:g.ph}).then(function(){return PUT("groups/"+gid,ng)}).then(function(){return PUT("groupIndex/"+gid,true)}).then(function(){delete g.ph}))}
+      else if(!ix[gid])q.push(PUT("groupIndex/"+gid,true));
+    });
+    return q.length?Promise.all(q).catch(function(){}):null;
+  });
+}
 function load(){
   LOADERR=null;var rd=function(p){return GET(p).catch(function(e){LOADERR=e&&e.message||"errore";return null})};
   return Promise.all([rd("rooms/"+ROOM),rd("removed/"+ROOM),rd("groups"),rd("groupMembers"),rd("mutes"),rd("groupRequests/"+ROOM),rd("reports/"+ROOM),rd("requests/"+ROOM)]).then(function(r){
     ST={users:obj(r[0]),removed:obj(r[1]),groups:obj(r[2]),members:obj(r[3]),mutes:obj(r[4]),greq:obj(r[5]),reports:obj(r[6]),preq:obj(r[7])};
+    return migrateGroups();
   });
 }
 function nGreq(){return Object.keys(ST.greq).filter(function(k){return ST.greq[k]&&ST.greq[k].s==="p"})}
