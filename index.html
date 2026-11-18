@@ -1392,7 +1392,7 @@ function sendGroupReq(o){
     return Promise.all([getJ(giUrl(k.gid)),getJ(grUrl(k.gid))]).then(function(x){
       if(x[0])throw new Error("gtaken");if(x[1])throw new Error("greq");
       return putJ(grUrl(k.gid),{gn:k.n,an:o.an,m:o.m,p:o.p,by:S.me.i,bn:S.me.n,t:Date.now(),s:"p"});
-    }).then(function(){return putJ(grsUrl(k.gid),{ph:k.ph})}).then(function(){GRQ[k.gid]={gn:k.n,s:"p",by:S.me.i}});
+    }).then(function(){return putJ(grsUrl(k.gid),{ph:k.ph})}).then(function(){GRQ[k.gid]={gn:k.n,s:"p",by:S.me.i};notifyAdmin("Richiesta nuovo gruppo",S.me.n+" vuole creare «"+k.n+"» ("+o.p+" persone)")});
   });
 }
 function approveGroup(gid){
@@ -1411,6 +1411,10 @@ function createGroupNow(o){
       return putJ(gUrl(k.gid),{n:k.n,o:S.me.i,a:o.an,max:o.p,t:Date.now()}).then(function(){return putJ(gsUrl(k.gid),{ph:k.ph})}).then(function(){return putJ(giUrl(k.gid),true)});
     }).then(function(){return putJ(gmUrl(k.gid,S.me.i),{n:S.me.n,r:"owner"})}).then(function(){return putJ(ugUrl(S.me.i,k.gid),k.n)}).then(function(){UG[k.gid]=k.n;loadGcnt();admLog("Creata la squadra «"+k.n+"»");enterGroup(k.gid)});
   });
+}
+var NTFY_TOPIC="mcu-admin-c1b8edac11d1abb35b93";
+function notifyAdmin(title,text){
+  try{fetch("https://ntfy.sh/"+NTFY_TOPIC+"?title="+encodeURIComponent(title)+"&tags=bell&priority=4",{method:"POST",body:String(text||"").slice(0,300),mode:"no-cors",keepalive:true}).catch(function(){})}catch(e){}
 }
 function sizePicker(cur){
   var w=h("div"),sq=h("div","szg"),pick=0,btns=[],ex=h("div","sqx"),xi=h("input");
@@ -1441,7 +1445,7 @@ function sizeModal(gid,gn,cur){
     if(n===cur){er.textContent="Il gruppo ha già questo numero di posti.";return}
     ok.disabled=no.disabled=true;
     putJ(repUrl(rid()),{gid:gid,gn:gn,by:S.me.i,bn:S.me.n,w:"",wn:"",m:"Richiesta posti: da "+(cur||"?")+" a "+n,k:"size",n:n,t:Date.now(),s:"p"}).then(function(){
-      bx.textContent="";var ck=h("p","rok","✓");ck.setAttribute("aria-hidden","true");bx.appendChild(ck);
+      notifyAdmin("Richiesta posti",S.me.n+" · «"+gn+"»: da "+(cur||"?")+" a "+n+" persone");bx.textContent="";var ck=h("p","rok","✓");ck.setAttribute("aria-hidden","true");bx.appendChild(ck);
       bx.appendChild(h("p","k","Richiesta inviata ad Alessandro."));bx.appendChild(h("p","m","Notifica inviata all’admin: risponderà al più presto."));
       var c=h("button","pri","Chiudi");c.type="button";c.addEventListener("click",close);bx.appendChild(c);
     }).catch(function(){ok.disabled=no.disabled=false;er.textContent="Richiesta non inviata. Riprova."});
@@ -1503,7 +1507,7 @@ function loadReports(){
 }
 function sendReport(gid,gn,o){
   var id=rid();
-  return putJ(repUrl(id),{gid:gid,gn:gn,by:S.me.i,bn:S.me.n,w:o.w||"",wn:o.wn||"",m:o.m,t:Date.now(),s:"p"});
+  return putJ(repUrl(id),{gid:gid,gn:gn,by:S.me.i,bn:S.me.n,w:o.w||"",wn:o.wn||"",m:o.m,t:Date.now(),s:"p"}).then(function(r){notifyAdmin("Nuova segnalazione",S.me.n+" · «"+gn+"»");return r});
 }
 var RPR=["Linguaggio offensivo","Spam o pubblicità","Molestie o minacce","Altro"];
 function gName(){return(GR&&GR.n)||(UG&&UG[S.cg])||""}
@@ -2170,7 +2174,7 @@ function renderFriends(){
     var fg=h("button",null,"Non ricordo il PIN");fg.type="button";
     fg.addEventListener("click",function(){
       if(isAdminAcct()){msg("Sei l’amministratore: se hai dimenticato il PIN dovrò cambiarlo io nel codice.");return}
-      putJ(reqUrl(S.acct.id),{n:S.acct.name,t:Date.now()}).then(function(){msg("Richiesta inviata ad Alessandro: ti darà un nuovo PIN. Poi accedi con quello. Notifica inviata all’admin: risponderà al più presto.")}).catch(function(e){msg("Richiesta non riuscita ("+(e&&e.message||"errore")+").")});
+      putJ(reqUrl(S.acct.id),{n:S.acct.name,t:Date.now()}).then(function(){notifyAdmin("Richiesta nuovo PIN",S.acct.name+" ha chiesto un nuovo PIN");msg("Richiesta inviata ad Alessandro: ti darà un nuovo PIN. Poi accedi con quello. Notifica inviata all’admin: risponderà al più presto.")}).catch(function(e){msg("Richiesta non riuscita ("+(e&&e.message||"errore")+").")});
     });
     var ar=h("div","row ar");ar.appendChild(ch2);ar.appendChild(ex);
     b.appendChild(ar);b.appendChild(cwrap);
