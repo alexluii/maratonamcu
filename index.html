@@ -2197,7 +2197,7 @@ function ensureGate(){
   var er=h("p","m gerr");er.setAttribute("role","alert");
   var ok=h("button","pri","Crea account");ok.type="button";
   var hint=h("p","m","Hai dimenticato la password? Scrivi ad Alessandro: ti sblocca l’account.");hint.hidden=true;
-  [ni,pi,er,ok,hint].forEach(function(x){bx.appendChild(x)});
+  [ni,pi,er,ok,hint].forEach(function(x){bx.appendChild(x)});bx.appendChild(langSw());
   function setMode(m){mode=m;tn.setAttribute("aria-pressed",String(m==="new"));tl.setAttribute("aria-pressed",String(m==="in"));ok.textContent=m==="new"?"Crea account":"Accedi";pi.autocomplete=m==="new"?"new-password":"current-password";hint.hidden=m==="new";er.textContent=""}
   tn.addEventListener("click",function(){setMode("new")});tl.addEventListener("click",function(){setMode("in")});setMode(EXP?"in":"new");
   function go(){
