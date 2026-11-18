@@ -245,7 +245,7 @@ body{grid-template-columns:minmax(440px,520px) minmax(0,720px);column-gap:96px}
 .agm button{padding:4px 10px;font-size:12px}
 .cd{align-self:center;margin:4px 0;font:700 11px "Instrument Sans",sans-serif;color:var(--mute);text-transform:capitalize}
 .cm b{display:block;font:700 11px "Instrument Sans",sans-serif;opacity:.7}
-.cf{display:flex;gap:6px}.cf input{flex:1;min-width:0;padding:10px 12px;font:inherit;font-size:15px;color:var(--ink);background:var(--panel);border:2px solid var(--line);border-radius:12px}
+.chf{display:flex;gap:6px}.chf input{flex:1;min-width:0;padding:10px 12px;font:inherit;font-size:15px;color:var(--ink);background:var(--panel);border:2px solid var(--line);border-radius:12px}
 .plus{flex:0 0 52px!important;padding:0!important;font:700 26px/1 "Instrument Sans",sans-serif;color:#0b1030;background:var(--amber);border-color:var(--amber)}
 .sqs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
 .sq{width:38px;height:38px;padding:0;border-radius:8px;border:2px solid var(--line);background:var(--bg);color:var(--ink);font:700 15px/1 "Instrument Sans",sans-serif}
@@ -797,7 +797,7 @@ function chatBox(gid){
   var w=h("div","chat"),hd=h("div","row ar"),tg=h("button",null,chOpen?"Chiudi la chat del gruppo":"Apri la chat del gruppo");tg.type="button";hd.appendChild(tg);w.appendChild(hd);
   var body=h("div");body.hidden=!chOpen;
   var l=h("div","cl");l.id="chl";l.setAttribute("role","log");l.setAttribute("aria-live","polite");body.appendChild(l);
-  var f=h("form","cf"),i=h("input");i.type="text";i.maxLength=300;i.placeholder="Scrivi al gruppo";i.setAttribute("aria-label","Messaggio per il gruppo");i.autocomplete="off";
+  var f=h("form","chf"),i=h("input");i.type="text";i.maxLength=300;i.placeholder="Scrivi al gruppo";i.setAttribute("aria-label","Messaggio per il gruppo");i.autocomplete="off";
   var sb=h("button","pri","Invia");sb.type="submit";f.appendChild(i);f.appendChild(sb);body.appendChild(f);
   w.appendChild(h("p","m","Solo i membri di questo gruppo vedono questa chat."));
   w.insertBefore(body,w.lastChild);
