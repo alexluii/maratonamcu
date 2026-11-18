@@ -233,6 +233,13 @@ body{grid-template-columns:minmax(440px,520px) minmax(0,720px);column-gap:96px}
 .cl{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin:0 0 8px}
 .cm{align-self:flex-start;max-width:85%;padding:6px 10px;border-radius:12px;background:var(--panel);border:1px solid var(--line);font-size:14px;line-height:1.35;overflow-wrap:anywhere}
 .cm.me{align-self:flex-end;background:var(--amber);border-color:var(--amber);color:#0b1030}
+.agi{margin:6px 0;border:1px solid var(--line);border-radius:12px;background:var(--bg);overflow:hidden}
+.agh{display:flex;justify-content:space-between;gap:10px;width:100%;padding:12px;border:0;background:none;color:var(--ink);font:700 15px "Instrument Sans",sans-serif;text-align:left;cursor:pointer}
+.agc{font-weight:600;font-size:12px;color:var(--mute);white-space:nowrap}
+.agb2{padding:0 12px 12px}.agm{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:14px}
+.cred select,.gbox select{display:block;width:100%;box-sizing:border-box;margin:0 0 10px;padding:12px;font:inherit;font-size:15px;color:var(--ink);background:var(--panel);border:2px solid var(--line);border-radius:12px}
+.agm button{padding:4px 10px;font-size:12px}
+.cd{align-self:center;margin:4px 0;font:700 11px "Instrument Sans",sans-serif;color:var(--mute);text-transform:capitalize}
 .cm b{display:block;font:700 11px "Instrument Sans",sans-serif;opacity:.7}
 .cf{display:flex;gap:6px}.cf input{flex:1;min-width:0;padding:10px 12px;font:inherit;font-size:15px;color:var(--ink);background:var(--panel);border:2px solid var(--line);border-radius:12px}
 .plus{flex:0 0 52px!important;padding:0!important;font:700 26px/1 "Instrument Sans",sans-serif;color:#0b1030;background:var(--amber);border-color:var(--amber)}
@@ -640,9 +647,11 @@ function push(){
   },500);
 }
 function pull(force){
+  var cg0=S.cg;
   if(!DB_URL||!S.acct||(pulling&&!force)||document.hidden||moving)return;
   pulling=true;
   Promise.all([getJ(dbUrl()),getJ(remUrl()).catch(function(){return null}),isAdminAcct()?getJ(reqUrl()).catch(function(){return null}):Promise.resolve(null),getJ(ugUrl(S.me.i)).catch(function(){return null}),S.cg?getJ(gmUrl(S.cg)).catch(function(){return null}):Promise.resolve(null),S.cg?getJ(gUrl(S.cg)).catch(function(){return null}):Promise.resolve(null),getJ(grUrl()).catch(function(){return null})]).then(function(res){
+    if(S.cg!==cg0){setTimeout(function(){pull(true)},80);return}
     var all=res[0];REM=(res[1]&&typeof res[1]==="object")?res[1]:{};REQ=(res[2]&&typeof res[2]==="object")?res[2]:{};UG=(res[3]&&typeof res[3]==="object")?res[3]:{};GM=(res[4]&&typeof res[4]==="object")?res[4]:{};GR=res[5]||null;GRQ=(res[6]&&typeof res[6]==="object")?res[6]:{};
     online=true;
     {
@@ -739,7 +748,7 @@ function grUrl(id){return DB_URL.replace(/\/+$/,"")+"/groupRequests/"+ROOM+(id?"
 function gUrl(gid){return DB_URL.replace(/\/+$/,"")+"/groups/"+gid+".json"}
 function gmUrl(gid,id){return DB_URL.replace(/\/+$/,"")+"/groupMembers/"+gid+(id?"/"+id:"")+".json"}
 function ugUrl(id,gid){return DB_URL.replace(/\/+$/,"")+"/userGroups/"+id+(gid?"/"+gid:"")+".json"}
-var GCNT=null,CH={gid:"",m:[]},chOpen=false,chLast=0;
+var GCNT=null,CH={gid:"",m:[]},chOpen=true,chLast=0;
 function gcntTxt(){return GCNT===null?"gruppi: —":GCNT+(GCNT===1?" gruppo attivo":" gruppi attivi")}
 function loadGcnt(){
   if(!DB_URL||document.hidden)return;
@@ -748,14 +757,22 @@ function loadGcnt(){
   });
 }
 function chUrl(gid,k){return DB_URL.replace(/\/+$/,"")+"/chats/"+gid+(k?"/"+k:"")+".json"}
-function drawChat(){
-  var l=document.getElementById("chl");if(!l)return;
+function chDay(t){return new Date(t).toLocaleDateString("it-IT",{weekday:"short",day:"numeric",month:"short"})}
+function chHour(t){return new Date(t).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}
+function fillChat(l,arr,meId){
   var stick=l.scrollHeight-l.scrollTop-l.clientHeight<40||!l.childNodes.length;
   l.textContent="";
-  if(!CH.m.length){l.appendChild(h("p","m","Ancora nessun messaggio. Scrivi il primo."));}
-  CH.m.forEach(function(x){var d=h("div","cm"+(x.i===S.me.i?" me":""));if(x.i!==S.me.i)d.appendChild(h("b",null,x.n||"?"));d.appendChild(document.createTextNode(x.m));l.appendChild(d)});
+  if(!arr.length){l.appendChild(h("p","m","Ancora nessun messaggio."));return}
+  var last="";
+  arr.forEach(function(x){
+    var dy=x.t?chDay(x.t):"";if(dy&&dy!==last){last=dy;l.appendChild(h("div","cd",dy))}
+    var me=meId&&x.i===meId,d=h("div","cm"+(me?" me":""));
+    d.appendChild(h("b",null,(me?"Tu":(x.n||"?"))+(x.t?" · "+chHour(x.t):"")));
+    d.appendChild(document.createTextNode(x.m));l.appendChild(d);
+  });
   if(stick)l.scrollTop=l.scrollHeight;
 }
+function drawChat(){var l=document.getElementById("chl");if(l)fillChat(l,CH.m,S.me.i)}
 function pullChat(){
   if(!S.cg||!chOpen||document.hidden||!GM||!GM[S.me.i])return;
   var gid=S.cg;
@@ -884,12 +901,145 @@ function groupForm(){
   });
   return f;
 }
+function repUrl(id){return DB_URL.replace(/\/+$/,"")+"/reports/"+ROOM+(id?"/"+id:"")+".json"}
+var rpSig=null;
+function loadReports(){
+  if(!DB_URL||!isAdmin()||document.hidden)return;
+  getJ(repUrl()).then(function(o){
+    RP=(o&&typeof o==="object")?o:{};
+    var sg=Object.keys(RP).sort().join(",")+"|"+Object.keys(RP).filter(function(k){return RP[k]&&RP[k].s==="p"}).length;
+    updBadge();
+    if(sg!==rpSig){rpSig=sg;if($("fl"))renderFriends()}
+  }).catch(function(){});
+}
+function sendReport(gid,gn,o){
+  var id=rid();
+  return putJ(repUrl(id),{gid:gid,gn:gn,by:S.me.i,bn:S.me.n,w:o.w||"",wn:o.wn||"",m:o.m,t:Date.now(),s:"p"});
+}
+function reportForm(gid,gn){
+  var f=h("div","box cred");f.appendChild(h("p","k","Segnala un problema"));
+  f.appendChild(h("p","m","La segnalazione arriva all’amministratore, che può leggere la chat e intervenire. Squadra: "+gn));
+  var sel=h("select");sel.setAttribute("aria-label","Chi ha fatto l’infrazione");
+  var o0=h("option",null,"Chi? (facoltativo)");o0.value="";sel.appendChild(o0);
+  Object.keys(GM||{}).forEach(function(id){if(id===S.me.i)return;var o=h("option",null,(GM[id]&&GM[id].n)||"?");o.value=id;sel.appendChild(o)});
+  var mo=h("textarea");mo.maxLength=300;mo.rows=3;mo.placeholder="Cosa è successo?";mo.setAttribute("aria-label","Motivo della segnalazione");
+  f.appendChild(sel);f.appendChild(mo);
+  var row=h("div","row"),ok=h("button","pri","Invia la segnalazione"),no=h("button",null,"Annulla");ok.type=no.type="button";row.appendChild(ok);row.appendChild(no);f.appendChild(row);
+  no.addEventListener("click",function(){f.remove()});
+  ok.addEventListener("click",function(){
+    var m=mo.value.trim();if(m.length<5){msg("Scrivi cosa è successo.");return}
+    if(Date.now()-(window.__rpLast||0)<30000){msg("Hai appena inviato una segnalazione: aspetta un attimo.");return}
+    ok.disabled=no.disabled=true;
+    sendReport(gid,gn,{w:sel.value,wn:sel.value?(GM[sel.value]&&GM[sel.value].n)||"":"",m:m}).then(function(){window.__rpLast=Date.now();msg("Segnalazione inviata all’amministratore.");f.remove()}).catch(function(){ok.disabled=no.disabled=false;msg("Segnalazione non inviata. Riprova.")});
+  });
+  return f;
+}
+function reportsBox(){
+  var b=h("section","box gbox agb"),gh=h("div","gh"),pend=Object.keys(RP||{}).filter(function(k){return RP[k]});
+  gh.appendChild(h("p","k","Segnalazioni"+(pend.length?" ("+pend.length+")":"")));b.appendChild(gh);
+  if(!pend.length){b.appendChild(h("p","m","Nessuna segnalazione."));return b}
+  pend.sort(function(a,c){return(RP[c].t||0)-(RP[a].t||0)}).forEach(function(k){
+    var r=RP[k],it=h("div","agi greq"),when=r.t?new Date(r.t).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"";
+    it.appendChild(h("p","k","Squadra «"+(r.gn||"?")+"»"));
+    it.appendChild(h("p","m","Da "+(r.bn||"?")+(r.wn?" · contro "+r.wn:"")+" · "+when));
+    it.appendChild(h("p","m","Motivo: "+(r.m||"")));
+    var ar=h("div","row ar"),cb=h("button",null,"Leggi la chat"),mb=h("button",null,"Membri / Rimuovi"),xb=h("button",null,"Chiudi segnalazione");cb.type=mb.type=xb.type="button";
+    var cl=h("div","cl");cl.hidden=true;var mem=h("div");
+    cb.addEventListener("click",function(){
+      if(!cl.hidden){cl.hidden=true;cb.textContent="Leggi la chat";return}
+      cl.hidden=false;cb.textContent="Chiudi la chat";
+      getJ(chUrl(r.gid)+'?orderBy="$key"&limitToLast=100').then(function(o){var a=[];if(o&&typeof o==="object")Object.keys(o).sort().forEach(function(q){var x=o[q];if(x&&typeof x.m==="string")a.push({i:String(x.i||""),n:String(x.n||""),m:x.m.slice(0,300),t:Number(x.t)||0})});fillChat(cl,a,"")}).catch(function(){fillChat(cl,[],"")});
+    });
+    mb.addEventListener("click",function(){
+      if(mem.firstChild){mem.textContent="";return}
+      getJ(gmUrl(r.gid)).then(function(ms){
+        ms=ms||{};var ids=Object.keys(ms);if(!ids.length)mem.appendChild(h("p","m","Nessun membro (squadra eliminata?)."));
+        ids.forEach(function(id){
+          var row=h("div","agm");row.appendChild(h("span",null,(ms[id].n||"?")+(id===r.w?" ⚠":"")+(ms[id].r==="owner"?" (capogruppo)":"")));
+          var kb=h("button",null,"Rimuovi dal gruppo");kb.type="button";var ka=false;
+          kb.addEventListener("click",function(){
+            if(!ka){ka=true;kb.textContent="Tocca ancora";setTimeout(function(){ka=false;kb.textContent="Rimuovi dal gruppo"},4000);return}
+            Promise.all([delJ(gmUrl(r.gid,id)),delJ(ugUrl(id,r.gid))]).then(function(){row.remove();msg("Persona rimossa dal gruppo.");if(AG&&AG.m&&AG.m[r.gid])delete AG.m[r.gid][id]}).catch(function(e){msg(gErr(e))});
+          });row.appendChild(kb);mem.appendChild(row);
+        });
+      }).catch(function(){msg("Non riesco a leggere i membri.")});
+    });
+    xb.addEventListener("click",function(){delJ(repUrl(k)).then(function(){delete RP[k];updBadge();renderFriends()}).catch(function(){msg("Operazione non riuscita.")})});
+    ar.appendChild(cb);ar.appendChild(mb);ar.appendChild(xb);it.appendChild(ar);it.appendChild(cl);it.appendChild(mem);b.appendChild(it);
+  });
+  return b;
+}
+var AG=null;
+function agLoad(){
+  var base=DB_URL.replace(/\/+$/,"");
+  return Promise.all([getJ(base+"/groups.json"),getJ(base+"/groupMembers.json")]).then(function(r){AG={g:(r[0]&&typeof r[0]==="object")?r[0]:{},m:(r[1]&&typeof r[1]==="object")?r[1]:{}}});
+}
+function adminGroupsBox(){
+  var b=h("section","box gbox agb"),gh=h("div","gh");var gqk=Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].s==="p"});gh.appendChild(h("p","k","Creazione gruppi"+(gqk.length?" ("+gqk.length+" richieste)":"")));
+  var rf=h("button",null,"Aggiorna");rf.type="button";gh.appendChild(rf);b.appendChild(gh);
+  gqk.forEach(function(k){
+    var q=GRQ[k],c=h("div","agi greq");
+    c.appendChild(h("p","k",q.gn));
+    c.appendChild(h("p","m","Richiesto da "+q.bn+" · admin del gruppo: "+q.an+" · "+q.p+(q.p===1?" persona":" persone")));
+    c.appendChild(h("p","m","Motivo: "+q.m));
+    var rw=h("div","row"),ap=h("button","pri","Approva"),rj=h("button",null,"Rifiuta");ap.type=rj.type="button";
+    ap.addEventListener("click",function(){ap.disabled=rj.disabled=true;approveGroup(k).catch(function(e){ap.disabled=rj.disabled=false;msg(gErr(e))})});
+    rj.addEventListener("click",function(){ap.disabled=rj.disabled=true;rejectGroup(k).catch(function(e){ap.disabled=rj.disabled=false;msg(gErr(e))})});
+    rw.appendChild(ap);rw.appendChild(rj);c.appendChild(rw);b.appendChild(c);
+  });
+  b.appendChild(h("p","m","Tutte le squadre"));
+  var list=h("div");b.appendChild(list);
+  function draw(){
+    list.textContent="";
+    if(!AG){list.appendChild(h("p","m","Caricamento…"));return}
+    var ids=Object.keys(AG.g).sort(function(a,c){return(AG.g[a].t||0)-(AG.g[c].t||0)});
+    if(!ids.length){list.appendChild(h("p","m","Nessuna squadra creata."));return}
+    ids.forEach(function(gid){
+      var g=AG.g[gid]||{},ms=AG.m[gid]||{},ids2=Object.keys(ms),it=h("div","agi"),hd=h("button","agh");hd.type="button";
+      hd.appendChild(h("span",null,(g.n||"Senza nome")));
+      hd.appendChild(h("span","agc",ids2.length+(g.max?"/"+g.max:"")+" · "+(g.t?new Date(g.t).toLocaleDateString("it-IT",{day:"numeric",month:"short"}):"")));
+      var body=h("div","agb2");body.hidden=true;
+      hd.addEventListener("click",function(){body.hidden=!body.hidden});
+      ids2.forEach(function(id){
+        var m=ms[id]||{},r=h("div","agm");r.appendChild(h("span",null,(m.n||"?")+(m.r==="owner"?" (capogruppo)":m.r==="admin"?" (capogruppo)":"")));
+        var kb=h("button",null,"Rimuovi");kb.type="button";var ka=false;
+        kb.addEventListener("click",function(){
+          if(!ka){ka=true;kb.textContent="Tocca ancora";setTimeout(function(){ka=false;kb.textContent="Rimuovi"},4000);return}
+          Promise.all([delJ(gmUrl(gid,id)),delJ(ugUrl(id,gid))]).then(function(){delete (AG.m[gid]||{})[id];draw();loadGcnt()}).catch(function(e){msg(gErr(e))});
+        });r.appendChild(kb);body.appendChild(r);
+      });
+      var cb=h("button",null,"Leggi la chat");cb.type="button";var cl=h("div","cl");cl.hidden=true;
+      cb.addEventListener("click",function(){
+        if(!cl.hidden){cl.hidden=true;cb.textContent="Leggi la chat";return}
+        cb.textContent="Chiudi la chat";cl.hidden=false;
+        getJ(chUrl(gid)+'?orderBy="$key"&limitToLast=100').then(function(o){var a=[];if(o&&typeof o==="object")Object.keys(o).sort().forEach(function(k){var x=o[k];if(x&&typeof x.m==="string")a.push({i:String(x.i||""),n:String(x.n||""),m:x.m.slice(0,300),t:Number(x.t)||0})});fillChat(cl,a,"")}).catch(function(){fillChat(cl,[],"")});
+      });
+      var db=h("button",null,"Elimina squadra");db.type="button";var da=false;
+      db.addEventListener("click",function(){
+        if(!da){da=true;db.textContent="Tocca ancora per eliminare";setTimeout(function(){da=false;db.textContent="Elimina squadra"},4000);return}
+        deleteGroupAdmin(gid).then(function(){delete AG.g[gid];delete AG.m[gid];draw();loadGcnt();msg("Squadra eliminata.")}).catch(function(e){msg(gErr(e))});
+      });
+      var ar=h("div","row ar");ar.appendChild(cb);ar.appendChild(db);
+      body.appendChild(ar);body.appendChild(cl);it.appendChild(hd);it.appendChild(body);list.appendChild(it);
+    });
+  }
+  function load(){AG=AG||null;draw();agLoad().then(draw).catch(function(){list.textContent="";list.appendChild(h("p","m","Non riesco a leggere le squadre."))})}
+  rf.addEventListener("click",load);load();
+  return b;
+}
+function deleteGroupAdmin(gid){
+  return getJ(gmUrl(gid)).then(function(ms){
+    var q=Object.keys(ms||{}).map(function(id){return delJ(ugUrl(id,gid))});
+    q.push(delJ(gmUrl(gid)));q.push(delJ(gUrl(gid)));q.push(delJ(chUrl(gid)));return Promise.all(q);
+  }).then(function(){if(UG[gid]){delete UG[gid]}if(S.cg===gid)enterGroup("");else renderFriends()});
+}
 function groupsBox(){
   var b=h("section","box gbox"),gh=h("div","gh");gh.appendChild(h("p","k","Le tue squadre"));
   var gc=h("span","gcnt"),ld=h("span","led"+(GCNT===null?"":" on")),gt=h("span",null,gcntTxt());gc.id="gcnt";gc.appendChild(ld);gc.appendChild(gt);gc.title="Gruppi attivi in questo momento";gh.appendChild(gc);b.appendChild(gh);
   var chips=h("div","chips"),all=h("button","chip","Tutti gli amici");all.type="button";all.setAttribute("aria-pressed",!S.cg);all.addEventListener("click",function(){enterGroup("")});chips.appendChild(all);
   Object.keys(UG||{}).forEach(function(g){var c=h("button","chip",UG[g]);c.type="button";c.setAttribute("aria-pressed",S.cg===g);c.addEventListener("click",function(){enterGroup(g)});chips.appendChild(c)});
   b.appendChild(chips);
+  if(!S.cg&&Object.keys(UG||{}).length)b.appendChild(h("p","m","Tocca una squadra per vedere i suoi membri e aprire la sua chat."));
   if(S.cg){
     var role=myRole(),nm=(GR&&GR.n)||UG[S.cg]||"",cnt=Object.keys(GM||{}).length;
     b.appendChild(h("p","m","Gruppo «"+nm+"» · "+(role==="owner"?"sei il capogruppo":role==="admin"?"sei capogruppo":"sei membro")+" · "+cnt+(GR&&GR.max?"/"+GR.max:"")+(cnt===1?" persona":" persone")));
@@ -900,6 +1050,9 @@ function groupsBox(){
     });
     ar.appendChild(lv);b.appendChild(ar);
     b.appendChild(chatBox(S.cg));
+    var rr=h("div","row ar"),rb2=h("button",null,"Segnala un problema"),rw2=h("div");rb2.type="button";
+    rb2.addEventListener("click",function(){if(rw2.firstChild){rw2.textContent="";return}rw2.appendChild(reportForm(S.cg,nm))});
+    rr.appendChild(rb2);b.appendChild(rr);b.appendChild(rw2);
   }
   var wrap=h("div"),row=h("div","row ar"),bn=h("button","gnew",isAdmin()?"Crea un gruppo":"Richiedi un gruppo"),bj=h("button",null,"Entra con il codice");bn.type=bj.type="button";
   bn.addEventListener("click",function(){wrap.textContent="";wrap.appendChild(requestForm())});
@@ -914,7 +1067,9 @@ function groupsBox(){
 function reqUrl(id){return DB_URL.replace(/\/+$/,"")+"/requests/"+ROOM+(id?"/"+id:"")+".json"}
 function delJ(u){return fetch(u,{method:"DELETE"}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status)})}
 function nkOf(name){return sha("nm:"+String(name).replace(/\s+/g," ").trim().slice(0,24).toLowerCase()).then(function(x){return x.slice(0,20)})}
-function updBadge(){var n=isAdminAcct()?Object.keys(REQ).length+Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].s==="p"}).length:0,b=$("tAm");if(b){if(n)b.setAttribute("data-n",n);else b.removeAttribute("data-n")}}
+var RP={};
+function admCount(){return isAdminAcct()?Object.keys(REQ).length+Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].s==="p"}).length+Object.keys(RP||{}).filter(function(k){return RP[k]&&RP[k].s==="p"}).length:0}
+function updBadge(){var n=admCount(),b=$("tAm");if(b){if(n)b.setAttribute("data-n",n);else b.removeAttribute("data-n")}var p=$("admPill");if(p&&!p.hidden)p.textContent=n?"Admin · "+n+" · Esci":"Admin · Esci"}
 function forceLogout(){viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("Nome o PIN sono stati cambiati. Accedi con le nuove credenziali.");render()}
 function moveAccount(old,newName,newPin){
   moving=true;
@@ -1075,24 +1230,8 @@ function renderFriends(){
         el.appendChild(rb);
       }
     }
-    if(isAdmin()){
-      var gq=Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].s==="p"});
-      if(gq.length){
-        var gb=h("section","box");gb.appendChild(h("p","k","Richieste di nuovi gruppi"));
-        gq.forEach(function(k){
-          var q=GRQ[k],c=h("div","greq");
-          c.appendChild(h("p","k",q.gn));
-          c.appendChild(h("p","m","Richiesto da "+q.bn+" · admin del gruppo: "+q.an+" · "+q.p+(q.p===1?" persona":" persone")));
-          c.appendChild(h("p","m","Motivo: "+q.m));
-          var rw=h("div","row"),ap=h("button","pri","Approva"),rj=h("button",null,"Rifiuta");ap.type=rj.type="button";
-          ap.addEventListener("click",function(){ap.disabled=rj.disabled=true;approveGroup(k).catch(function(e){ap.disabled=rj.disabled=false;msg(gErr(e))})});
-          rj.addEventListener("click",function(){ap.disabled=rj.disabled=true;rejectGroup(k).catch(function(e){ap.disabled=rj.disabled=false;msg(gErr(e))})});
-          rw.appendChild(ap);rw.appendChild(rj);c.appendChild(rw);gb.appendChild(c);
-        });
-        el.appendChild(gb);
-      }
-    }
     el.appendChild(groupsBox());
+    if(isAdmin()){loadReports();el.appendChild(reportsBox());el.appendChild(adminGroupsBox())}
     var fl=h("div","anim");fl.id="fl";el.appendChild(fl);setSync();drawList();pull();
     return;
   }
@@ -1164,7 +1303,7 @@ function admUi(){
   var b=$("admBtn"),p=$("admPill"),on=fbMode()&&adminOk();
   if(b)b.textContent=on?"Esci dall’amministratore":"Accesso amministratore";
   if(!p){p=h("button","adm-pill","Admin · Esci");p.id="admPill";p.type="button";p.addEventListener("click",admExit);document.body.appendChild(p)}
-  p.hidden=!on;
+  p.hidden=!on;if(on)updBadge();
 }
 function render(){admUi();
   renderSponsors();
@@ -1213,9 +1352,9 @@ if(window.matchMedia&&matchMedia("(hover:hover) and (pointer:fine)").matches){
 setTimeout(function(){document.body.classList.remove("boot")},2800);
 render();
 if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}setInterval(pull,5000);loadGcnt();setInterval(loadGcnt,30000);setInterval(pullChat,5000)}
-admLoad();if(fbMode())$("admFoot").hidden=false;if(adminOk()){render();renderSponsors()}
+admLoad();if(fbMode())$("admFoot").hidden=false;if(adminOk()){render();renderSponsors();loadReports()}
 $("admBtn").addEventListener("click",function(){if(adminOk()){admExit();return}location.href="admin.html"});
-refreshUpcoming();setInterval(refreshUpcoming,3600000);loadSponsors();setInterval(loadSponsors,120000);if(window.matchMedia)window.matchMedia("(min-width:1080px)").addEventListener("change",placeSp);setInterval(tick,1000);document.addEventListener("visibilitychange",function(){if(!document.hidden)pull()});
+refreshUpcoming();setInterval(refreshUpcoming,3600000);loadSponsors();setInterval(loadSponsors,120000);setInterval(loadReports,15000);if(window.matchMedia)window.matchMedia("(min-width:1080px)").addEventListener("change",placeSp);setInterval(tick,1000);document.addEventListener("visibilitychange",function(){if(!document.hidden)pull()});
 </script>
 </body>
 </html>
