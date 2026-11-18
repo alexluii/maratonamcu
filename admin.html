@@ -137,7 +137,7 @@ function token(){
 function url(p,q){return DB+"/"+p+".json"+(q||"")}
 function authed(u){return token().then(function(t){return t?u+(u.indexOf("?")<0?"?":"&")+"auth="+encodeURIComponent(t):u})}
 function ok(r){if(!r.ok)throw new Error("HTTP "+r.status);return r}
-function GET(p,q){return fetch(url(p,q)).then(ok).then(function(r){return r.json()})}
+function GET(p,q){return authed(url(p,q)).then(function(u){return fetch(u)}).then(ok).then(function(r){return r.json()})}
 function PUT(p,v){return authed(url(p)).then(function(u){return fetch(u,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(v)})}).then(ok).then(function(r){return r.json()})}
 function DEL(p){return authed(url(p)).then(function(u){return fetch(u,{method:"DELETE"})}).then(ok)}
 function LOG(t){authed(url("adminLog/"+ROOM)).then(function(u){return fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({t:Date.now(),a:String(t).slice(0,200)})})}).catch(function(){})}
@@ -154,8 +154,9 @@ function loadTitles(){
 function doneOf(u){return(Array.isArray(u.d)?u.d:[]).filter(function(i){return Number.isInteger(i)&&(!byId[i]||!byId[i].u)})}
 
 /* ---------- dati ---------- */
+var LOADERR=null;
 function load(){
-  var rd=function(p){return GET(p).catch(function(){return null})};
+  LOADERR=null;var rd=function(p){return GET(p).catch(function(e){LOADERR=e&&e.message||"errore";return null})};
   return Promise.all([rd("rooms/"+ROOM),rd("removed/"+ROOM),rd("groups"),rd("groupMembers"),rd("mutes"),rd("groupRequests/"+ROOM),rd("reports/"+ROOM),rd("requests/"+ROOM)]).then(function(r){
     ST={users:obj(r[0]),removed:obj(r[1]),groups:obj(r[2]),members:obj(r[3]),mutes:obj(r[4]),greq:obj(r[5]),reports:obj(r[6]),preq:obj(r[7])};
   });
@@ -295,7 +296,8 @@ function pageOggi(){
   var g=nGreq().length,r=nRep().length,p=nPin().length;
   main.appendChild(h("h2",null,"Da fare"));
   function todo(n,l,sub,go){var b=h("button","todo");b.type="button";b.appendChild(h("span","n",n));var d=h("div");d.appendChild(h("strong",null,l));d.appendChild(h("span","m",sub));b.appendChild(d);b.addEventListener("click",function(){tab=go;view=null;render()});main.appendChild(b)}
-  if(!g&&!r&&!p)main.appendChild(h("div","ok","Tutto a posto: nessuna richiesta o segnalazione."));
+  if(LOADERR){var eb=h("div","ok","Non riesco a leggere i dati ("+LOADERR+"). Esci e rientra dal pannello; se resta così, controlla le regole del database.");eb.style.color="#c0243a";main.appendChild(eb)}
+  else if(!g&&!r&&!p)main.appendChild(h("div","ok","Tutto a posto: nessuna richiesta o segnalazione."));
   if(r)todo(r,r===1?"Segnalazione da controllare":"Segnalazioni da controllare","Leggi la chat e decidi","rich");
   if(g)todo(g,g===1?"Richiesta di nuova squadra":"Richieste di nuove squadre","Approva o rifiuta","rich");
   if(p)todo(p,p===1?"Richiesta di nuovo PIN":"Richieste di nuovo PIN","Si reimposta dal sito, scheda Amici","rich");
