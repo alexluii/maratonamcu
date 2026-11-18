@@ -646,9 +646,10 @@ function dec(c){
 }
 function myCode(){return enc("MCU1.",{i:S.me.i,n:S.me.n,d:myArr(),u:S.me.u||Date.now()})}
 function backupCode(){return enc("MCU2.",{me:{i:S.me.i,n:S.me.n,d:myArr(),u:S.me.u},f:S.f})}
+function asArr(x){if(Array.isArray(x))return x;if(x&&typeof x==="object")return Object.keys(x).sort(function(a,b){return a-b}).map(function(k){return x[k]});return[]}
 function cleanF(o){
   if(!o||typeof o.i!=="string"||!o.i||o.i.length>10000)return null;
-  return{n:cn(o.n)||"Amico",d:valid(Array.isArray(o.d)?o.d:[]),u:Number(o.u)||Date.now()};
+  return{n:cn(o.n)||"Amico",d:valid(asArr(o.d)),u:Number(o.u)||Date.now()};
 }
 function importCode(t){
   var r=dec(t);if(!r||!r.o||typeof r.o!=="object")return"Codice non valido. Incolla il codice completo, che inizia con MCU.";
@@ -969,24 +970,26 @@ function push(){
   pushT=setTimeout(function(){
     pushT=null;
     if(!canPush()||moving)return;
-    fetch(dbUrl(S.me.i),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({n:S.me.n,d:myArr(),u:S.me.u||Date.now()})})
+    fetch(dbUrl(S.me.i),{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(S.me.a?{n:S.me.n,d:myArr(),u:S.me.u||Date.now(),a:S.me.a}:{n:S.me.n,d:myArr(),u:S.me.u||Date.now()})})
       .then(function(r){online=r.ok;lastErr=r.ok?"":"HTTP "+r.status;setSync()}).catch(function(e){online=false;lastErr=String(e&&e.message||e);setSync()});
   },500);
 }
-function pull(force){
+function pull(force,local){
   var cg0=S.cg;
   if(!DB_URL||!S.acct||(pulling&&!force)||document.hidden||moving)return;
+  if(local&&(pulling||(S.cg&&!(GM&&GM[S.me.i]))))return;
   frLoad();rtLoad();nfLoad();avLoad();
   pulling=true;
-  Promise.all([getJ(dbUrl()),getJ(remUrl()).catch(function(){return null}),isAdminAcct()?getJ(reqUrl()).catch(function(){return null}):Promise.resolve(null),getJ(ugUrl(S.me.i)).catch(function(){return null}),S.cg?getJ(gmUrl(S.cg)).catch(function(){return null}):Promise.resolve(null),S.cg?getJ(gUrl(S.cg)).catch(function(){return null}):Promise.resolve(null),getJ(grUrl()).catch(function(){return null})]).then(function(res){
+  (local?Promise.all([liveGet(dbUrl()),Promise.resolve(REM),Promise.resolve(REQ),Promise.resolve(UG),Promise.resolve(GM),Promise.resolve(GR),Promise.resolve(GRQ)]):Promise.all([liveGet(dbUrl()),getJ(remUrl()).catch(function(){return null}),isAdminAcct()?getJ(reqUrl()).catch(function(){return null}):Promise.resolve(null),getJ(ugUrl(S.me.i)).catch(function(){return null}),S.cg?getJ(gmUrl(S.cg)).catch(function(){return null}):Promise.resolve(null),S.cg?getJ(gUrl(S.cg)).catch(function(){return null}):Promise.resolve(null),getJ(grUrl()).catch(function(){return null})])).then(function(res){
     if(S.cg!==cg0){setTimeout(function(){pull(true)},80);return}
     var all=res[0];REM=(res[1]&&typeof res[1]==="object")?res[1]:{};REQ=(res[2]&&typeof res[2]==="object")?res[2]:{};UG=(res[3]&&typeof res[3]==="object")?res[3]:{};GM=(res[4]&&typeof res[4]==="object")?res[4]:{};GR=res[5]||null;GRQ=(res[6]&&typeof res[6]==="object")?res[6]:{};
     online=true;
     {
       var ch=false;all=(all&&typeof all==="object")?all:{};lastAll=all;
       var mine=all[S.me.i],mch=false;
+      if(mine&&typeof mine==="object"&&mine.a&&!S.me.a)S.me.a=Number(mine.a)||0;
       if(mine&&typeof mine==="object"&&!pushT&&cn(mine.n)&&cn(mine.n)!==S.me.n){S.me.n=cn(mine.n);if(S.acct)S.acct.name=S.me.n;save(false);mch=true}
-      if(mine&&typeof mine==="object"&&!pushT&&Number(mine.u)>(S.me.u||0)){S.me.d=toMap(valid(Array.isArray(mine.d)?mine.d:[]));S.me.u=Number(mine.u);if(mine.n)S.me.n=cn(mine.n)||S.me.n;save(false);mch=true}
+      if(mine&&typeof mine==="object"&&!pushT&&Number(mine.u)>(S.me.u||0)){S.me.d=toMap(valid(asArr(mine.d)));S.me.u=Number(mine.u);if(mine.n)S.me.n=cn(mine.n)||S.me.n;save(false);mch=true}
       else if(S.me.u&&!pushT&&canPush()&&!mine){var me0=S.acct;nkOf(me0.name).then(function(nk){return getJ(aUrl(nk))}).then(function(a){if(S.acct&&S.acct.id===me0.id){if(a&&a.id===me0.id)push();else forceLogout()}}).catch(function(){})}
       else if(S.me.u&&!pushT&&canPush()&&mine&&Number(mine.u)<S.me.u)push();
       if(S.cg&&!GM[S.me.i]){S.cg="";S.f={};GM={};save(false);msg("Non fai più parte di quel gruppo.")}
@@ -1000,7 +1003,7 @@ function pull(force){
         if(x&&(!old||x.u>old.u)){S.f[k]={n:x.n,d:x.d,u:x.u};ch=true}
         else if(x&&old&&x.n&&x.n!==old.n){old.n=x.n;ch=true}
       });
-      if(viewing&&all[viewing.id]){var nd=toMap(Array.isArray(all[viewing.id].d)?all[viewing.id].d:[]);if(JSON.stringify(nd)!==JSON.stringify(viewing.d)){viewing.d=nd;mch=true}}
+      if(viewing&&all[viewing.id]){var nd=toMap(asArr(all[viewing.id].d));if(JSON.stringify(nd)!==JSON.stringify(viewing.d)){viewing.d=nd;mch=true}}
       var rs=Object.keys(REM).sort().join(",");if(rs!==remSig){remSig=rs;ch=true}
       var qs=Object.keys(REQ).sort().join(",");var rq=qs!==reqSig;reqSig=qs;updBadge();
       var gs=JSON.stringify([UG,GM,S.cg,GR&&GR.n,GR&&GR.img&&GR.img.length,GRQ]);if(gs!==gSig){if(gSig!==null)rq=true;gSig=gs}
@@ -1012,14 +1015,14 @@ function pull(force){
 
 var FR=null,FRQ={},FRO="",frSig=null,frBusy=false,FRLEG=false,FRN={},PUB=false,auxSig=null;
 function pubUrl(id){return DB_URL.replace(/\/+$/,"")+"/pub/"+id+".json"}
+function fsUrl(from,to){return DB_URL.replace(/\/+$/,"")+"/friendSent/"+from+(to?"/"+to:"")+".json"}
+var FSENT={};
 function fnUrl(to,from){return DB_URL.replace(/\/+$/,"")+"/friendNote/"+to+(from?"/"+from:"")+".json"}
 function frUrl(id,f){return DB_URL.replace(/\/+$/,"")+"/friends/"+(id||"")+(f?"/"+f:"")+".json"}
 function fqUrl(id,f){return DB_URL.replace(/\/+$/,"")+"/friendReq/"+(id||"")+(f?"/"+f:"")+".json"}
 function isFr(id){return FRLEG||isAdmin()||(FRO===S.me.i&&!!FR&&!!FR[id])}
 var FSEL="",FQT="";
 function frCount(){return Object.keys(FRQ||{}).length+Object.keys(FRN||{}).length}
-function snGet(){try{return JSON.parse(localStorage.getItem("mcu-sent-"+(S.me&&S.me.i))||"{}")||{}}catch(e){return{}}}
-function snSet(o){try{localStorage.setItem("mcu-sent-"+(S.me&&S.me.i),JSON.stringify(o))}catch(e){}}
 function frErr(e){var m=e&&e.message;return m==="fnone"?"Non trovo nessuno con questo username. Controlla di averlo scritto giusto.":m==="fself"?"Quello sei tu!":m==="fhave"?"È già tra i tuoi amici.":m==="freq"?"Hai già mandato la richiesta a questa persona.":m==="fdeny"?"Non è stato possibile inviare la richiesta. Controlla che le regole del database siano pubblicate e riprova.":"Operazione non riuscita ("+(m||"errore")+")."}
 function frInit(me){
   /* i nuovi account partono SENZA amici: niente piu copia di tutti gli iscritti */
@@ -1027,9 +1030,11 @@ function frInit(me){
 }
 function frAux(me){
   if(auxSig===null){try{PUB=localStorage.getItem("mcu-pub-"+me)==="1"}catch(e){}}
-  Promise.all([getJ(fnUrl(me)).catch(function(){return null}),getJ(pubUrl(me)).catch(function(){return null})]).then(function(r){
+  Promise.all([getJ(fnUrl(me)).catch(function(){return null}),getJ(pubUrl(me)).catch(function(){return null}),getJ(fsUrl(me)).catch(function(){return null})]).then(function(r){
     if(S.me.i!==me)return;
-    var n=(r[0]&&typeof r[0]==="object")?r[0]:{},pb=r[1]===true,sig=JSON.stringify([Object.keys(n).sort(),pb]);
+    var n=(r[0]&&typeof r[0]==="object")?r[0]:{},pb=r[1]===true,fsn=(r[2]&&typeof r[2]==="object")?r[2]:{};
+    Object.keys(fsn).forEach(function(k){if(FR&&FR[k]){delete fsn[k];delJ(fsUrl(me,k)).catch(function(){})}});
+    var sig=JSON.stringify([Object.keys(n).sort(),pb,Object.keys(fsn).sort()]);FSENT=fsn;
     FRN=n;PUB=pb;try{localStorage.setItem("mcu-pub-"+me,pb?"1":"0")}catch(e){}
     if(sig!==auxSig){var first=auxSig===null;auxSig=sig;updBadge();if(!first&&tab!=="io"&&!S.cg)renderFriends()}
   });
@@ -1046,7 +1051,7 @@ function frLoad(){
     var sig=JSON.stringify([FRLEG,Object.keys(nf).sort(),Object.keys(q).sort()]),chg=sig!==frSig||FRO!==me;
     FR=nf;FRQ=q;FRO=me;frSig=sig;
     if(chg){
-      updBadge();if(tab!=="io")renderFriends();else if(!S.cg)drawList();pull(true)
+      updBadge();if($("nfp"))nfPanel(true);if(tab!=="io")renderFriends();else if(!S.cg)drawList();pull(true)
     }
   }).catch(function(){frBusy=false});
 }
@@ -1062,18 +1067,21 @@ function frSend(name){
         var tn=(lastAll[id]&&lastAll[id].n)||nm.toLowerCase();
         return putJ(frUrl(me,id),tn).then(function(){return putJ(frUrl(id,me),S.me.n)}).then(function(){return putJ(fnUrl(id,me),{n:S.me.n,t:Date.now()}).catch(function(){})}).then(function(){FR=FR||{};FR[id]=tn;frSig=null;pull(true);return"added"});
       }
-      var sn=snGet();
-      return putJ(fqUrl(id,me),{n:S.me.n,t:Date.now()}).then(function(){sn[id]=(lastAll[id]&&lastAll[id].n)||nm;snSet(sn);return"sent"},function(e){throw new Error(sn[id]?"freq":"fdeny")});
+      if(FSENT[id])throw new Error("freq");
+      return putJ(fqUrl(id,me),{n:S.me.n,t:Date.now()}).then(function(){
+        var tn=(lastAll[id]&&lastAll[id].n)||nm;FSENT[id]={n:tn,t:Date.now()};
+        return putJ(fsUrl(me,id),{n:tn,t:Date.now()}).catch(function(){}).then(function(){return"sent"});
+      },function(e){throw new Error("fdeny")});
     });
   });
 }
 function frAccept(id){
   var me=S.me.i,n=(FRQ[id]&&FRQ[id].n)||(lastAll[id]&&lastAll[id].n)||"?";nhAdd("acc",n);
-  return putJ(frUrl(me,id),n).then(function(){return putJ(frUrl(id,me),S.me.n)}).then(function(){return delJ(fqUrl(me,id))}).then(function(){
+  return putJ(frUrl(me,id),n).then(function(){return putJ(frUrl(id,me),S.me.n)}).then(function(){return delJ(fqUrl(me,id))}).then(function(){delJ(fsUrl(id,me)).catch(function(){});
     FR=FR||{};FR[id]=n;delete FRQ[id];frSig=null;updBadge();renderFriends();pull(true);
   });
 }
-function frReject(id){nhAdd("rej",(FRQ[id]&&FRQ[id].n)||"?");return delJ(fqUrl(S.me.i,id)).then(function(){delete FRQ[id];frSig=null;updBadge();renderFriends()})}
+function frReject(id){nhAdd("rej",(FRQ[id]&&FRQ[id].n)||"?");return delJ(fqUrl(S.me.i,id)).then(function(){delJ(fsUrl(id,S.me.i)).catch(function(){});delete FRQ[id];frSig=null;updBadge();renderFriends()})}
 function frRemove(id){
   var me=S.me.i;
   return Promise.all([delJ(frUrl(me,id)),delJ(frUrl(id,me))]).then(function(){if(FR)delete FR[id];delete S.f[id];frSig=null;save(false);drawList()});
@@ -1139,7 +1147,7 @@ function rtUrl(f,u){return DB_URL.replace(/\/+$/,"")+"/ratings/"+ROOM+(f?"/"+f:"
 function rtLoad(force){
   if(!DB_URL||!S.acct||document.hidden)return;
   if(!force&&Date.now()-rtAt<20000)return;rtAt=Date.now();
-  getJ(rtUrl()).then(function(o){
+  liveGet(rtUrl()).then(function(o){
     var n=(o&&typeof o==="object")?o:{},sig=JSON.stringify(n);
     if(sig!==rtSig){rtSig=sig;RT=n;if(tab==="io")render()}
   }).catch(function(){});
@@ -1311,6 +1319,60 @@ function acctKeys(name,pin,v){
 }
 function verifyPw(name,pw){return nkOf(name).then(function(nk){return getJ(aUrl(nk))}).then(function(a){if(!a)throw new Error("bad");return acctKeys(a.o||name,pw,a.v||1)})}
 function aUrl(nk){return DB_URL.replace(/\/+$/,"")+"/accounts/"+ROOM+"/"+nk+".json"}
+/* ===== TEMPO REALE (Firebase streaming): scarica tutto una volta, poi solo le modifiche ===== */
+var LS={};
+function lsClose(){Object.keys(LS).forEach(function(u){var l=LS[u];try{if(l.es)l.es.close()}catch(e){}clearTimeout(l.rt);delete LS[u]})}
+function lsSet(root,path,val){
+  if(!path.length)return val;
+  if(root===null||typeof root!=="object")root={};
+  var k=path[0];
+  if(path.length===1){if(val===null)delete root[k];else root[k]=val}
+  else{var c=lsSet(root[k],path.slice(1),val);if(c===null||(typeof c==="object"&&!Object.keys(c).length))delete root[k];else root[k]=c}
+  return root;
+}
+function lsPath(p){return String(p||"/").split("/").filter(Boolean)}
+function lsOpen(url){
+  var l=LS[url];if(!l)l=LS[url]={data:null,ready:false,t:0,es:null,rt:0,bo:3000,busy:false};
+  if(l.es||l.busy||typeof EventSource==="undefined")return l;
+  l.busy=true;
+  curTok().then(function(t){
+    l.busy=false;if(LS[url]!==l||l.es||!S.acct)return;
+    var es;try{es=new EventSource(url+(url.indexOf("?")<0?"?":"&")+(t?"auth="+encodeURIComponent(t):""))}catch(e){return}
+    l.es=es;
+    function drop(){l.ready=false;try{es.close()}catch(x){}if(l.es===es)l.es=null;clearTimeout(l.rt);var w=l.bo;l.bo=Math.min(l.bo*2,60000);l.rt=setTimeout(function(){if(LS[url]===l&&S.acct)lsOpen(url)},w)}
+    function fire(){
+      clearTimeout(l.dt);
+      l.dt=setTimeout(function(){
+        if(!S.acct||!S.me||document.hidden)return;
+        if(url.indexOf("/rooms/")>0)pull(true,true);
+        else if(url.indexOf("/presence/")>0){PRES=l.data||{};avRefresh()}
+        else if(url.indexOf("/ratings/")>0)rtLoad(true);
+        else if(url.indexOf("/friendReq/")>0||url.indexOf("/friends/")>0){frSig=null;frLoad()}
+        else if(url.indexOf("/friendNote/")>0||url.indexOf("/friendSent/")>0){auxSig=null;frAux(S.me.i)}
+        else if(url.indexOf("/notifs/")>0)nfLoad();
+        else if(url.indexOf("/userGroups/")>0||url.indexOf("/groupMembers/")>0||/\/groups\/[^/]+\.json/.test(url))pull(true);
+      },400);
+    }
+    es.addEventListener("put",function(e){try{var m=JSON.parse(e.data),pa=lsPath(m.path),v=m.data===undefined?null:m.data;l.data=pa.length?lsSet(l.data,pa,v):(v===null?{}:v);l.ready=true;l.t=Date.now();l.bo=3000;fire()}catch(x){}});
+    es.addEventListener("patch",function(e){try{var m=JSON.parse(e.data),pa=lsPath(m.path);Object.keys(m.data||{}).forEach(function(k){l.data=lsSet(l.data,pa.concat(lsPath(k)),m.data[k])});l.ready=true;l.t=Date.now();fire()}catch(x){}});
+    es.addEventListener("keep-alive",function(){l.t=Date.now()});
+    es.addEventListener("cancel",drop);es.addEventListener("auth_revoked",drop);es.onerror=drop;
+  }).catch(function(){l.busy=false});
+  return l;
+}
+function liveGet(url){
+  var l=LS[url];
+  if(l&&l.ready&&Date.now()-l.t<90000)return Promise.resolve(l.data&&Object.keys(l.data).length?l.data:null);
+  lsOpen(url);return getJ(url);
+}
+function liveStart(){
+  if(!DB_URL||!S.acct||!S.me||!S.me.i)return;
+  var me=S.me.i,u=[dbUrl(),fqUrl(me),nfUrl(),prUrl()]; /* massimo 4 connessioni aperte: prudenza sui limiti del browser */
+  u.forEach(function(x){lsOpen(x)});
+  Object.keys(LS).forEach(function(k){if(/\/(groupMembers|groups)\//.test(k)&&u.indexOf(k)<0){var l=LS[k];try{if(l.es)l.es.close()}catch(e){}clearTimeout(l.rt);clearTimeout(l.dt);delete LS[k]}});
+}
+function liveOK(){var l=LS[dbUrl()];return !!(l&&l.ready&&Date.now()-l.t<90000)}
+setInterval(function(){if(!S.acct&&Object.keys(LS).length)lsClose();else if(S.acct&&!document.hidden)liveStart()},3000);
 function getJ(u){return fetch(u).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})}
 function putJ(u,v){return fetch(u,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(v)}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})}
 function grUrl(id){return DB_URL.replace(/\/+$/,"")+"/groupRequests/"+ROOM+(id?"/"+id:"")+".json"}
@@ -1502,9 +1564,9 @@ var PRES={};
 function prUrl(id){return DB_URL.replace(/\/+$/,"")+"/presence/"+ROOM+(id?"/"+id:"")+".json"}
 function isOn(id){return !!(PRES&&PRES[id]&&typeof PRES[id]==="number"&&Math.abs(Date.now()-PRES[id])<150000&&S.me&&id!==S.me.i)}
 function prBeat(){if(!DB_URL||!S.acct||!S.me||!S.me.i||document.hidden)return;putJ(prUrl(S.me.i),Date.now()).catch(function(){})}
-function prLoad(){if(!DB_URL||!S.acct||!S.me||!S.me.i)return;getJ(prUrl()).then(function(v){PRES=(v&&typeof v==="object")?v:{};avRefresh()}).catch(function(){})}
+function prLoad(){if(!DB_URL||!S.acct||!S.me||!S.me.i)return;liveGet(prUrl()).then(function(v){PRES=(v&&typeof v==="object")?v:{};avRefresh()}).catch(function(){})}
 setInterval(prBeat,60000);setInterval(prLoad,30000);
-document.addEventListener("visibilitychange",function(){if(!document.hidden){prBeat();prLoad()}});
+document.addEventListener("visibilitychange",function(){if(!document.hidden){prBeat();prLoad();if(S.acct){setTimeout(function(){pull(true);frLoad();nfLoad()},50)}}});
 setTimeout(function(){prBeat();prLoad()},3000);
 function avFill(el,id,name){
   if(!el)return;el.setAttribute("data-av",id);el.setAttribute("data-avn",name||"?");
@@ -1516,12 +1578,24 @@ function avFill(el,id,name){
   else if(!on&&od)od.remove();
 }
 function avRefresh(){Array.prototype.forEach.call(document.querySelectorAll("[data-av]"),function(e){avFill(e,e.getAttribute("data-av"),e.getAttribute("data-avn"))})}
+var AV_V={};
+function avCacheLoad(){try{var c=JSON.parse(localStorage.getItem("mcu-avc")||"{}")||{};Object.keys(c).forEach(function(k){if(c[k]&&typeof c[k].d==="string"&&/^data:image\/jpeg;base64,/.test(c[k].d)){AV[k]=c[k].d;AV_V[k]=Number(c[k].v)||0}})}catch(e){}}
+function avCacheSave(){try{var o={};Object.keys(AV).forEach(function(k){o[k]={v:AV_V[k]||0,d:AV[k]}});localStorage.setItem("mcu-avc",JSON.stringify(o))}catch(e){}}
+avCacheLoad();
+function avNeeded(){var o={};if(S.me&&S.me.i)o[S.me.i]=1;[S.f,GM,FR].forEach(function(m){Object.keys(m||{}).forEach(function(k){if(k!=="_i")o[k]=1})});return o}
 function avLoad(force){
   if(!DB_URL||!S.acct||!S.me||!S.me.i)return;
   if(!force&&Date.now()-AV_T<15000)return;AV_T=Date.now();
-  getJ(avUrl()).then(function(v){
-    var o=(v&&typeof v==="object")?v:{},sig=Object.keys(o).sort().map(function(k){return k+":"+String(o[k]).length}).join(",");
-    if(sig===AV_SIG)return;AV_SIG=sig;AV=o;avRefresh();
+  getJ(avUrl()+"?shallow=true").then(function(k){
+    var has=(k&&typeof k==="object")?k:{},need=avNeeded(),jobs=[],ch=false;
+    Object.keys(AV).forEach(function(id){if(!has[id]){delete AV[id];delete AV_V[id];ch=true}});
+    Object.keys(need).forEach(function(id){
+      if(!has[id])return;
+      var ver=Number(lastAll&&lastAll[id]&&lastAll[id].a)||0;
+      if(AV[id]&&AV_V[id]===ver)return;
+      jobs.push(getJ(avUrl(id)).then(function(d){if(typeof d==="string"&&/^data:image\/jpeg;base64,/.test(d)){AV[id]=d;AV_V[id]=ver;ch=true}}).catch(function(){}));
+    });
+    return Promise.all(jobs).then(function(){if(ch){avCacheSave();avRefresh()}});
   }).catch(function(){});
 }
 function avPrep(file){
@@ -1551,15 +1625,17 @@ function avBox(){
     var f=fi.files&&fi.files[0];if(!f)return;
     if(!/^image\//.test(f.type)){msg("Scegli un’immagine (JPG, PNG o WebP).");return}
     up.disabled=true;msg("Un attimo…");
-    avPrep(f).then(function(d){return putJ(avUrl(S.me.i),d).then(function(){AV[S.me.i]=d;AV_SIG="";avRefresh();up.textContent="Cambia foto";rm.hidden=false;msg("Foto aggiornata.")})}).catch(function(){msg("Non riesco a usare questa foto. Prova con un’altra.")}).then(function(){up.disabled=false;fi.value=""});
+    avPrep(f).then(function(d){return putJ(avUrl(S.me.i),d).then(function(){S.me.a=Date.now();save(false);push();AV[S.me.i]=d;AV_V[S.me.i]=S.me.a;avCacheSave();avRefresh();up.textContent="Cambia foto";rm.hidden=false;msg("Foto aggiornata.")})}).catch(function(){msg("Non riesco a usare questa foto. Prova con un’altra.")}).then(function(){up.disabled=false;fi.value=""});
   });
-  rm.addEventListener("click",function(){rm.disabled=true;delJ(avUrl(S.me.i)).then(function(){delete AV[S.me.i];AV_SIG="";avRefresh();up.textContent="Scegli una foto";rm.hidden=true;msg("Foto rimossa.")}).catch(function(){msg("Operazione non riuscita. Riprova.")}).then(function(){rm.disabled=false})});
+  rm.addEventListener("click",function(){rm.disabled=true;delJ(avUrl(S.me.i)).then(function(){S.me.a=Date.now();save(false);push();delete AV[S.me.i];delete AV_V[S.me.i];avCacheSave();avRefresh();up.textContent="Scegli una foto";rm.hidden=true;msg("Foto rimossa.")}).catch(function(){msg("Operazione non riuscita. Riprova.")}).then(function(){rm.disabled=false})});
   row.appendChild(up);row.appendChild(rm);col.appendChild(row);col.appendChild(fi);b.appendChild(col);return b;
 }
 
 /* ===== NOVITA' DEL SITO (popup) ===== */
 /* Ad ogni modifica visibile agli utenti: aumenta NEWS_V e aggiungi una voce in NEWS (it + en). Mai cose che riguardano l'amministratore. */
-var NEWS_V=13,NEWS=[
+var NEWS_V=15,NEWS=[
+ {v:15,d:"2026-11-18",ic:"⏳",ti:{it:"Amicizie in sospeso",en:"Pending friend requests"},tx:{it:"Nella scheda Amici vedi le richieste che hai mandato. Appena l’altra persona accetta, spariscono da lì e la trovi tra i tuoi amici.",en:"In the Friends tab you can see the requests you’ve sent. As soon as the other person accepts, they disappear from there and show up among your friends."}},
+ {v:14,d:"2026-11-18",ic:"⚡",ti:{it:"Più veloce e leggero",en:"Faster and lighter"},tx:{it:"Gli avanzamenti, le foto e la presenza degli amici arrivano in tempo reale, e il sito scarica molti meno dati: meno attesa e meno consumo sul telefono.",en:"Progress, photos and friends’ presence now arrive in real time, and the site downloads far less data: less waiting and less mobile data used."}},
  {v:13,d:"2026-11-18",ic:"✨",ti:{it:"Novità più chiare",en:"What’s new, made clearer"},tx:{it:"Qui trovi tutte le novità in ordine, con le più recenti in rosso.",en:"Everything new is listed in order here, with the latest ones in red."}},
  {v:12,d:"2026-11-18",ic:"🎙",ti:{it:"Chiamata vocale",en:"Voice call"},tx:{it:"Nei gruppi puoi avviare o entrare in una chiamata con il microfono: vedi chi c’è, chi sta parlando e da quanto dura. Puoi mettere il muto e uscire quando vuoi.",en:"In groups you can start or join a call with your microphone: see who’s in, who’s talking and how long it’s been. Mute or leave whenever you like."},hero:1,chips:{it:["Fino a 6 persone","Timer","Muto"],en:["Up to 6 people","Timer","Mute"]}},
  {v:11,d:"2026-11-18",ic:"💬",ti:{it:"I miei gruppi e i tag",en:"My groups and tags"},tx:{it:"La scheda Gruppo ora è come WhatsApp: immagine, nome e ultimo messaggio. In chat scrivi @ per taggare un membro: il suo nome si evidenzia in giallo.",en:"The Group tab now works like WhatsApp: picture, name and last message. In chat type @ to tag a member: their name is highlighted in yellow."}},
@@ -2237,17 +2313,23 @@ function friendsBox(){
       ok.addEventListener("click",function(){ok.disabled=true;nhAdd("note",q.n);delJ(fnUrl(S.me.i,id)).then(function(){delete FRN[id];auxSig=null;updBadge();renderFriends()}).catch(function(){ok.disabled=false})});
       rw.appendChild(ok);b.appendChild(rw);
     });
-    var sn0=snGet(),snk=Object.keys(sn0).filter(function(k){return !(FR&&FR[k])});
-    if(snk.length!==Object.keys(sn0).length){var sn1={};snk.forEach(function(k){sn1[k]=sn0[k]});snSet(sn1)}
-    snk.forEach(function(k){var rw=h("div","rmr min");rw.appendChild(h("span",null,"In attesa di risposta: "+dn(sn0[k])));var cx=h("button","rb");cx.type="button";cx.appendChild(ico(IC_NO));cx.setAttribute("aria-label","Annulla");cx.title="Annulla";
-      cx.addEventListener("click",function(){var o=snGet();delete o[k];snSet(o);delJ(fqUrl(k,S.me.i)).catch(function(){});renderFriends()});rw.appendChild(cx);b.appendChild(rw)});
+    var sk=Object.keys(FSENT||{}).filter(function(k){return !(FR&&FR[k])});
+    if(sk.length){
+      b.appendChild(h("p","m rqh",ct("Amicizie in sospeso ("+sk.length+")","Pending friend requests ("+sk.length+")")));
+      sk.forEach(function(k){
+        var q=FSENT[k]||{},rw=h("div","rmr min"),tx=h("span",null,ct("In attesa che "+dn(q.n||"?")+" accetti","Waiting for "+dn(q.n||"?")+" to accept"));tx.setAttribute("data-nt","1");rw.appendChild(tx);
+        var cx=h("button","rb");cx.type="button";cx.appendChild(ico(IC_NO));cx.setAttribute("aria-label",ct("Annulla la richiesta","Cancel the request"));cx.title=ct("Annulla la richiesta","Cancel the request");
+        cx.addEventListener("click",function(){cx.disabled=true;Promise.all([delJ(fqUrl(k,S.me.i)).catch(function(){}),delJ(fsUrl(S.me.i,k)).catch(function(){})]).then(function(){delete FSENT[k];auxSig=null;renderFriends()})});
+        rw.appendChild(cx);b.appendChild(rw);
+      });
+    }
     var af=h("div","agn"),ai=h("input"),ab=h("button","pri");
     ab.appendChild(ico(IC_ADDP));ab.appendChild(document.createTextNode(" Aggiungi amico"));ab.classList.add("addf");
     ai.type="text";ai.maxLength=24;ai.placeholder="@username di un amico";ai.setAttribute("aria-label","Username dell’amico da aggiungere");ai.autocomplete="off";ab.type="button";ai.id="addfi";
     function go(){
       var nm=ai.value.replace(/\s+/g," ").trim();if(!nm){msg("Scrivi lo username dell’amico.");ai.focus();return}
       ab.disabled=true;
-      frSend(nm).then(function(r){ai.value="";msg(r==="acc"?"Ora siete amici!":r==="added"?"Ora siete amici: "+nm+" riceve un avviso.":"Richiesta inviata a "+nm+". Quando accetta, vi vedete a vicenda.");if(r==="added")renderFriends()}).catch(function(e){msg(frErr(e))}).then(function(){ab.disabled=false});
+      frSend(nm).then(function(r){ai.value="";msg(r==="acc"?"Ora siete amici!":r==="added"?"Ora siete amici: "+nm+" riceve un avviso.":"Richiesta inviata a "+nm+". Quando accetta, vi vedete a vicenda.");if(r==="added"||r==="sent")renderFriends()}).catch(function(e){msg(frErr(e))}).then(function(){ab.disabled=false});
     }
     ab.addEventListener("click",go);ai.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();go()}});
     af.appendChild(ai);af.appendChild(ab);b.appendChild(af);
@@ -2297,7 +2379,7 @@ function clWatch(){
     clDraw();
   }).catch(function(){});
 }
-setInterval(clWatch,3000);
+var cwk=0;setInterval(function(){cwk++;if(!CALL&&cwk%3)return;clWatch()},3000);
 function clMkPc(pid,peerS){
   var pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"},{urls:"stun:stun1.l.google.com:19302"}]});
   CALL.stream.getTracks().forEach(function(t){pc.addTrack(t,CALL.stream)});
@@ -2510,7 +2592,7 @@ function glLoad(force){
     GL=o;if(sig!==GL_SIG){GL_SIG=sig;if(tab==="gr"&&!S.cg&&S.acct)renderFriends()}
   }).catch(function(){});
 }
-setInterval(function(){if(tab==="gr"&&!S.cg&&S.acct&&!document.hidden)glLoad(true)},20000);
+setInterval(function(){if(tab==="gr"&&!S.cg&&S.acct&&!document.hidden)glLoad(true)},30000);
 function groupsBox(){
   var b=h("section","box gbox");
   var ng=Object.keys(UG||{}).length,sq=h("div","sqs");
@@ -3075,7 +3157,7 @@ if(DB_URL&&S.acct&&!U2){LEGACY=S.acct.name;S.acct=null;S.me={i:rid(),n:"",d:{},u
 setTimeout(function(){document.body.classList.remove("boot")},2800);
 render();
 if(LEGACY)setTimeout(function(){openMigrate(LEGACY,"")},300);
-if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}setInterval(pull,5000);loadGcnt();setInterval(loadGcnt,30000);loadUcnt();setInterval(loadUcnt,60000);setInterval(pullChat,5000)}
+if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}var pk=0;setInterval(function(){pk++;var need=liveOK()?6:((tab==="am"||tab==="gr")?1:2);if(pk%need)return;pull()},5000);loadGcnt();setInterval(loadGcnt,30000);loadUcnt();setInterval(loadUcnt,60000);setInterval(pullChat,5000)}
 admLoad();if(fbMode())$("admFoot").hidden=false;if(adminOk()){render();renderSponsors();loadReports()}
 $("admBtn").addEventListener("click",function(){if(adminOk()){admExit();return}location.href="admin.html"});
 refreshUpcoming();setInterval(refreshUpcoming,3600000);loadSponsors();setInterval(loadSponsors,120000);setInterval(loadReports,15000);if(window.matchMedia)window.matchMedia("(min-width:1080px)").addEventListener("change",placeSp);setInterval(tick,1000);document.addEventListener("visibilitychange",function(){if(!document.hidden)pull()});
