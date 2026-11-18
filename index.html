@@ -325,6 +325,7 @@ a.sp-tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)
 body:has(.tkr:not([hidden])) .adm-pill{top:46px}
 #reset[hidden]{display:none}
 .cm.me b{color:#0b1030;opacity:.7}
+.cm b{font-style:italic}
 </style>
 </head>
 <body class="boot">
@@ -757,6 +758,7 @@ function pull(force){
         if(k===S.me.i||S.h[k]||!inScope(k))return;
         var v=all[k]||{},x=cleanF({i:k,n:v.n,d:v.d,u:v.u}),old=S.f[k];
         if(x&&(!old||x.u>old.u)){S.f[k]={n:x.n,d:x.d,u:x.u};ch=true}
+        else if(x&&old&&x.n&&x.n!==old.n){old.n=x.n;ch=true}
       });
       if(viewing&&all[viewing.id]){var nd=toMap(Array.isArray(all[viewing.id].d)?all[viewing.id].d:[]);if(JSON.stringify(nd)!==JSON.stringify(viewing.d)){viewing.d=nd;mch=true}}
       var rs=Object.keys(REM).sort().join(",");if(rs!==remSig){remSig=rs;ch=true}
@@ -833,6 +835,9 @@ function adminRenameUser(id,old,nn){
     q.push(getJ(ugUrl(id)).then(function(ug){return Promise.all(Object.keys(ug||{}).map(function(g){return putJ(gmUrl(g,id+"/n"),nn)}))}).catch(function(){}));
     q.push(getJ(base+"/friends.json").then(function(fa){fa=fa||{};return Promise.all(Object.keys(fa).filter(function(x){return x!==id&&fa[x]&&fa[x][id]!==undefined}).map(function(x){return putJ(frUrl(x,id),nn)}))}).catch(function(){}));
     q.push(getJ(base+"/friendReq.json").then(function(qa){qa=qa||{};return Promise.all(Object.keys(qa).filter(function(t){return qa[t]&&qa[t][id]}).map(function(t){return putJ(fqUrl(t,id+"/n"),nn)}))}).catch(function(){}));
+    q.push(getJ(base+"/chats.json").then(function(ca){ca=ca||{};var w=[];Object.keys(ca).forEach(function(g){var l=ca[g]||{};Object.keys(l).forEach(function(k){var m=l[k]||{};if(m.i===id&&m.n!==nn)w.push(putJ(base+"/chats/"+g+"/"+k+"/n.json",nn))})});return Promise.all(w)}).catch(function(){}));
+    q.push(getJ(base+"/reports/"+ROOM+".json").then(function(ra){ra=ra||{};var w=[];Object.keys(ra).forEach(function(k){var r=ra[k]||{};if(r.by===id&&r.bn!==nn)w.push(putJ(base+"/reports/"+ROOM+"/"+k+"/bn.json",nn));if(r.w===id&&r.wn!==nn)w.push(putJ(base+"/reports/"+ROOM+"/"+k+"/wn.json",nn))});return Promise.all(w)}).catch(function(){}));
+    q.push(getJ(base+"/groupRequests/"+ROOM+".json").then(function(ga){ga=ga||{};var w=[];Object.keys(ga).forEach(function(k){var r=ga[k]||{};if(r.by===id&&r.bn!==nn)w.push(putJ(base+"/groupRequests/"+ROOM+"/"+k+"/bn.json",nn))});return Promise.all(w)}).catch(function(){}));
     return Promise.all(q);
   }).then(function(){
     admLog("Cambiato il nome di "+old+" in "+nn);
@@ -1034,6 +1039,13 @@ function chUrl(gid,k){return DB_URL.replace(/\/+$/,"")+"/chats/"+gid+(k?"/"+k:""
 function chDay(t){return new Date(t).toLocaleDateString("it-IT",{weekday:"short",day:"numeric",month:"short"})}
 function chHour(t){return new Date(t).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}
 function chArr(o){var a=[];if(o&&typeof o==="object")Object.keys(o).sort().forEach(function(k){var x=o[k];if(x&&typeof x.m==="string")a.push({k:k,i:String(x.i||""),n:String(x.n||""),m:x.m.slice(0,300),t:Number(x.t)||0})});return a}
+function curName(i,fb){
+  if(i&&S.me&&i===S.me.i&&S.me.n)return S.me.n;
+  var g=GM&&GM[i];if(g&&g.n)return g.n;
+  if(i&&lastAll&&lastAll[i]&&lastAll[i].n)return lastAll[i].n;
+  if(i&&S.f&&S.f[i]&&S.f[i].n)return S.f[i].n;
+  return fb||"?";
+}
 function fillChat(l,arr,meId,onDel){
   var stick=l.scrollHeight-l.scrollTop-l.clientHeight<40||!l.childNodes.length;
   l.textContent="";
@@ -1042,7 +1054,7 @@ function fillChat(l,arr,meId,onDel){
   arr.forEach(function(x){
     var dy=x.t?chDay(x.t):"";if(dy&&dy!==last){last=dy;l.appendChild(h("div","cd",dy))}
     var me=meId&&x.i===meId,d=h("div","cm"+(me?" me":""));
-    var nb=h("b",null,dn(x.n||"?"));nb.style.setProperty("--h",hue(x.i||x.n||"?"));d.appendChild(nb);
+    var nb=h("b",null,dn(curName(x.i,x.n)));nb.style.setProperty("--h",hue(x.i||x.n||"?"));d.appendChild(nb);
     d.appendChild(document.createTextNode(x.m));
     if(x.t)d.appendChild(h("span","ct",chHour(x.t)));
     if(onDel&&x.k){var xb=h("button","cx","×");xb.type="button";xb.setAttribute("aria-label","Cancella il messaggio");var ar=false;

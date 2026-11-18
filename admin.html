@@ -230,12 +230,24 @@ function renameUser(id,oldName,newName){
       return PUT("accounts/"+ROOM+"/"+k[1],{id:id,v:rec.v||2,o:rec.o||oldName}).then(function(){return k[0]===k[1]?null:DEL("accounts/"+ROOM+"/"+k[0])});
     });
   }).then(function(){
-    var q=[PUT("rooms/"+ROOM+"/"+id+"/n",nn)];
-    Object.keys(ST.members).forEach(function(g){if(obj(ST.members[g])[id])q.push(PUT("groupMembers/"+g+"/"+id+"/n",nn))});
-    q.push(GET("friends").then(function(fa){fa=obj(fa);return Promise.all(Object.keys(fa).filter(function(x){return x!==id&&obj(fa[x])[id]!==undefined}).map(function(x){return PUT("friends/"+x+"/"+id,nn)}))}).catch(function(){}));
-    q.push(GET("friendReq").then(function(qa){qa=obj(qa);return Promise.all(Object.keys(qa).filter(function(t){return obj(qa[t])[id]}).map(function(t){return PUT("friendReq/"+t+"/"+id+"/n",nn)}))}).catch(function(){}));
-    return Promise.all(q);
+    return PUT("rooms/"+ROOM+"/"+id+"/n",nn);
+  }).then(function(){
+    if(ST.users[id])ST.users[id].n=nn;
+    return syncNames().catch(function(){});
   }).then(function(){return nn});
+}
+function syncNames(){
+  var nm={};Object.keys(ST.users).forEach(function(k){var n=obj(ST.users[k]).n;if(n)nm[k]=n});
+  var w=[];
+  Object.keys(ST.members).forEach(function(g){var ms=obj(ST.members[g]);Object.keys(ms).forEach(function(i){if(nm[i]&&obj(ms[i]).n!==nm[i])w.push(PUT("groupMembers/"+g+"/"+i+"/n",nm[i]))})});
+  var t=[
+    GET("friends").then(function(fa){fa=obj(fa);Object.keys(fa).forEach(function(x){var l=obj(fa[x]);Object.keys(l).forEach(function(i){if(i!=="_i"&&nm[i]&&l[i]!==nm[i])w.push(PUT("friends/"+x+"/"+i,nm[i]))})})}),
+    GET("friendReq").then(function(qa){qa=obj(qa);Object.keys(qa).forEach(function(x){var l=obj(qa[x]);Object.keys(l).forEach(function(i){if(nm[i]&&obj(l[i]).n!==nm[i])w.push(PUT("friendReq/"+x+"/"+i+"/n",nm[i]))})})}),
+    GET("chats").then(function(ca){ca=obj(ca);Object.keys(ca).forEach(function(g){var l=obj(ca[g]);Object.keys(l).forEach(function(k){var m=obj(l[k]);if(nm[m.i]&&m.n!==nm[m.i])w.push(PUT("chats/"+g+"/"+k+"/n",nm[m.i]))})})}),
+    GET("reports/"+ROOM).then(function(ra){ra=obj(ra);Object.keys(ra).forEach(function(k){var r=obj(ra[k]);if(nm[r.by]&&r.bn!==nm[r.by])w.push(PUT("reports/"+ROOM+"/"+k+"/bn",nm[r.by]));if(nm[r.w]&&r.wn!==nm[r.w])w.push(PUT("reports/"+ROOM+"/"+k+"/wn",nm[r.w]))})}),
+    GET("groupRequests/"+ROOM).then(function(ga){ga=obj(ga);Object.keys(ga).forEach(function(k){var r=obj(ga[k]);if(nm[r.by]&&r.bn!==nm[r.by])w.push(PUT("groupRequests/"+ROOM+"/"+k+"/bn",nm[r.by]))})})
+  ].map(function(p){return p.catch(function(){})});
+  return Promise.all(t).then(function(){return Promise.all(w)}).then(function(){return w.length});
 }
 function movePerson(id,name,gid){
   var g=ST.groups[gid],ms=obj(ST.members[gid]);if(!g)return Promise.reject(new Error("none"));
@@ -440,6 +452,11 @@ function planRestore(b){
 }
 function pageAltro(){
   setTitle("Altro");
+  main.appendChild(h("h2",null,"Nomi"));
+  var nc=h("div","card");nc.appendChild(h("p","m","Se hai cambiato dei nomi, questo pulsante aggiorna anche i messaggi delle chat, le segnalazioni, le liste amici e le squadre con i nomi di adesso."));
+  var nb=btn("Allinea i nomi","pri");nb.addEventListener("click",function(){
+    nb.disabled=true;load().then(function(){return syncNames()}).then(function(n){LOG("Allineati i nomi ("+n+" correzioni)");toast(n?"Fatto: "+n+" nomi aggiornati.":"Era già tutto allineato.");nb.disabled=false}).catch(function(){nb.disabled=false;toast("Operazione non riuscita. Riprova.")});
+  });nc.appendChild(nb);main.appendChild(nc);
   main.appendChild(h("h2",null,"Backup"));
   var b=h("div","card");b.appendChild(h("p","m","Scarica un file con progressi, squadre e membri. Non contiene le password degli amici."));
   var bb=btn("Scarica il backup","pri");bb.addEventListener("click",function(){
