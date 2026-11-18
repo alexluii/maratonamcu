@@ -964,7 +964,8 @@ function pull(force){
       else if(S.me.u&&!pushT&&canPush()&&!mine){var me0=S.acct;nkOf(me0.name).then(function(nk){return getJ(aUrl(nk))}).then(function(a){if(S.acct&&S.acct.id===me0.id){if(a&&a.id===me0.id)push();else forceLogout()}}).catch(function(){})}
       else if(S.me.u&&!pushT&&canPush()&&mine&&Number(mine.u)<S.me.u)push();
       if(S.cg&&!GM[S.me.i]){S.cg="";S.f={};GM={};save(false);msg("Non fai più parte di quel gruppo.")}
-      function inScope(k){return S.cg?!!GM[k]:(!REM[k]&&(FRO!==S.me.i||!FR||isFr(k)))}
+      var gsc=(tab==="gr"&&S.cg);
+      function inScope(k){return gsc?!!GM[k]:(!REM[k]&&(FRO!==S.me.i||!FR||isFr(k)))}
       if(REM[S.me.i]&&!S.cg)msg("L'amministratore ti ha rimosso dall'elenco: i tuoi progressi non vengono più condivisi.");
       Object.keys(S.f).forEach(function(k){if(!(k in all)||!inScope(k)){delete S.f[k];ch=true}});
       Object.keys(all).forEach(function(k){
@@ -1165,7 +1166,7 @@ function wActions(f){
 }
 function drawStrip(el){
   var list=[{id:S.me.i,me:1,n:S.me.n||"Tu",d:valid(myArr()),u:S.me.u}];
-  Object.keys(S.f).forEach(function(k){list.push({id:k,n:S.f[k].n,d:valid(S.f[k].d),u:S.f[k].u})});
+  Object.keys(S.f).forEach(function(k){if(GM&&GM[k])list.push({id:k,n:S.f[k].n,d:valid(S.f[k].d),u:S.f[k].u})});
   Object.keys(GM||{}).forEach(function(k){if(k!==S.me.i&&!S.f[k])list.push({id:k,n:GM[k].n||"?",d:[],u:0})});
   list.sort(function(a,b){return b.d.length-a.d.length});
   if(WSEL&&!list.some(function(f){return f.id===WSEL}))WSEL="";
@@ -1490,9 +1491,9 @@ function avBox(){
 
 /* ===== NOVITA' DEL SITO (popup) ===== */
 /* Ad ogni modifica visibile agli utenti: aumenta NEWS_V e aggiungi una voce in NEWS (it + en). Mai cose che riguardano l'amministratore. */
-var NEWS_V=6,NEWS=[
- {v:6,it:["Striscia dei titoli e legenda ora compaiono solo nella Lista, sia da telefono che da computer.","Amici: puoi cercare un amico per nome e vedere tutti gli amici dal menu; il tuo nome non compare più nella lista.","Gruppi: sotto ogni persona ora si vede quanti film ha visto (es. 3/142).","Amici: ora ogni account parte senza amici e vede solo chi ha accettato la sua richiesta.","Amici: nuovo menu a tendina per scegliere uno dei tuoi amici e vedere solo lui.","Le foto profilo si aggiornano da sole, senza ricaricare la pagina.","Gruppi: il capogruppo può scegliere l’immagine del gruppo.","Le novità e le notifiche già viste non ricompaiono più.","Chi crea un account deve mantenere un atteggiamento rispettoso e consono."],
-  en:["The titles strip and legend now only show in the List tab, on both phone and computer.","Friends: you can search a friend by name and see all friends from the menu; your own name no longer shows in the list.","Groups: under each person you now see how many films they’ve watched (e.g. 3/142).","Friends: every account now starts with no friends and only sees people who accepted their request.","Friends: new drop-down menu to pick one of your friends and see only them.","Profile photos now update by themselves, no need to reload the page.","Groups: the group leader can choose the group image.","News and notifications you’ve already seen no longer come back.","Anyone creating an account must behave respectfully and appropriately."]},
+var NEWS_V=7,NEWS=[
+ {v:7,it:["Striscia dei titoli e legenda ora compaiono solo nella Lista, sia da telefono che da computer.","Amici: puoi cercare un amico per nome e vedere tutti gli amici dal menu; il tuo nome non compare più nella lista.","Se sei in più gruppi, gli avanzamenti degli amici e dei gruppi ora si vedono correttamente.","Gruppi: sotto ogni persona ora si vede quanti film ha visto (es. 3/142).","Amici: ora ogni account parte senza amici e vede solo chi ha accettato la sua richiesta.","Amici: nuovo menu a tendina per scegliere uno dei tuoi amici e vedere solo lui.","Le foto profilo si aggiornano da sole, senza ricaricare la pagina.","Gruppi: il capogruppo può scegliere l’immagine del gruppo.","Le novità e le notifiche già viste non ricompaiono più.","Chi crea un account deve mantenere un atteggiamento rispettoso e consono."],
+  en:["The titles strip and legend now only show in the List tab, on both phone and computer.","Friends: you can search a friend by name and see all friends from the menu; your own name no longer shows in the list.","If you’re in several groups, friends’ and groups’ progress now shows correctly.","Groups: under each person you now see how many films they’ve watched (e.g. 3/142).","Friends: every account now starts with no friends and only sees people who accepted their request.","Friends: new drop-down menu to pick one of your friends and see only them.","Profile photos now update by themselves, no need to reload the page.","Groups: the group leader can choose the group image.","News and notifications you’ve already seen no longer come back.","Anyone creating an account must behave respectfully and appropriately."]},
  {v:1,it:["Nuove schede in basso: Lista, Amici, Profilo e Gruppo.","Foto profilo: caricala dalla scheda Profilo, si adatta da sola e la vedono i tuoi amici.","La legenda ora compare solo nella Lista.","Notifiche: la campanella in basso a destra raccoglie le novità per te.","Gruppi: il capogruppo può cambiare il nome, aggiungere i suoi amici e chiedere più posti. Se esce, il gruppo passa a un altro membro scelto a caso.","Segnalare è più facile: tocca ⋯ accanto a un messaggio.","Il sito ora c’è anche in inglese, con gli orari delle uscite in ora italiana (UTC+1/+2).","Timbro e strappo del biglietto sempre animati."],
   en:["New tabs at the bottom: List, Friends, Profile and Group.","Profile photo: upload it from the Profile tab, it fits automatically and your friends can see it.","The legend now only shows in the List tab.","Notifications: the bell at the bottom right collects news for you.","Groups: the group leader can change the name, add their friends and ask for more seats. If they leave, the group passes to another member chosen at random.","Reporting is easier: tap ⋯ next to a message.","The site is now also in English, with release times in Italian time (UTC+1/+2).","The ticket stamp and tear are always animated."]}
 ];
@@ -2681,10 +2682,10 @@ $("app").addEventListener("click",function(e){
   var sm=t.closest("summary");
   if(sm&&sm.parentNode&&sm.parentNode.getAttribute("data-p")!==null)openPh[sm.parentNode.getAttribute("data-p")]=!sm.parentNode.open;
 });
-$("tIo").addEventListener("click",function(){tab="io";msg("");render()});
-$("tAm").addEventListener("click",function(){tab="am";msg("");render()});
-$("tPr").addEventListener("click",function(){tab="pr";msg("");render()});
-$("tGr").addEventListener("click",function(){tab="gr";msg("");render()});
+$("tIo").addEventListener("click",function(){tab="io";msg("");render();setTimeout(function(){pull(true)},30)});
+$("tAm").addEventListener("click",function(){tab="am";msg("");render();setTimeout(function(){pull(true)},30)});
+$("tPr").addEventListener("click",function(){tab="pr";msg("");render();setTimeout(function(){pull(true)},30)});
+$("tGr").addEventListener("click",function(){tab="gr";msg("");render();setTimeout(function(){pull(true)},30)});
 var rb=$("reset"),armed=false;
 rb.addEventListener("click",function(){
   if(viewing)return;
