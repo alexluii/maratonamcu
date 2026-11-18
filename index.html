@@ -321,6 +321,8 @@ a.sp-tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)
 @media (min-width:1080px){.tkr{position:absolute;top:0;left:0;right:0}body:has(.tkr:not([hidden])){padding-top:36px}}
 .gfoot{display:flex;margin:0 0 14px;font-size:13px}
 .gfoot[hidden]{display:none}
+.admgo{display:block;padding:12px 16px;border-radius:999px;background:#5b2a96;color:#fff;font:700 15px "Instrument Sans",system-ui,sans-serif;text-align:center;text-decoration:none}.admgo:hover{background:#6c37ae}.admgo:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+body:has(.tkr:not([hidden])) .adm-pill{top:46px}
 </style>
 </head>
 <body class="boot">
@@ -517,8 +519,7 @@ function fbSignIn(){return Promise.resolve(false)}
 function admBox(){
   var f=h("div","box cred");f.appendChild(h("p","k","Sei amministratore"));
   var n=admCount();f.appendChild(h("p","m",n?"Hai "+n+(n===1?" cosa":" cose")+" da controllare: richieste, segnalazioni o PIN.":"Nessuna richiesta o segnalazione in attesa."));
-  var row=h("div","row"),go=h("a","pri","Apri il pannello admin");go.href="admin.html";go.style.cssText="display:flex;align-items:center;justify-content:center;text-decoration:none;text-align:center";
-  var lk=h("button",null,"Esci dall’amministratore");lk.type="button";lk.addEventListener("click",admExit);row.appendChild(go);row.appendChild(lk);f.appendChild(row);return f;
+  var go=h("a","admgo","Apri il pannello admin");go.href="admin.html";f.appendChild(go);return f;
 }
 var ADM_KEY="mcu-adm";
 function admStore(){try{if(FBT&&ADM_UNTIL)localStorage.setItem(ADM_KEY,JSON.stringify({t:FBT.t,r:FBT.r,x:FBT.x,uid:FBT.uid,u:ADM_UNTIL}))}catch(e){}}
@@ -1740,6 +1741,7 @@ function admUi(){
   if(b)b.textContent=on?"Esci dall’amministratore":"Accesso amministratore";
   if(!p){p=h("button","adm-pill","Admin · Esci");p.id="admPill";p.type="button";p.addEventListener("click",admExit);document.body.appendChild(p)}
   p.hidden=!on;if(on)updBadge();
+  var fa=$("admFoot");if(fa&&fbMode())fa.hidden=on;
 }
 function render(){admUi();renderTicker();
   renderSponsors();
