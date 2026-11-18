@@ -2641,8 +2641,8 @@ function dmMark(p){
 function dmSend(p,text){
   var t=Date.now(),k=("000000000"+t.toString(36)).slice(-9)+Math.random().toString(36).slice(2,5),m={i:S.me.i,m:text,t:t};
   DM[p]=DM[p]||{};DM[p][k]=m;dmDraw();
-  return putJ(dmOtherUrl(p,k),m).then(function(){return putJ(dmUrl(p,k),m)}).catch(function(){
-    if(DM[p])delete DM[p][k];dmDraw();msg(ct("Messaggio non inviato. Controlla che siate ancora amici e riprova.","Message not sent. Check you’re still friends and try again."));
+  return putJ(dmOtherUrl(p,k),m).then(function(){return putJ(dmUrl(p,k),m)}).catch(function(e){
+    if(DM[p])delete DM[p][k];dmDraw();var c=String(e&&e.message||"");msg(ct("Messaggio non inviato ("+c+"). Controlla che siate ancora amici e riprova.","Message not sent ("+c+"). Check you’re still friends and try again."));
   });
 }
 function dmClose(){dmPeer="";var o=$("dmov");if(o)o.remove();document.body.classList.remove("dmopen")}
