@@ -324,6 +324,7 @@ a.sp-tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)
 .admgo{display:block;padding:12px 16px;border-radius:999px;background:#5b2a96;color:#fff;font:700 15px "Instrument Sans",system-ui,sans-serif;text-align:center;text-decoration:none}.admgo:hover{background:#6c37ae}.admgo:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 body:has(.tkr:not([hidden])) .adm-pill{top:46px}
 #reset[hidden]{display:none}
+.cm.me b{color:#0b1030;opacity:.7}
 </style>
 </head>
 <body class="boot">
@@ -1041,7 +1042,7 @@ function fillChat(l,arr,meId,onDel){
   arr.forEach(function(x){
     var dy=x.t?chDay(x.t):"";if(dy&&dy!==last){last=dy;l.appendChild(h("div","cd",dy))}
     var me=meId&&x.i===meId,d=h("div","cm"+(me?" me":""));
-    if(!me){var nb=h("b",null,x.n||"?");nb.style.setProperty("--h",hue(x.i||x.n||"?"));d.appendChild(nb)}
+    var nb=h("b",null,dn(x.n||"?"));nb.style.setProperty("--h",hue(x.i||x.n||"?"));d.appendChild(nb);
     d.appendChild(document.createTextNode(x.m));
     if(x.t)d.appendChild(h("span","ct",chHour(x.t)));
     if(onDel&&x.k){var xb=h("button","cx","×");xb.type="button";xb.setAttribute("aria-label","Cancella il messaggio");var ar=false;
