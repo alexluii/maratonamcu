@@ -238,6 +238,10 @@ body{grid-template-columns:minmax(440px,520px) minmax(0,720px);column-gap:96px}
 .agc{font-weight:600;font-size:12px;color:var(--mute);white-space:nowrap}
 .agb2{padding:0 12px 12px}.agm{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:14px}
 .cred select,.gbox select{display:block;width:100%;box-sizing:border-box;margin:0 0 10px;padding:12px;font:inherit;font-size:15px;color:var(--ink);background:var(--panel);border:2px solid var(--line);border-radius:12px}
+.cx{margin-left:8px;padding:0 6px;border:0;border-radius:8px;background:rgba(11,16,36,.15);color:inherit;font:700 12px/18px "Instrument Sans",sans-serif;cursor:pointer}
+.sbox p{margin:4px 0}.sbox ol{margin:4px 0 8px;padding-left:20px;font-size:14px}.lgl{font-size:13px;margin:4px 0;padding:4px 0;border-top:1px solid var(--line)}
+.agn{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.agn input{flex:1;min-width:120px;margin:0!important;padding:8px 10px!important}
+.mvw{display:flex;gap:8px;margin:8px 0 0}.mvw select{margin:0;flex:1}.mvw button{flex:none}
 .agm button{padding:4px 10px;font-size:12px}
 .cd{align-self:center;margin:4px 0;font:700 11px "Instrument Sans",sans-serif;color:var(--mute);text-transform:capitalize}
 .cm b{display:block;font:700 11px "Instrument Sans",sans-serif;opacity:.7}
@@ -543,7 +547,7 @@ function renderSponsors(){placeSp();
 }
 function setRemoved(id,on){
   if(!isAdmin())return Promise.resolve();
-  var q=on?aPut(remUrl(id),true):aDel(remUrl(id));
+  var q=on?aPut(remUrl(id),true):aDel(remUrl(id));admLog((on?"Tolto dall’elenco: ":"Rimesso nell’elenco: ")+((lastAll[id]&&lastAll[id].n)||id));
   return q.then(function(){if(on)REM[id]=true;else delete REM[id];delete S.f[id];pull(true);drawList()}).catch(function(e){msg("Operazione non riuscita ("+(e&&e.message||e)+")")});
 }
 function viewUser(id){
@@ -708,6 +712,8 @@ function drawList(){
         });gx.appendChild(kk);
       }
       body.appendChild(gx);
+    }else if(f.me&&!S.cg&&isAdmin()){
+      var sx=h("div","adm"),sc=moveCtl(f.id,f.n);sx.appendChild(sc.b);body.appendChild(sx);body.appendChild(sc.w);
     }else if(!f.me&&!S.cg&&isAdmin()){
       var bx=h("div","adm"),vw=h("button",null,"Guarda");vw.type="button";vw.addEventListener("click",function(){viewUser(f.id)});
       var rm=h("button",null,"Rimuovi");rm.type="button";var arm=false;
@@ -717,7 +723,8 @@ function drawList(){
       });
       var ed=h("button",null,"Modifica");ed.type="button";var ew=h("div");
       ed.addEventListener("click",function(){if(ew.firstChild){ew.textContent="";return}ew.appendChild(adminCred(f.id,f.n))});
-      bx.appendChild(vw);bx.appendChild(ed);bx.appendChild(rm);body.appendChild(bx);body.appendChild(ew);
+      var mc=moveCtl(f.id,f.n),mv=mc.b,mw=mc.w;
+      bx.appendChild(vw);bx.appendChild(ed);bx.appendChild(mv);bx.appendChild(rm);body.appendChild(bx);body.appendChild(mw);body.appendChild(ew);
     }
     d.appendChild(av);d.appendChild(body);el.appendChild(d);
   });
@@ -759,7 +766,8 @@ function loadGcnt(){
 function chUrl(gid,k){return DB_URL.replace(/\/+$/,"")+"/chats/"+gid+(k?"/"+k:"")+".json"}
 function chDay(t){return new Date(t).toLocaleDateString("it-IT",{weekday:"short",day:"numeric",month:"short"})}
 function chHour(t){return new Date(t).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}
-function fillChat(l,arr,meId){
+function chArr(o){var a=[];if(o&&typeof o==="object")Object.keys(o).sort().forEach(function(k){var x=o[k];if(x&&typeof x.m==="string")a.push({k:k,i:String(x.i||""),n:String(x.n||""),m:x.m.slice(0,300),t:Number(x.t)||0})});return a}
+function fillChat(l,arr,meId,onDel){
   var stick=l.scrollHeight-l.scrollTop-l.clientHeight<40||!l.childNodes.length;
   l.textContent="";
   if(!arr.length){l.appendChild(h("p","m","Ancora nessun messaggio."));return}
@@ -768,7 +776,10 @@ function fillChat(l,arr,meId){
     var dy=x.t?chDay(x.t):"";if(dy&&dy!==last){last=dy;l.appendChild(h("div","cd",dy))}
     var me=meId&&x.i===meId,d=h("div","cm"+(me?" me":""));
     d.appendChild(h("b",null,(me?"Tu":(x.n||"?"))+(x.t?" · "+chHour(x.t):"")));
-    d.appendChild(document.createTextNode(x.m));l.appendChild(d);
+    d.appendChild(document.createTextNode(x.m));
+    if(onDel&&x.k){var xb=h("button","cx","×");xb.type="button";xb.setAttribute("aria-label","Cancella il messaggio");var ar=false;
+      xb.addEventListener("click",function(){if(!ar){ar=true;xb.textContent="Cancella?";setTimeout(function(){ar=false;xb.textContent="×"},3500);return}onDel(x,d)});d.appendChild(xb)}
+    l.appendChild(d);
   });
   if(stick)l.scrollTop=l.scrollHeight;
 }
@@ -794,10 +805,14 @@ function chatBox(gid){
   f.addEventListener("submit",function(e){
     e.preventDefault();var t=i.value.replace(/\s+/g," ").trim().slice(0,300);if(!t)return;
     if(Date.now()-chLast<1500){msg("Un attimo, stai scrivendo troppo in fretta.");return}
-    chLast=Date.now();i.value="";
+    chLast=Date.now();
+    getJ(muUrl(gid,S.me.i)).catch(function(){return null}).then(function(mu){
+    if(Number(mu)>Date.now()){msg("Sei stato silenziato dall’amministratore fino alle "+new Date(Number(mu)).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+".");return}
+    i.value="";
     var m={i:S.me.i,n:S.me.n,m:t,t:Date.now()};
     CH.m.push(m);drawChat();
     fetch(chUrl(gid),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(m)}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);pullChat()}).catch(function(){msg("Messaggio non inviato. Riprova.")});
+    });
   });
   if(CH.gid===gid)setTimeout(drawChat,0);else{CH={gid:gid,m:[]};}
   if(chOpen)setTimeout(pullChat,0);
@@ -854,7 +869,7 @@ function createGroupNow(o){
     return getJ(gUrl(k.gid)).then(function(ex){
       if(ex)throw new Error("gtaken");
       return putJ(gUrl(k.gid),{n:k.n,ph:k.ph,o:S.me.i,a:o.an,max:o.p,t:Date.now()});
-    }).then(function(){return putJ(gmUrl(k.gid,S.me.i),{n:S.me.n,r:"owner"})}).then(function(){return putJ(ugUrl(S.me.i,k.gid),k.n)}).then(function(){UG[k.gid]=k.n;loadGcnt();enterGroup(k.gid)});
+    }).then(function(){return putJ(gmUrl(k.gid,S.me.i),{n:S.me.n,r:"owner"})}).then(function(){return putJ(ugUrl(S.me.i,k.gid),k.n)}).then(function(){UG[k.gid]=k.n;loadGcnt();admLog("Creata la squadra «"+k.n+"»");enterGroup(k.gid)});
   });
 }
 function requestForm(){
@@ -885,7 +900,7 @@ function requestForm(){
   });
   return f;
 }
-function gErr(e){var m=e&&e.message;return m==="gtaken"?"Questo codice è già usato da un altro gruppo: scegline un altro.":m==="gbad"?"Codice non valido.":m==="gfull"?"Il gruppo è pieno.":m==="greq"?"Esiste già una richiesta con questo codice: scegline un altro.":"Operazione non riuscita ("+(m||"errore")+")."}
+function gErr(e){var m=e&&e.message;return m==="gtaken"?"Questo codice è già usato da un altro gruppo: scegline un altro.":m==="gbad"?"Codice non valido.":m==="gfull"?"La squadra è piena (aumenta i posti o scegli un’altra).":m==="gnone"?"Questa squadra non esiste più.":m==="nome"?"Nome non valido (lettere, numeri, spazi).":m==="greq"?"Esiste già una richiesta con questo codice: scegline un altro.":"Operazione non riuscita ("+(m||"errore")+")."}
 function groupForm(){
   var f=h("div","box cred");f.appendChild(h("p","k","Entra con il codice"));
   f.appendChild(h("p","m","Scrivi il codice che ti ha dato il capogruppo."));
@@ -934,6 +949,53 @@ function reportForm(gid,gn){
   });
   return f;
 }
+function statsBox(){
+  var b=h("section","box gbox sbox"),gh=h("div","gh");gh.appendChild(h("p","k","Statistiche e backup"));
+  var rf=h("button",null,"Aggiorna");rf.type="button";gh.appendChild(rf);b.appendChild(gh);
+  var body=h("div");b.appendChild(body);
+  function draw(){
+    body.textContent="";
+    var ids=Object.keys(lastAll||{}).filter(function(k){return !REM[k]&&lastAll[k]&&lastAll[k].n});
+    var now=Date.now(),wk=7*86400000,act=ids.filter(function(k){return now-(Number(lastAll[k].u)||0)<wk}).length;
+    var done={},cnt={};
+    ids.forEach(function(k){var d=valid(Array.isArray(lastAll[k].d)?lastAll[k].d:[]);done[k]=d.length;d.forEach(function(i){cnt[i]=(cnt[i]||0)+1})});
+    body.appendChild(h("p","m","Iscritti: "+ids.length+" · attivi negli ultimi 7 giorni: "+act));
+    var top=Object.keys(cnt).sort(function(a,c){return cnt[c]-cnt[a]}).slice(0,5);
+    body.appendChild(h("p","k","Titoli più visti"));
+    var ol=h("ol");if(!top.length)ol.appendChild(h("li",null,"Ancora nessun dato"));
+    top.forEach(function(i){ol.appendChild(h("li",null,(byId[i]&&byId[i].t||i)+" — "+cnt[i]+(cnt[i]===1?" persona":" persone")))});body.appendChild(ol);
+    var lead=ids.sort(function(a,c){return done[c]-done[a]}).slice(0,5);
+    body.appendChild(h("p","k","Più avanti nella maratona"));
+    var ol2=h("ol");lead.forEach(function(k){ol2.appendChild(h("li",null,lastAll[k].n+" — "+done[k]+"/"+total))});body.appendChild(ol2);
+    var bk=h("button","pri","Scarica backup dei dati");bk.type="button";
+    bk.addEventListener("click",function(){
+      bk.disabled=true;var base=DB_URL.replace(/\/+$/,"");
+      Promise.all(["rooms/"+ROOM,"removed/"+ROOM,"groups","groupMembers","userGroups","sponsors/"+ROOM].map(function(p){return getJ(base+"/"+p+".json").catch(function(){return null})})).then(function(r){
+        var o={creato:new Date().toISOString(),progressi:r[0],rimossi:r[1],gruppi:r[2],membri:r[3],gruppiUtente:r[4],sponsor:r[5]};
+        var bl=new Blob([JSON.stringify(o,null,1)],{type:"application/json"}),a=document.createElement("a");
+        a.href=URL.createObjectURL(bl);a.download="maratona-backup-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();
+        setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000);admLog("Scaricato il backup dei dati");bk.disabled=false;msg("Backup scaricato.");
+      }).catch(function(){bk.disabled=false;msg("Backup non riuscito.")});
+    });
+    body.appendChild(bk);
+  }
+  rf.addEventListener("click",function(){pull(true);setTimeout(draw,700)});draw();
+  return b;
+}
+function logBox(){
+  var b=h("section","box gbox sbox"),gh=h("div","gh");gh.appendChild(h("p","k","Registro azioni"));
+  var rf=h("button",null,"Mostra");rf.type="button";gh.appendChild(rf);b.appendChild(gh);
+  var list=h("div");b.appendChild(list);
+  rf.addEventListener("click",function(){
+    list.textContent="";list.appendChild(h("p","m","Caricamento…"));rf.textContent="Aggiorna";
+    getJ(logUrl().replace(".json",".json")+'?orderBy="$key"&limitToLast=60').then(function(o){
+      list.textContent="";var a=[];if(o&&typeof o==="object")Object.keys(o).sort().reverse().forEach(function(k){if(o[k]&&o[k].a)a.push(o[k])});
+      if(!a.length){list.appendChild(h("p","m","Ancora nessuna azione registrata."));return}
+      a.forEach(function(x){list.appendChild(h("div","lgl",fmtWhen(x.t)+" · "+x.a))});
+    }).catch(function(){list.textContent="";list.appendChild(h("p","m","Non riesco a leggere il registro."))});
+  });
+  return b;
+}
 function reportsBox(){
   var b=h("section","box gbox agb"),gh=h("div","gh"),pend=Object.keys(RP||{}).filter(function(k){return RP[k]});
   gh.appendChild(h("p","k","Segnalazioni"+(pend.length?" ("+pend.length+")":"")));b.appendChild(gh);
@@ -948,7 +1010,7 @@ function reportsBox(){
     cb.addEventListener("click",function(){
       if(!cl.hidden){cl.hidden=true;cb.textContent="Leggi la chat";return}
       cl.hidden=false;cb.textContent="Chiudi la chat";
-      getJ(chUrl(r.gid)+'?orderBy="$key"&limitToLast=100').then(function(o){var a=[];if(o&&typeof o==="object")Object.keys(o).sort().forEach(function(q){var x=o[q];if(x&&typeof x.m==="string")a.push({i:String(x.i||""),n:String(x.n||""),m:x.m.slice(0,300),t:Number(x.t)||0})});fillChat(cl,a,"")}).catch(function(){fillChat(cl,[],"")});
+      getJ(chUrl(r.gid)+'?orderBy="$key"&limitToLast=100').then(function(o){fillChat(cl,chArr(o),"",function(x,d){delJ(chUrl(r.gid,x.k)).then(function(){d.remove();admLog("Cancellato un messaggio di "+(x.n||"?")+" in «"+(r.gn||"?")+"»")}).catch(function(){msg("Non riesco a cancellare il messaggio.")})})}).catch(function(){fillChat(cl,[],"")});
     });
     mb.addEventListener("click",function(){
       if(mem.firstChild){mem.textContent="";return}
@@ -959,23 +1021,31 @@ function reportsBox(){
           var kb=h("button",null,"Rimuovi dal gruppo");kb.type="button";var ka=false;
           kb.addEventListener("click",function(){
             if(!ka){ka=true;kb.textContent="Tocca ancora";setTimeout(function(){ka=false;kb.textContent="Rimuovi dal gruppo"},4000);return}
-            Promise.all([delJ(gmUrl(r.gid,id)),delJ(ugUrl(id,r.gid))]).then(function(){row.remove();msg("Persona rimossa dal gruppo.");if(AG&&AG.m&&AG.m[r.gid])delete AG.m[r.gid][id]}).catch(function(e){msg(gErr(e))});
+            Promise.all([delJ(gmUrl(r.gid,id)),delJ(ugUrl(id,r.gid))]).then(function(){admLog("Rimosso "+(ms[id].n||"?")+" dalla squadra «"+(r.gn||"?")+"» (segnalazione)");row.remove();msg("Persona rimossa dal gruppo.");if(AG&&AG.m&&AG.m[r.gid])delete AG.m[r.gid][id]}).catch(function(e){msg(gErr(e))});
           });row.appendChild(kb);mem.appendChild(row);
         });
       }).catch(function(){msg("Non riesco a leggere i membri.")});
     });
-    xb.addEventListener("click",function(){delJ(repUrl(k)).then(function(){delete RP[k];updBadge();renderFriends()}).catch(function(){msg("Operazione non riuscita.")})});
+    xb.addEventListener("click",function(){delJ(repUrl(k)).then(function(){admLog("Chiusa segnalazione su «"+(r.gn||"?")+"»");delete RP[k];updBadge();renderFriends()}).catch(function(){msg("Operazione non riuscita.")})});
     ar.appendChild(cb);ar.appendChild(mb);ar.appendChild(xb);it.appendChild(ar);it.appendChild(cl);it.appendChild(mem);b.appendChild(it);
   });
   return b;
 }
+function logUrl(){return DB_URL.replace(/\/+$/,"")+"/adminLog/"+ROOM+".json"}
+function muUrl(gid,id){return DB_URL.replace(/\/+$/,"")+"/mutes/"+gid+(id?"/"+id:"")+".json"}
+function admLog(txt){
+  if(!isAdmin())return;
+  aUrlTok(logUrl()).then(function(u){return fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({t:Date.now(),a:String(txt).slice(0,200)})})}).catch(function(){});
+}
+function fmtWhen(t){return new Date(t).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}
 var AG=null;
 function agLoad(){
   var base=DB_URL.replace(/\/+$/,"");
-  return Promise.all([getJ(base+"/groups.json"),getJ(base+"/groupMembers.json")]).then(function(r){AG={g:(r[0]&&typeof r[0]==="object")?r[0]:{},m:(r[1]&&typeof r[1]==="object")?r[1]:{}}});
+  return Promise.all([getJ(base+"/groups.json"),getJ(base+"/groupMembers.json"),getJ(base+"/mutes.json").catch(function(){return null})]).then(function(r){AG={g:(r[0]&&typeof r[0]==="object")?r[0]:{},m:(r[1]&&typeof r[1]==="object")?r[1]:{},u:(r[2]&&typeof r[2]==="object")?r[2]:{}}});
 }
 function adminGroupsBox(){
-  var b=h("section","box gbox agb"),gh=h("div","gh");var gqk=Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].s==="p"});gh.appendChild(h("p","k","Creazione gruppi"+(gqk.length?" ("+gqk.length+" richieste)":"")));
+  var b=h("section","box gbox agb"),gh=h("div","gh");
+  var gqk=Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].s==="p"});gh.appendChild(h("p","k","Creazione gruppi"+(gqk.length?" ("+gqk.length+" richieste)":"")));
   var rf=h("button",null,"Aggiorna");rf.type="button";gh.appendChild(rf);b.appendChild(gh);
   gqk.forEach(function(k){
     var q=GRQ[k],c=h("div","agi greq");
@@ -983,49 +1053,130 @@ function adminGroupsBox(){
     c.appendChild(h("p","m","Richiesto da "+q.bn+" · admin del gruppo: "+q.an+" · "+q.p+(q.p===1?" persona":" persone")));
     c.appendChild(h("p","m","Motivo: "+q.m));
     var rw=h("div","row"),ap=h("button","pri","Approva"),rj=h("button",null,"Rifiuta");ap.type=rj.type="button";
-    ap.addEventListener("click",function(){ap.disabled=rj.disabled=true;approveGroup(k).catch(function(e){ap.disabled=rj.disabled=false;msg(gErr(e))})});
-    rj.addEventListener("click",function(){ap.disabled=rj.disabled=true;rejectGroup(k).catch(function(e){ap.disabled=rj.disabled=false;msg(gErr(e))})});
+    ap.addEventListener("click",function(){ap.disabled=rj.disabled=true;approveGroup(k).then(function(){admLog("Approvato il gruppo «"+q.gn+"»")}).catch(function(e){ap.disabled=rj.disabled=false;msg(gErr(e))})});
+    rj.addEventListener("click",function(){ap.disabled=rj.disabled=true;rejectGroup(k).then(function(){admLog("Rifiutato il gruppo «"+q.gn+"»")}).catch(function(e){ap.disabled=rj.disabled=false;msg(gErr(e))})});
     rw.appendChild(ap);rw.appendChild(rj);c.appendChild(rw);b.appendChild(c);
   });
   b.appendChild(h("p","m","Tutte le squadre"));
   var list=h("div");b.appendChild(list);
+  function two(btn,label,fn){var arm=false;btn.addEventListener("click",function(){if(!arm){arm=true;btn.textContent="Tocca ancora";setTimeout(function(){arm=false;btn.textContent=label},4000);return}arm=false;btn.textContent=label;fn()})}
+  function inl(parent,ph,min,okLabel,fn){
+    if(parent.firstChild){parent.textContent="";return}
+    var w=h("div","agn"),i=h("input");i.type="text";i.maxLength=40;i.placeholder=ph;i.autocomplete="off";i.autocapitalize="off";var ok=h("button","pri",okLabel);ok.type="button";
+    ok.addEventListener("click",function(){var v=i.value.replace(/\s+/g," ").trim();if(v.length<min){msg("Servono almeno "+min+" caratteri.");return}ok.disabled=true;fn(v).then(function(){parent.textContent=""}).catch(function(e){ok.disabled=false;msg(gErr(e))})});
+    w.appendChild(i);w.appendChild(ok);parent.appendChild(w);
+  }
   function draw(){
     list.textContent="";
     if(!AG){list.appendChild(h("p","m","Caricamento…"));return}
     var ids=Object.keys(AG.g).sort(function(a,c){return(AG.g[a].t||0)-(AG.g[c].t||0)});
     if(!ids.length){list.appendChild(h("p","m","Nessuna squadra creata."));return}
     ids.forEach(function(gid){
-      var g=AG.g[gid]||{},ms=AG.m[gid]||{},ids2=Object.keys(ms),it=h("div","agi"),hd=h("button","agh");hd.type="button";
+      var g=AG.g[gid]||{},ms=AG.m[gid]||{},mu=(AG.u&&AG.u[gid])||{},ids2=Object.keys(ms),it=h("div","agi"),hd=h("button","agh");hd.type="button";
       hd.appendChild(h("span",null,(g.n||"Senza nome")));
       hd.appendChild(h("span","agc",ids2.length+(g.max?"/"+g.max:"")+" · "+(g.t?new Date(g.t).toLocaleDateString("it-IT",{day:"numeric",month:"short"}):"")));
       var body=h("div","agb2");body.hidden=true;
       hd.addEventListener("click",function(){body.hidden=!body.hidden});
       ids2.forEach(function(id){
-        var m=ms[id]||{},r=h("div","agm");r.appendChild(h("span",null,(m.n||"?")+(m.r==="owner"?" (capogruppo)":m.r==="admin"?" (capogruppo)":"")));
-        var kb=h("button",null,"Rimuovi");kb.type="button";var ka=false;
-        kb.addEventListener("click",function(){
-          if(!ka){ka=true;kb.textContent="Tocca ancora";setTimeout(function(){ka=false;kb.textContent="Rimuovi"},4000);return}
-          Promise.all([delJ(gmUrl(gid,id)),delJ(ugUrl(id,gid))]).then(function(){delete (AG.m[gid]||{})[id];draw();loadGcnt()}).catch(function(e){msg(gErr(e))});
-        });r.appendChild(kb);body.appendChild(r);
+        var m=ms[id]||{},r=h("div","agm"),until=Number(mu[id])||0,muted=until>Date.now();
+        r.appendChild(h("span",null,(m.n||"?")+(m.r==="owner"?" (capogruppo)":"")+(muted?" 🔇 fino alle "+new Date(until).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"")));
+        var act=h("div","agn");
+        if(m.r!=="owner"){var ob=h("button",null,"Capogruppo");ob.type="button";two(ob,"Capogruppo",function(){
+          adminOwner(gid,id).then(function(){admLog("Capogruppo di «"+g.n+"»: ora "+(m.n||"?"));return agLoad()}).then(draw).catch(function(e){msg(gErr(e))})});act.appendChild(ob)}
+        var sb=h("button",null,muted?"Riattiva chat":"Silenzia");sb.type="button";
+        sb.addEventListener("click",function(){
+          if(muted){aDel(muUrl(gid,id)).then(function(){admLog("Chat riattivata a "+(m.n||"?")+" in «"+g.n+"»");delete mu[id];draw()}).catch(function(e){msg(gErr(e))});return}
+          var pr=h("span","agn"),h1=h("button",null,"1 ora"),h2=h("button",null,"1 giorno");h1.type=h2.type="button";
+          function setM(ms2,lbl){aPut(muUrl(gid,id),Date.now()+ms2).then(function(){admLog("Silenziato "+(m.n||"?")+" per "+lbl+" in «"+g.n+"»");AG.u=AG.u||{};AG.u[gid]=AG.u[gid]||{};AG.u[gid][id]=Date.now()+ms2;draw()}).catch(function(e){msg(gErr(e))})}
+          h1.addEventListener("click",function(){setM(3600000,"1 ora")});h2.addEventListener("click",function(){setM(86400000,"1 giorno")});
+          pr.appendChild(h1);pr.appendChild(h2);act.appendChild(pr);sb.hidden=true;
+        });act.appendChild(sb);
+        var kb=h("button",null,"Rimuovi");kb.type="button";two(kb,"Rimuovi",function(){
+          Promise.all([delJ(gmUrl(gid,id)),delJ(ugUrl(id,gid))]).then(function(){admLog("Rimosso "+(m.n||"?")+" dalla squadra «"+g.n+"»");delete (AG.m[gid]||{})[id];draw();loadGcnt()}).catch(function(e){msg(gErr(e))})});
+        act.appendChild(kb);
+        r.appendChild(act);body.appendChild(r);
       });
+      var tools=h("div","agn"),rn=h("button",null,"Rinomina"),cc=h("button",null,"Cambia codice");rn.type=cc.type="button";
+      var rnw=h("div"),ccw=h("div");
+      rn.addEventListener("click",function(){inl(rnw,"Nuovo nome",2,"Salva",function(v){if(!validName(v))return Promise.reject(new Error("nome"));return adminRename(gid,v).then(function(){admLog("Squadra «"+g.n+"» rinominata in «"+v+"»");return agLoad()}).then(draw)})});
+      cc.addEventListener("click",function(){inl(ccw,"Nuovo codice (8+ caratteri)",8,"Salva",function(v){return adminCode(gid,v).then(function(){admLog("Cambiato il codice della squadra «"+g.n+"»");return agLoad()}).then(function(){draw();msg("Codice cambiato. I membri restano dentro: dai il nuovo codice solo a chi deve entrare.")})})});
+      tools.appendChild(rn);tools.appendChild(cc);
       var cb=h("button",null,"Leggi la chat");cb.type="button";var cl=h("div","cl");cl.hidden=true;
       cb.addEventListener("click",function(){
         if(!cl.hidden){cl.hidden=true;cb.textContent="Leggi la chat";return}
         cb.textContent="Chiudi la chat";cl.hidden=false;
-        getJ(chUrl(gid)+'?orderBy="$key"&limitToLast=100').then(function(o){var a=[];if(o&&typeof o==="object")Object.keys(o).sort().forEach(function(k){var x=o[k];if(x&&typeof x.m==="string")a.push({i:String(x.i||""),n:String(x.n||""),m:x.m.slice(0,300),t:Number(x.t)||0})});fillChat(cl,a,"")}).catch(function(){fillChat(cl,[],"")});
+        getJ(chUrl(gid)+'?orderBy="$key"&limitToLast=100').then(function(o){fillChat(cl,chArr(o),"",function(x,d){delJ(chUrl(gid,x.k)).then(function(){d.remove();admLog("Cancellato un messaggio di "+(x.n||"?")+" in «"+g.n+"»")}).catch(function(){msg("Non riesco a cancellare il messaggio.")})})}).catch(function(){fillChat(cl,[],"")});
       });
-      var db=h("button",null,"Elimina squadra");db.type="button";var da=false;
-      db.addEventListener("click",function(){
-        if(!da){da=true;db.textContent="Tocca ancora per eliminare";setTimeout(function(){da=false;db.textContent="Elimina squadra"},4000);return}
-        deleteGroupAdmin(gid).then(function(){delete AG.g[gid];delete AG.m[gid];draw();loadGcnt();msg("Squadra eliminata.")}).catch(function(e){msg(gErr(e))});
-      });
+      var db=h("button",null,"Elimina squadra");db.type="button";
+      two(db,"Elimina squadra",function(){deleteGroupAdmin(gid).then(function(){admLog("Eliminata la squadra «"+g.n+"»");delete AG.g[gid];delete AG.m[gid];draw();loadGcnt();msg("Squadra eliminata.")}).catch(function(e){msg(gErr(e))})});
       var ar=h("div","row ar");ar.appendChild(cb);ar.appendChild(db);
-      body.appendChild(ar);body.appendChild(cl);it.appendChild(hd);it.appendChild(body);list.appendChild(it);
+      body.appendChild(tools);body.appendChild(rnw);body.appendChild(ccw);body.appendChild(ar);body.appendChild(cl);it.appendChild(hd);it.appendChild(body);list.appendChild(it);
     });
   }
-  function load(){AG=AG||null;draw();agLoad().then(draw).catch(function(){list.textContent="";list.appendChild(h("p","m","Non riesco a leggere le squadre."))})}
+  function load(){draw();agLoad().then(draw).catch(function(){list.textContent="";list.appendChild(h("p","m","Non riesco a leggere le squadre."))})}
   rf.addEventListener("click",load);load();
   return b;
+}
+function adminOwner(gid,id){
+  return Promise.all([getJ(gUrl(gid)),getJ(gmUrl(gid))]).then(function(r){
+    var g=r[0],ms=r[1]||{};if(!g||!ms[id])throw new Error("gnone");
+    var q=[];Object.keys(ms).forEach(function(k){if(ms[k].r==="owner"&&k!==id)q.push(putJ(gmUrl(gid,k),{n:ms[k].n,r:"member"}))});
+    q.push(putJ(gmUrl(gid,id),{n:ms[id].n,r:"owner"}));g.o=id;q.push(putJ(gUrl(gid),g));return Promise.all(q);
+  });
+}
+function adminRename(gid,name){
+  return Promise.all([getJ(gUrl(gid)),getJ(gmUrl(gid))]).then(function(r){
+    var g=r[0],ms=r[1]||{};if(!g)throw new Error("gnone");g.n=name;
+    var q=[putJ(gUrl(gid),g)];Object.keys(ms).forEach(function(id){q.push(putJ(ugUrl(id,gid),name))});return Promise.all(q);
+  });
+}
+function adminCode(gid,code){
+  return Promise.all([getJ(gUrl(gid)),getJ(gmUrl(gid)),getJ(chUrl(gid))]).then(function(r){
+    var g=r[0],ms=r[1]||{},ch=r[2];if(!g)throw new Error("gnone");
+    return gKeys(g.n,code).then(function(k){
+      return getJ(gUrl(k.gid)).then(function(ex){
+        if(ex)throw new Error("gtaken");
+        var ng=Object.assign({},g,{ph:k.ph}),q=[putJ(gUrl(k.gid),ng),putJ(gmUrl(k.gid),ms)];
+        if(ch)q.push(putJ(chUrl(k.gid),ch));
+        Object.keys(ms).forEach(function(id){q.push(putJ(ugUrl(id,k.gid),g.n))});
+        return Promise.all(q).then(function(){
+          var d=[delJ(gUrl(gid)),delJ(gmUrl(gid)),delJ(chUrl(gid))];Object.keys(ms).forEach(function(id){d.push(delJ(ugUrl(id,gid)))});
+          return Promise.all(d);
+        }).then(function(){if(S.cg===gid)enterGroup(k.gid)});
+      });
+    });
+  });
+}
+function moveCtl(id,name){
+  var mv=h("button",null,"Sposta in…");mv.type="button";var mw=h("div","mvw");
+  mv.addEventListener("click",function(){
+    if(mw.firstChild){mw.textContent="";return}
+    var sel=h("select");sel.setAttribute("aria-label","Squadra di destinazione");var go=h("button","pri","Sposta");go.type="button";
+    mw.appendChild(sel);mw.appendChild(go);
+    function fillSel(){
+      sel.textContent="";var ids=Object.keys((AG&&AG.g)||{});
+      if(!ids.length){var o0=h("option",null,"Nessuna squadra creata");o0.value="";sel.appendChild(o0);go.disabled=true;return}
+      ids.forEach(function(g){var o=h("option",null,(AG.g[g].n||"?")+" ("+Object.keys(AG.m[g]||{}).length+(AG.g[g].max?"/"+AG.g[g].max:"")+")");o.value=g;sel.appendChild(o)});go.disabled=false;
+    }
+    if(AG)fillSel();else{var ol=h("option",null,"Caricamento…");ol.value="";sel.appendChild(ol);go.disabled=true;agLoad().then(fillSel).catch(function(){sel.textContent="";go.disabled=true})}
+    go.addEventListener("click",function(){
+      var gid=sel.value;if(!gid)return;go.disabled=true;
+      adminMove(id,name,gid).then(function(r){admLog("Spostato "+name+" nella squadra «"+r+"»");msg(name+" è stato spostato in «"+r+"».");mw.textContent="";if(id===S.me.i)pull(true)}).catch(function(e){go.disabled=false;msg(gErr(e))});
+    });
+  });
+  return{b:mv,w:mw};
+}
+function adminMove(id,name,gid){
+  if(!isAdmin())return Promise.reject(new Error("x"));
+  return Promise.all([getJ(gUrl(gid)),getJ(gmUrl(gid))]).then(function(r){
+    var g=r[0],ms=r[1]||{};if(!g)throw new Error("gnone");
+    if(!ms[id]&&g.max&&Object.keys(ms).length>=g.max)throw new Error("gfull");
+    var role=ms[id]&&ms[id].r?ms[id].r:"member";
+    return putJ(gmUrl(gid,id),{n:name,r:role}).then(function(){return putJ(ugUrl(id,gid),g.n||"")}).then(function(){
+      if(AG&&AG.m){AG.m[gid]=AG.m[gid]||{};AG.m[gid][id]={n:name,r:role}}
+      return g.n||"squadra";
+    });
+  });
 }
 function deleteGroupAdmin(gid){
   return getJ(gmUrl(gid)).then(function(ms){
@@ -1231,7 +1382,7 @@ function renderFriends(){
       }
     }
     el.appendChild(groupsBox());
-    if(isAdmin()){loadReports();el.appendChild(reportsBox());el.appendChild(adminGroupsBox())}
+    if(isAdmin()){loadReports();el.appendChild(reportsBox());el.appendChild(adminGroupsBox());el.appendChild(statsBox());el.appendChild(logBox())}
     var fl=h("div","anim");fl.id="fl";el.appendChild(fl);setSync();drawList();pull();
     return;
   }
