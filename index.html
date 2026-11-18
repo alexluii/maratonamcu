@@ -63,11 +63,12 @@ main{padding:0 16px 28px}
 .tk-b{flex:1;padding:14px 16px;font-size:16px;color:#fff;background:#0b1030;border:0;border-radius:12px;transition:transform .12s}
 .tk-b:active{transform:scale(.97)}
 .bc{flex:none;width:78px;height:34px;fill:rgba(11,16,48,.85)}
-.stamp{position:absolute;right:14px;top:50px;padding:2px 14px;border:4px solid #c4162b;border-radius:8px;color:#c4162b;font:900 42px/1 "Big Shoulders Display",Impact,sans-serif;letter-spacing:.04em;opacity:0;transform:rotate(-14deg);pointer-events:none;mix-blend-mode:multiply}
+.stamp{position:absolute;right:14px;top:50px;padding:2px 14px;border:4px solid #c4162b;border-radius:8px;color:#c4162b;font:900 42px/1 "Big Shoulders Display",Impact,sans-serif;letter-spacing:.04em;opacity:0;transform:rotate(-14deg);pointer-events:none;z-index:3;background:rgba(196,22,43,.08);text-shadow:0 0 1px rgba(196,22,43,.4)}
+.stamp.done{position:relative;display:inline-block;top:auto;right:auto;margin:2px 0 12px 4px;font-size:22px;opacity:.95;animation:stamp .45s cubic-bezier(.2,1.5,.4,1) .2s backwards}
 .ticket.tear{pointer-events:none}
-.tear .stamp{animation:stamp .4s cubic-bezier(.2,1.5,.4,1) .08s forwards}
-.tear .tk-bot{transform-origin:0 0;animation:stub .8s cubic-bezier(.55,0,.9,.55) forwards}
-.tear .tk-top{animation:head .75s cubic-bezier(.5,0,.8,.4) .3s forwards}
+.tear .stamp{animation:stamp .35s cubic-bezier(.2,1.5,.4,1) 0s forwards}
+.tear .tk-bot{transform-origin:0 0;animation:stub .8s cubic-bezier(.55,0,.9,.55) .95s forwards}
+.tear .tk-top{animation:head .75s cubic-bezier(.5,0,.8,.4) 1.25s forwards}
 @keyframes stamp{from{opacity:0;transform:rotate(-14deg) scale(2)}to{opacity:.95;transform:rotate(-14deg) scale(1)}}
 @keyframes stub{0%{transform:none;opacity:1}18%{transform:rotate(-3deg) translate(-6px,3px)}100%{transform:translate(30px,150px) rotate(16deg);opacity:0}}
 @keyframes head{to{transform:translateY(-38px) scale(.97);opacity:0}}
@@ -159,6 +160,8 @@ li.u label{opacity:1}li.u .t{opacity:.7}
 .rmh{margin:22px 4px 8px;font:800 18px "Big Shoulders Display",Impact,sans-serif;color:var(--mute)}
 .rmr{display:flex;align-items:center;gap:8px;padding:8px 4px;color:var(--mute)}
 .rmr span{flex:1}
+.rmr.min{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:5px 6px 5px 12px;margin:6px 0;font-size:14px;color:var(--ink)}
+.rmr .rb{width:34px;height:34px;min-height:0;padding:0;border-radius:50%;display:inline-grid;place-items:center;font-size:0}
 .mpop{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:20px;background:rgba(5,8,20,.72);backdrop-filter:blur(6px);animation:pfade .3s ease both}
 .mpop.out{opacity:0;transition:opacity .25s}
 @keyframes pfade{from{opacity:0}}
@@ -337,8 +340,8 @@ body:has(.tkr:not([hidden])) .adm-pill{top:46px}
 @keyframes warnblink{0%,100%{border-color:var(--red);box-shadow:0 0 0 0 rgba(214,36,58,.55)}50%{border-color:rgba(214,36,58,.25);box-shadow:0 0 18px 4px rgba(214,36,58,.45)}}
 @media (prefers-reduced-motion:reduce){.mbox.warn{animation:none;box-shadow:0 0 14px 2px rgba(214,36,58,.4)}}
 .pubsw{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:4px 12px;border-radius:999px;border:2px solid var(--line);background:var(--panel);color:var(--mute);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
-.pubsw::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--mute)}
-.pubsw.on{border-color:var(--amber);color:var(--ink)}.pubsw.on::before{background:#1f9d55}
+.pubsw svg{flex:none}
+.pubsw.on{border-color:var(--amber);color:var(--ink)}.pubsw.on svg{color:#1f9d55}
 .pubnote{margin:2px 0 8px;font-size:13px}
 .addf{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .sqd{margin:8px 0;border:2px solid var(--line);border-radius:12px;padding:0 12px}
@@ -359,6 +362,27 @@ body:has(.tkr:not([hidden])) .adm-pill{top:46px}
 .gtabs{display:flex;gap:8px}.gtabs button{flex:1;min-height:40px}.gtabs button[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:#0b1030}
 .gerr{color:var(--red);min-height:1.2em}
 body.gated{overflow:hidden}
+.cm{position:relative}.cm:has(.cmo) b{padding-right:22px}
+.cmo{position:absolute;top:1px;right:3px;width:26px;height:26px;border:0;border-radius:50%;background:none;color:inherit;opacity:.55;font:700 17px/1 "Instrument Sans",sans-serif;cursor:pointer;display:grid;place-items:center;padding:0}
+.cmo:hover,.cmo:focus-visible{opacity:1;background:rgba(127,127,127,.2)}
+#cmm{position:fixed;z-index:130;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:4px}
+#cmm button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:0;border-radius:8px;background:none;color:inherit;font:600 14px "Instrument Sans",system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+#cmm button:hover{background:var(--bg)}
+.rbox{max-height:92vh;overflow:auto}.rbox select,.rbox textarea{width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
+.rq{margin:0;padding:8px 12px;border-left:3px solid var(--amber);background:var(--bg);border-radius:0 10px 10px 0;font-size:14px;line-height:1.35;overflow-wrap:anywhere}.rq b{display:block;font-size:12px;opacity:.75}
+.rchips{display:flex;flex-wrap:wrap;gap:8px}
+.rnote{font-size:13px}.rhow summary{cursor:pointer;font:600 14px "Instrument Sans",sans-serif;padding:4px 0}.rhow ol{margin:6px 0 0;padding-left:20px;font-size:13px;line-height:1.4;color:var(--mute)}
+.rok{margin:0;width:44px;height:44px;border-radius:50%;background:var(--amber);color:#0b1030;display:grid;place-items:center;font:800 24px/1 sans-serif;align-self:center}
+.lsw{display:inline-flex;gap:0;border:1px solid var(--line);border-radius:999px;overflow:hidden;align-self:center;margin:6px 0}
+.lsw button{padding:6px 14px;border:0;background:none;color:var(--mute);font:700 13px "Instrument Sans",sans-serif;cursor:pointer}
+.lsw button[aria-pressed="true"]{background:var(--amber);color:#0b1030}
+#lswSlot{display:flex;justify-content:center}
+.lbox{max-width:440px;text-align:center}.lrow{display:flex;gap:12px}
+.lbtn{flex:1;padding:18px 10px;border:1px solid var(--line);border-radius:14px;background:var(--bg);color:var(--ink);cursor:pointer;display:flex;flex-direction:column;gap:4px;align-items:center;font-family:inherit}
+.lbtn b{font:800 22px "Big Shoulders Display",Impact,sans-serif;letter-spacing:.5px}.lbtn small{font-size:12px;color:var(--mute)}
+.lbtn:hover,.lbtn:focus-visible{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber)}
+.lbox .m{text-align:left;font-size:13px}
+.utc{margin-left:6px;font:700 10px "Instrument Sans",sans-serif;opacity:.7;white-space:nowrap}
 </style>
 </head>
 <body class="boot">
@@ -382,6 +406,7 @@ body.gated{overflow:hidden}
 <footer>
 <p class="gcnt gfoot" id="gcnt" title="Gruppi aperti in questo momento" hidden><span class="led"></span><span>gruppi: —</span></p>
 <p class="gcnt gfoot" id="ucnt" title="Persone iscritte al sito" hidden><span class="led"></span><span>iscritti: —</span></p>
+<div id="lswSlot"></div>
 <button id="reset" type="button">Azzera i miei progressi</button>
 <div class="adm-foot" id="admFoot" hidden><button type="button" id="admBtn" class="lnk">Accesso amministratore</button><div id="admSlot"></div></div>
 </footer>
@@ -391,6 +416,63 @@ body.gated{overflow:hidden}
 <button type="button" id="tAm" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.2a3.2 3.2 0 010 5.6M18 14.8c1.9.7 3 2.4 3 5.2"/></svg><span>Amici</span></button>
 </nav>
 <script>
+/* ===== LINGUA ===== */
+var LANG="";try{LANG=localStorage.getItem("mcu-lang")||""}catch(e){}if(LANG!=="en"&&LANG!=="it")LANG="";
+var EN=LANG==="en",LOC=EN?"en-GB":"it-IT";
+function setLangStore(l){try{localStorage.setItem("mcu-lang",l)}catch(e){}}
+function romeOff(ts){try{var p=new Intl.DateTimeFormat("en-US",{timeZone:"Europe/Rome",hourCycle:"h23",year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"numeric",second:"numeric"}).formatToParts(new Date(ts)),o={};p.forEach(function(x){o[x.type]=+x.value});return Math.round((Date.UTC(o.year,o.month-1,o.day,o.hour%24,o.minute,o.second)-Math.floor(ts/1000)*1000)/6e4)}catch(e){return 60}}
+function romeMid(y,m,d){var u=Date.UTC(y,m-1,d),t=u-romeOff(u)*6e4;return u-romeOff(t)*6e4}
+function utcLbl(ts){var o=romeOff(ts||Date.now()),a=Math.abs(o),mm=a%60;return"UTC"+(o<0?"-":"+")+Math.floor(a/60)+(mm?":"+(mm<10?"0":"")+mm:"")}
+var TXD=Object.create(null);(function(a){for(var i=0;i<a.length;i+=2)TXD[a[i]]=a[i+1]})(["Accesso amministratore", "Admin access", "Amici", "Friends", "Lista", "List", "Legenda", "Legend", "Serie TV", "TV series", "Film o speciale", "Film or special", "Essenziale per la storia", "Essential to the story", "Prossimo da guardare", "Up next", "Non ancora uscito", "Not released yet", "Azzera i miei progressi", "Reset my progress", "Sito creato da", "Site made by", "per gli amici", "for friends", "creato con il", "made with", "Maratona MCU con gli amici", "MCU Marathon with friends", "Maratona", "Marathon", "Prossime uscite", "Next releases", "In arrivo", "Coming soon", "Sezioni", "Sections", "Prima del 1950", "Before 1950", "Anni ’90", "The ’90s", "La saga Fox degli X-Men", "The Fox X-Men saga", "Anni 2000 e 2010", "The 2000s and 2010s", "Fase 1 — The Avengers Initiative", "Phase 1 — The Avengers Initiative", "Fase 2 — HYDRA e le Gemme dell’Infinito", "Phase 2 — HYDRA and the Infinity Stones", "Fase 3A — Eroi di strada", "Phase 3A — Street-level heroes", "Fase 3B — Civil War e conseguenze", "Phase 3B — Civil War and aftermath", "Fase 3C — Ragnarok e Infinity War", "Phase 3C — Ragnarok and Infinity War", "Fase 4 — Il multiverso si apre", "Phase 4 — The multiverse opens", "Fase 4 — Nuovi inizi", "Phase 4 — New beginnings", "Fase 5 — La guerra del multiverso", "Phase 5 — The multiverse war", "Fase 6 — Doomsday", "Phase 6 — Doomsday", "Il futuro (2029)", "The future (2029)", "Universi alternativi", "Alternate universes", "Captain America: Il primo Vendicatore", "Captain America: The First Avenger", "Ancora nessun titolo visto su ", "No titles watched yet out of ", ". Servono circa ", "About ", " ore.", ". hours to go.", "Segna come visto", "Mark as watched", "Visto", "Watched", "Solo lettura", "Read only", " · solo lettura", " · read only", "Maratona completata", "Marathon complete", "Capitolo chiuso", "Chapter closed", "Congratulazioni,", "Congratulations,", "non hai una vita!", "you have no life!", "Hai buttato nel c3sso", "You flushed it down the t0ilet", "Maratona finita!", "Marathon finished!", "già viste", "watched", "ancora da vedere", "left to watch", "Hai visto tutto quello che è uscito finora. Il prossimo è ", "You’ve watched everything released so far. The next one is ", "Hai visto tutto quello che è uscito finora. Quando uscirà qualcosa di nuovo lo trovi qui.", "You’ve watched everything released so far. When something new comes out, you’ll find it here.", ". Ora puoi segnarlo come visto.", ". You can now mark it as watched.", "Hai visto tutti i ", "You’ve watched all ", " titoli visti", " titles watched", " titolo visto", " title watched", " titoli.", " titles.", " ore", " hours", " ora", " hour", "1 ora", "1 hour", "1 giorno", "1 day", " giorni", " days", " min", " min", ". Mancano circa ", ". About ", "% della maratona.", "% of the marathon.", "Ancora nessun messaggio. Scrivi tu il primo.", "No messages yet. Write the first one.", " stella", " star", " stelle", " stars", " voti", " votes", "Media amici", "Friends’ average", "Il tuo account", "Your account", "Account: ", "Account: ", "Esci", "Log out", "Accedi", "Log in", "Crea account", "Create account", "Cambia password", "Change password", "Password attuale", "Current password", "Nuova password (da 8 caratteri)", "New password (8+ characters)", "Nuova password", "New password", "Ripeti la nuova password", "Repeat the new password", "Salva", "Save", "Annulla", "Cancel", "Username (es. mario.rossi)", "Username (e.g. mario.rossi)", "Password (da 8 caratteri)", "Password (8+ characters)", "Password", "Password", "Username", "Username", "Il tuo username", "Your username", "Il tuo vecchio PIN", "Your old PIN", "Vecchio PIN", "Old PIN", "Continua", "Continue", "Un attimo…", "One moment…", "Abbiamo aggiornato la sicurezza del sito", "We’ve updated the site’s security", "Per proteggere i tuoi dati abbiamo cambiato alcune regole del server: ora si entra con una password al posto del PIN. Scegli una nuova password (da 8 caratteri) e scrivi ancora il tuo PIN di sempre. Progressi, gruppi e amici restano com’erano.", "To protect your data we’ve changed some server rules: you now sign in with a password instead of a PIN. Choose a new password (8+ characters) and enter your usual PIN one last time. Your progress, groups and friends stay as they were.", "Alessandro ha sbloccato il tuo account. Scegli una nuova password (da 8 caratteri): progressi, gruppi e amici restano com’erano.", "Alessandro has unlocked your account. Choose a new password (8+ characters): your progress, groups and friends stay as they were.", "Per vedere la maratona e i tuoi amici crea un account, oppure accedi se ce l’hai già.", "To see the marathon and your friends, create an account, or log in if you already have one.", "Per sicurezza l’accesso scade dopo un’ora di inattività. Accedi di nuovo.", "For security, your login expires after one hour of inactivity. Please log in again.", "Accedi alla maratona", "Log in to the marathon", "Hai dimenticato la password? Scrivi ad Alessandro: ti sblocca l’account e ne scegli una nuova.", "Forgot your password? Message Alessandro: he’ll unlock your account and you’ll choose a new one.", "Hai dimenticato la password? Scrivi ad Alessandro: ti sblocca l’account.", "Forgot your password? Message Alessandro: he’ll unlock your account.", "Scegli uno username (come su Instagram: lettere minuscole, numeri, punto e _, per esempio mario.rossi) e una password di almeno 8 caratteri. Con lo stesso username e la stessa password entri da qualsiasi telefono e ritrovi i tuoi progressi. Il PIN protegge poco: non usarne uno che usi altrove.", "Choose a username (like on Instagram: lowercase letters, numbers, dot and _, for example mario.rossi) and a password of at least 8 characters. With the same username and password you can sign in from any phone and get your progress back.", "Ti ho disconnesso perché il tuo account non risulta più sul server. Accedi di nuovo; se succede ancora, scrivilo ad Alessandro.", "You were logged out because your account no longer exists on the server. Please log in again; if it happens again, tell Alessandro.", "Account creato. I tuoi progressi ora sono condivisi.", "Account created. Your progress is now shared.", "Bentornato! Progressi ripristinati.", "Welcome back! Progress restored.", "Fatto! Da ora entri con la nuova password.", "Done! From now on you sign in with your new password.", "Sei uscito. Con username e password rientri quando vuoi.", "You’re logged out. Sign back in any time with your username and password.", "Password cambiata.", "Password changed.", "La password attuale non è corretta.", "The current password is incorrect.", "Non è stato possibile cambiarla. Riprova.", "Couldn’t change it. Please try again.", "Scrivi la password attuale.", "Enter your current password.", "Scrivi la password.", "Enter your password.", "Scrivi il tuo username.", "Enter your username.", "Scrivi un nome.", "Enter a name.", "Scrivi username e vecchio PIN.", "Enter your username and old PIN.", "Le due password non coincidono.", "The two passwords don’t match.", "La nuova password deve avere almeno 8 caratteri.", "The new password must be at least 8 characters.", "La nuova password deve avere da 8 a 64 caratteri.", "The new password must be 8 to 64 characters.", "La password deve avere da 8 a 64 caratteri.", "The password must be 8 to 64 characters.", "Username o password non corretti.", "Incorrect username or password.", "Username o vecchio PIN non corretti.", "Incorrect username or old PIN.", "L’account esiste, ma il vecchio PIN non è quello giusto.", "The account exists, but the old PIN is wrong.", "Non trovo nessun account con questo username. Scrivilo come lo avevi quando hai creato l’account (se Alessandro ha cambiato il tuo nome, chiedigli di sbloccarti l’account).", "I can’t find an account with this username. Type it as it was when you created the account (if Alessandro changed your name, ask him to unlock your account).", "Questo account è già passato alla nuova password. Se non sei stato tu, scrivi ad Alessandro.", "This account has already moved to the new password. If it wasn’t you, message Alessandro.", "Questo username è già in uso. Se è tuo, tocca Accedi.", "This username is already taken. If it’s yours, tap Log in.", "Questo nome è già in uso.", "This name is already taken.", "Questo nome è riservato.", "This name is reserved.", "Nome non valido.", "Invalid name.", "Username non valido: da 3 a 20 caratteri, solo lettere minuscole, numeri, punto e trattino basso (es. mario.rossi).", "Invalid username: 3 to 20 characters, lowercase letters, numbers, dot and underscore only (e.g. mario.rossi).", "Username non valido: da 3 a 20 caratteri, solo lettere minuscole, numeri, punto e trattino basso.", "Invalid username: 3 to 20 characters, lowercase letters, numbers, dot and underscore only.", "Troppi tentativi. Aspetta qualche minuto e riprova.", "Too many attempts. Wait a few minutes and try again.", "Il login con password non è ancora attivo sul server.", "Password login isn’t active on the server yet.", "Non riesco a collegarmi. Riprova tra poco.", "Can’t connect. Please try again shortly.", "Crea un account nella scheda Amici per condividere i progressi con gli amici.", "Create an account in the Friends tab to share your progress with friends.", "Tocca ancora per uscire", "Tap again to log out", "Tocca ancora per azzerare", "Tap again to reset", "Tocca ancora", "Tap again", "Sincronizzazione…", "Syncing…", "Sincronizzato con gli amici: si aggiorna da solo.", "Synced with friends: it updates by itself.", "Profilo privato", "Private profile", "Profilo pubblico", "Public profile", "Cambia il profilo tra pubblico e privato", "Switch profile between public and private", "Chi ti aggiunge aspetta che tu accetti.", "Whoever adds you waits for you to accept.", "Chi ti aggiunge diventa subito tuo amico, ti arriva un avviso.", "Whoever adds you becomes your friend right away; you get a notice.", "Profilo privato: chi ti aggiunge deve aspettare che tu accetti.", "Private profile: whoever adds you has to wait for you to accept.", "Profilo pubblico: chi ti aggiunge diventa subito tuo amico e ti arriva solo un avviso.", "Public profile: whoever adds you becomes your friend right away and you just get a notice.", "Non sono riuscito a cambiare il profilo. Riprova.", "Couldn’t change the profile. Please try again.", " Aggiungi amico", " Add friend", "Aggiungi amico", "Add friend", "@username di un amico", "@username of a friend", "Username dell’amico da aggiungere", "Username of the friend to add", "Scrivi lo username dell’amico.", "Enter your friend’s username.", "Ora siete amici!", "You’re now friends!", "Ora siete amici: ", "You’re now friends: ", " riceve un avviso.", " gets a notice.", "Richiesta inviata a ", "Request sent to ", ". Quando accetta, vi vedete a vicenda.", ". When they accept, you’ll see each other.", " vuole essere tuo amico", " wants to be your friend", " ti ha aggiunto agli amici", " added you as a friend", "Accetta", "Accept", "Rifiuta", "Decline", "Ok", "OK", "Rimuovi amico", "Remove friend", "Guarda i suoi film", "See their films", "I miei amici", "My friends", "Tutti gli amici", "All friends", "Non hai ancora amici in lista. Scrivi il nome di un amico qui sopra e mandagli la richiesta.", "You have no friends in your list yet. Type a friend’s name above and send them a request.", "Non trovo nessuno con questo username. Controlla di averlo scritto giusto.", "I can’t find anyone with this username. Check you typed it correctly.", "Quello sei tu!", "That’s you!", "È già tra i tuoi amici.", "They’re already your friend.", "Hai già mandato la richiesta a questa persona.", "You’ve already sent a request to this person.", "Aggiornato il ", "Updated on ", "Aggiornato: ", "Updated: ", "Prossimo: ", "Next: ", " (tu)", " (you)", "Squadre", "Teams", "Le tue squadre", "Your teams", "Non fai ancora parte di nessuna squadra.", "You’re not in any team yet.", "Richiedi un gruppo", "Request a group", " Richiedi un gruppo", " Request a group", "Crea un gruppo", "Create a group", " Crea un gruppo", " Create a group", "Entra con il codice", "Join with a code", " Entra con il codice", " Join with a code", "Scrivi il codice che ti ha dato il capogruppo.", "Enter the code the group leader gave you.", "Codice del gruppo", "Group code", "Codice del gruppo (8+ caratteri)", "Group code (8+ characters)", "Il codice ha almeno 8 caratteri.", "The code has at least 8 characters.", "Il codice deve avere almeno 8 caratteri.", "The code must be at least 8 characters.", "Entra", "Join", "Sei dentro al gruppo.", "You’re in the group.", "Codice non valido.", "Invalid code.", "La squadra è piena (aumenta i posti o scegli un’altra).", "The team is full (increase the seats or pick another).", "Questa squadra non esiste più.", "This team no longer exists.", "Questo codice è già usato da un altro gruppo: scegline un altro.", "This code is already used by another group: pick another one.", "Esiste già una richiesta con questo codice: scegline un altro.", "A request with this code already exists: pick another one.", "Nome del gruppo", "Group name", "Nome dell’admin del gruppo", "Group admin’s name", "Motivo della richiesta", "Reason for the request", "Perché vuoi creare il gruppo?", "Why do you want to create the group?", "Quante persone? (da 1 a 10)", "How many people? (1 to 10)", "Invia la richiesta ad Alessandro", "Send the request to Alessandro", "Crea il gruppo", "Create the group", "La richiesta arriva ad Alessandro. Quando la approva, il gruppo è tuo e puoi invitare gli amici con il codice.", "The request goes to Alessandro. When he approves it, the group is yours and you can invite friends with the code.", "Da amministratore il gruppo si crea subito, senza richiesta.", "As an administrator you create the group right away, without a request.", "Richiesta inviata ad Alessandro. Ti avviserà qui quando risponde.", "Request sent to Alessandro. He’ll let you know here when he replies.", "Gruppo creato. Dai il codice agli amici.", "Group created. Give the code to your friends.", "Scrivi un nome del gruppo valido (lettere, numeri, spazi).", "Enter a valid group name (letters, numbers, spaces).", "Scrivi il nome dell’admin del gruppo.", "Enter the group admin’s name.", "Scrivi il motivo della richiesta.", "Enter the reason for the request.", "Scegli quante persone sarete (da 1 a 10).", "Choose how many of you there will be (1 to 10).", "in attesa di Alessandro", "waiting for Alessandro", "Richiesta «", "Request «", ": rifiutata", ": declined", ": in attesa di Alessandro", ": waiting for Alessandro", "Torna a tutti gli amici", "Back to all friends", "Altre azioni del gruppo", "More group actions", "Gruppo", "Group", "Elimina gruppo", "Delete group", "Esci dal gruppo", "Leave group", "sei il capogruppo", "you’re the group leader", "sei capogruppo", "you’re a group leader", "sei membro", "you’re a member", " persona", " person", " persone", " people", " persona iscritta", " person signed up", " persone iscritte", " people signed up", " gruppo aperto", " open group", " gruppi aperti", " open groups", "iscritti: —", "signed up: —", "gruppi: —", "groups: —", "Non fai più parte di quel gruppo.", "You’re no longer in that group.", "Non fai più parte di quel gruppo", "You’re no longer in that group", "Non riesco a leggere i membri.", "Can’t read the members.", "Persona rimossa dal gruppo.", "Person removed from the group.", "Scrivi un messaggio", "Write a message", "Messaggio per il gruppo", "Message to the group", "Invia", "Send", "Chiudi la chat", "Close the chat", "Solo i membri di questo gruppo vedono questa chat.", "Only the members of this group can see this chat.", "Messaggio non inviato. Riprova.", "Message not sent. Please try again.", "Un attimo, stai scrivendo troppo in fretta.", "One moment, you’re writing too fast.", "Cancella il messaggio", "Delete the message", "Cancella?", "Delete?", "Sei stato silenziato dall’amministratore fino alle ", "You’ve been muted by the administrator until ", "Gruppi aperti in questo momento", "Groups open right now", "Persone iscritte al sito", "People signed up to the site", "iscritti: ", "signed up: ", "gruppi: ", "groups: ", "I Fantastici Quattro: Gli inizi", "The Fantastic Four: First Steps", "Serie", "Series", "★ Essenziale", "★ Essential", "essenziale", "essential", "Maratona finita", "Marathon finished", "Torna ai miei", "Back to mine", "Stai guardando ", "You’re viewing ", "Azzera", "Reset", "Aggiorna", "Refresh", "Chiudi", "Close", "Elimina", "Delete", "Rimuovi", "Remove", "Sì", "Yes", "No", "No", "Segnala un problema", "Report a problem", "Segnala", "Report", "Il tuo codice", "Your code", "Il tuo nickname", "Your nickname", "L'amministratore ti ha rimosso dall'elenco: i tuoi progressi non vengono più condivisi.", "The administrator removed you from the list: your progress is no longer shared.", "Tutte le squadre", "All teams", "Squadra di destinazione", "Destination team", "Statistiche e backup", "Stats and backup", "Titoli più visti", "Most watched titles", "Ancora nessun dato", "No data yet", "Backup completo", "Full backup", "Copia il backup", "Copy the backup", "Scarica backup dei dati", "Download data backup", "Ripristina da backup", "Restore from backup", "Backup copiato. Salvalo nelle note o in una chat.", "Backup copied. Save it in your notes or a chat.", "Backup non riuscito.", "Backup failed.", "Backup non valido.", "Invalid backup.", "Backup ripristinato: progressi e amici sono tornati.", "Backup restored: your progress and friends are back.", "Backup scaricato.", "Backup downloaded.", "Se Safari cancella i dati, incolla il backup", "If Safari clears your data, paste the backup", "Lo stesso campo serve per ripristinare un backup.", "The same field is used to restore a backup.", "Incolla prima un codice.", "Paste a code first.", "Copia il mio codice", "Copy my code", "Codice copiato. Mandalo agli amici.", "Code copied. Send it to your friends.", "Questo è il tuo stesso codice.", "That’s your own code.", "Tieni premuto sul backup, seleziona tutto e copia.", "Press and hold the backup, select all and copy.", "Tieni premuto sul codice, seleziona tutto e copia.", "Press and hold the code, select all and copy.", "Più avanti nella maratona", "Further ahead in the marathon", "Come ti vedranno gli amici", "How friends will see you", "Aggiungi un amico", "Add a friend", "Non ricordo il PIN", "I don’t remember the PIN", "Capogruppo ★", "Group leader ★", " (capogruppo)", " (group leader)", "Chi ha fatto l’infrazione", "Who broke the rules", "Hai già una versione più recente di ", "You already have a newer version of ", "Connessione non riuscita", "Connection failed", "Segnala messaggio", "Report message", "Segnala una persona", "Report a person", "Segnala un messaggio", "Report a message", "Altre opzioni", "More options", "Altre opzioni del messaggio", "More message options", "Cosa vuoi segnalare?", "What do you want to report?", "Scegli il motivo", "Choose a reason", "Linguaggio offensivo", "Offensive language", "Spam o pubblicità", "Spam or ads", "Molestie o minacce", "Harassment or threats", "Altro", "Other", "Aggiungi una nota (facoltativo)", "Add a note (optional)", "Il messaggio segnalato", "The reported message", "Solo l’amministratore vede la segnalazione. La persona segnalata non riceve nessun avviso.", "Only the administrator sees the report. The reported person is not notified.", "Come funziona la segnalazione?", "How does reporting work?", "Come funziona?", "How does it work?", "Tocca ⋯ accanto a un messaggio, oppure ⋯ in alto nel gruppo. Scegli il motivo e invia.", "Tap ⋯ next to a message, or ⋯ at the top of the group. Pick a reason and send.", "Alessandro riceve la segnalazione, legge la chat e può togliere la persona dal gruppo o silenziarla.", "Alessandro receives the report, reads the chat and can remove the person from the group or mute them.", "Segnalazione inviata. Grazie: la guarda l’amministratore.", "Report sent. Thank you: the administrator will look at it.", "Segnalazione non inviata. Riprova.", "Report not sent. Please try again.", "Hai appena inviato una segnalazione: aspetta un attimo.", "You just sent a report: wait a moment.", "Invia segnalazione", "Send report", "Invia la segnalazione", "Send the report", "Scegli un motivo.", "Choose a reason.", "Segnalazione inviata all’amministratore.", "Report sent to the administrator.", "Segnalazione", "Report", "Lingua", "Language", "Italiano", "Italiano", "English", "English", "Scegli la lingua", "Choose your language", "Cambia lingua", "Change language", "Chi vuoi segnalare? (facoltativo)", "Who do you want to report? (optional)", "Nessuno in particolare", "No one in particular", "Scegli il motivo e invia: la segnalazione arriva solo ad Alessandro.", "Pick a reason and send: the report goes only to Alessandro.", "Lui legge la chat e può silenziare la persona o toglierla dal gruppo.", "He reads the chat and can mute the person or remove them from the group.", "Tocca ⋯ accanto a un messaggio per segnalare proprio quel messaggio.", "Tap ⋯ next to a message to report that exact message.", "Tu ★", "You ★", "Tu", "You"]);
+var TXF=["Hai visto tutto quello che è uscito finora. Il prossimo è ", "You’ve watched everything released so far. The next one is ", "Sei stato silenziato dall’amministratore fino alle ", "You’ve been muted by the administrator until ", ". Quando accetta, vi vedete a vicenda.", ". When they accept, you’ll see each other.", "Hai già una versione più recente di ", "You already have a newer version of ", ". Ora puoi segnarlo come visto.", ". You can now mark it as watched.", "Ancora nessun titolo visto su ", "No titles watched yet out of ", " ti ha aggiunto agli amici", " added you as a friend", ": in attesa di Alessandro", ": waiting for Alessandro", " vuole essere tuo amico", " wants to be your friend", "Richiesta inviata a ", "Request sent to ", " Entra con il codice", " Join with a code", " Richiedi un gruppo", " Request a group", "Hai visto tutti i ", "You’ve watched all ", " riceve un avviso.", " gets a notice.", "Ora siete amici: ", "You’re now friends: ", " persona iscritta", " person signed up", " persone iscritte", " people signed up", "sei il capogruppo", "you’re the group leader", ". Servono circa ", "About ", ". Mancano circa ", ". About ", " · solo lettura", " · read only", " Aggiungi amico", " Add friend", " Crea un gruppo", " Create a group", "Stai guardando ", "You’re viewing ", "Aggiornato il ", "Updated on ", " gruppo aperto", " open group", " gruppi aperti", " open groups", "sei capogruppo", "you’re a group leader", " titoli visti", " titles watched", " titolo visto", " title watched", " (capogruppo)", " (group leader)", "Aggiornato: ", "Updated: ", "Richiesta «", "Request «", ": rifiutata", ": declined", "Prossimo: ", "Next: ", "iscritti: ", "signed up: ", "sei membro", "you’re a member", "Account: ", "Account: ", " titoli.", " titles.", " persona", " person", " persone", " people", "gruppi: ", "groups: ", " giorni", " days", " stella", " star", " stelle", " stars", " ore.", ". hours to go.", " voti", " votes", " (tu)", " (you)", " ore", " hours", " ora", " hour", " min", " min"];
+TXF.push("Captain America: Il primo Vendicatore","Captain America: The First Avenger","I Fantastici Quattro: Gli inizi","The Fantastic Four: First Steps");
+var TXR=[[new RegExp("^Ancora nessun titolo visto su (\\d+)\\. Servono circa (\\d+) ore\\.$","g"),"No titles watched yet out of $1. About $2 hours to go."],[new RegExp("^(\\d+) titolo visto su (\\d+)\\. Mancano circa (\\d+) ore\\.$","g"),"$1 title watched out of $2. About $3 hours left."],[new RegExp("^(\\d+) titoli visti su (\\d+)\\. Mancano circa (\\d+) ore\\.$","g"),"$1 titles watched out of $2. About $3 hours left."],[new RegExp("^Hai visto tutti i (\\d+) titoli\\.$","g"),"You’ve watched all $1 titles."],[new RegExp("^(\\d+) di (\\d+) titoli visti$","g"),"$1 of $2 titles watched"],[new RegExp("^N° (\\d+) di (\\d+)$","g"),"No. $1 of $2"],[new RegExp("(\\d+) ore e (\\d+) min","g"),"$1 h $2 min"],[new RegExp("^(\\d+) ore$","g"),"$1 hours"],[new RegExp("^Hai visto tutto quello che è uscito finora\\. Il prossimo è (.*), ([^,]+)\\.$","g"),"You’ve watched everything released so far. The next one is $1, $2."],[new RegExp("^Voto di (.*): (\\d+) su 5$","g"),"$1’s rating: $2 out of 5"],[new RegExp("stagione (\\d+)","g"),"season $1"],[new RegExp("\\(ep\\. (\\d+)–(\\d+)\\)","g"),"(ep. $1–$2)"],[new RegExp("^Richiesta «(.*)»: rifiutata$","g"),"Request «$1»: declined"],[new RegExp("^Squadre\\b","g"),"Teams"],[new RegExp("^Tu, (\\d+) film su (\\d+)\\. Tocca per i dettagli\\.$","g"),"You, $1 films out of $2. Tap for details."],[new RegExp("^(.*), (\\d+) film su (\\d+)\\. Tocca per i dettagli\\.$","g"),"$1, $2 films out of $3. Tap for details."],[new RegExp("\\b(\\d+(?:/\\d+)?) persone\\b","g"),"$1 people"],[new RegExp("\\b(\\d+(?:/\\d+)?) persona\\b","g"),"$1 person"]];
+function tr(s){
+  if(!EN||!s||typeof s!=="string")return s;
+  var v=TXD[s];if(v!==undefined)return v;
+  var m=/^(\s*)([\s\S]*?)(\s*)$/.exec(s),c=m[2];
+  if(c&&(v=TXD[c])!==undefined)return m[1]+v+m[3];
+  var o=s,i;
+  for(i=0;i<TXR.length;i++)o=o.replace(TXR[i][0],TXR[i][1]);
+  for(i=0;i<TXF.length;i+=2)if(o.indexOf(TXF[i])>=0)o=o.split(TXF[i]).join(TXF[i+1]);
+  return o;
+}
+TXD["Completato"]="Completed";TXD["Visto"]="Watched";
+var TXN=typeof WeakMap!=="undefined"?new WeakMap():null,TXA=["placeholder","aria-label","title","alt"];
+function trSkip(n,at){var p=n.nodeType===1?n:n.parentNode;if(!p)return true;if(p.closest&&p.closest("[data-nt]"))return true;if(at)return false;if(p.nodeName==="SCRIPT"||p.nodeName==="STYLE"||p.nodeName==="TEXTAREA")return true;var c=p.classList,pp=p.parentNode;return !!((c&&c.contains("cm"))||(p.nodeName==="B"&&pp&&pp.classList&&pp.classList.contains("cm")))}
+function trText(n){
+  if(trSkip(n))return;var s=n.nodeValue,o=TXN&&TXN.get(n);if(o&&o===s)return;
+  var t=tr(s);if(t!==s){n.nodeValue=t;if(TXN)TXN.set(n,t)}
+}
+function trAttrs(e){
+  if(trSkip(e,true))return;
+  TXA.forEach(function(a){var v=e.getAttribute&&e.getAttribute(a);if(v){var t=tr(v);if(t!==v)e.setAttribute(a,t)}});
+}
+function trTree(r){
+  if(!r)return;
+  if(r.nodeType===3){trText(r);return}
+  if(r.nodeType!==1)return;
+  trAttrs(r);
+  var q=r.querySelectorAll("[placeholder],[aria-label],[title],[alt]"),i;for(i=0;i<q.length;i++)trAttrs(q[i]);
+  var w=document.createTreeWalker(r,4,null),n,a=[];while(n=w.nextNode())a.push(n);
+  for(i=0;i<a.length;i++)trText(a[i]);
+}
+var TXO=null;
+function startTr(){
+  if(!EN||TXO)return;
+  document.documentElement.lang="en";document.title=tr(document.title);
+  trTree(document.body);
+  if(typeof MutationObserver==="undefined")return;
+  TXO=new MutationObserver(function(ms){
+    ms.forEach(function(m){
+      if(m.type==="childList")m.addedNodes.forEach(trTree);
+      else if(m.type==="characterData")trText(m.target);
+      else if(m.type==="attributes")trAttrs(m.target);
+    });
+    TXO.takeRecords();
+  });
+  TXO.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:TXA});
+}
 // [id stabile, titolo, ore, S=serie E=essenziale U=in uscita]
 var P=[
 ["Prima del 1950",[[0,"Captain America: Il primo Vendicatore",2.1,"E"],[48,"Marvel One-Shot: Agent Carter",0.3],[49,"Agent Carter, stagione 1",5.6,"S"],[50,"Agent Carter, stagione 2",7.1,"S"]]],
@@ -411,7 +493,7 @@ var P=[
 ["In arrivo",[[143,"Avengers: Secret Wars",2.5,"EU",[2027,12,17]]]]
 ];
 var items=[],byId={},phOf={},openPh={},total=0;
-function relOf(r){return r&&r.length===3?new Date(r[0],r[1]-1,r[2]).getTime():0}
+function relOf(r){return r&&r.length===3?romeMid(r[0],r[1],r[2]):0}
 function refreshLock(){var now=Date.now(),ch=[];items.forEach(function(x){if(x.r){var u=now<x.r;if(x.u&&!u)ch.push(x);x.u=u}});total=items.filter(function(i){return !i.u}).length;return ch}
 function buildItems(){
   items=[];byId={};phOf={};
@@ -426,7 +508,7 @@ function addUpcoming(list){
   P.forEach(function(p){p[1].forEach(function(x){have[x[1].toLowerCase()]=1})});
   list.forEach(function(u){
     if(!u||typeof u.t!=="string"||!u.r||!/^\d{4}-\d{2}-\d{2}$/.test(u.r)||!(u.id>=143))return;
-    if(have[u.t.toLowerCase()]||byId[u.id])return;var q=u.r.split("-"),rt=new Date(+q[0],q[1]-1,+q[2]).getTime();if(items.some(function(i){return i.r===rt}))return;
+    if(have[u.t.toLowerCase()]||byId[u.id])return;var q=u.r.split("-"),rt=romeMid(+q[0],+q[1],+q[2]);if(items.some(function(i){return i.r===rt}))return;
     var d=u.r.split("-");ph.push([u.id,u.t.slice(0,80),Number(u.h)>0?Number(u.h):2.2,"U"+(u.s?"S":""),[+d[0],+d[1],+d[2]]]);have[u.t.toLowerCase()]=1;ch=true;
   });
   if(ch){ph.sort(function(a,b){return relOf(a[4])-relOf(b[4])});buildItems();render()}
@@ -435,7 +517,7 @@ function refreshUpcoming(){
   if(DB_URL)fetch(DB_URL.replace(/\/+$/,"")+"/upcoming.json").then(function(r){return r.ok?r.json():null}).then(function(o){
     if(o&&typeof o==="object")addUpcoming(Object.keys(o).map(function(k){var v=o[k]||{};return{id:Number(v.id)||0,t:v.t,r:v.r,h:v.h,s:v.s}}));
   }).catch(function(){});
-  if(TMDB_KEY)fetch("https://api.themoviedb.org/3/discover/movie?api_key="+TMDB_KEY+"&language=it-IT&with_companies=420&primary_release_date.gte="+new Date().toISOString().slice(0,10)+"&sort_by=primary_release_date.asc").then(function(r){return r.json()}).then(function(o){
+  if(TMDB_KEY)fetch("https://api.themoviedb.org/3/discover/movie?api_key="+TMDB_KEY+"&language="+(EN?"en-US":"it-IT")+"&with_companies=420&primary_release_date.gte="+new Date().toISOString().slice(0,10)+"&sort_by=primary_release_date.asc").then(function(r){return r.json()}).then(function(o){
     addUpcoming((o.results||[]).map(function(m){return{id:5000000+m.id,t:m.title,r:m.release_date}}));
   }).catch(function(){});
 }
@@ -444,9 +526,9 @@ function renderTicker(){
   var el=$("tkr");if(!el)return;
   var lim=Date.now()+60*864e5,a=items.filter(function(x){return x.u&&x.r&&x.r<=lim}).sort(function(x,y){return x.r-y.r}).slice(0,8);
   if(!a.length){el.hidden=true;el.textContent="";el._s="";return}
-  var rows=a.map(function(x){return[x.t,new Date(x.r).toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"}),dayTxt(x.r)]});
+  var rows=a.map(function(x){return[x.t,new Date(x.r).toLocaleDateString(LOC,{day:"numeric",month:"short",year:"numeric",timeZone:"Europe/Rome"}),dayTxt(x.r)]});
   var sig=JSON.stringify(rows);if(el._s===sig)return;el._s=sig;el.textContent="";el.hidden=false;
-  var l=h("div","tkl");l.appendChild(h("i"));l.appendChild(h("span",null,"Prossime uscite"));el.appendChild(l);
+  var l=h("div","tkl");l.appendChild(h("i"));l.appendChild(h("span",null,EN?"Next releases · "+utcLbl():"Prossime uscite"));el.appendChild(l);
   var trk=h("div","trk"),n=0;
   rows.forEach(function(r){n+=r[0].length+r[1].length+r[2].length+8});
   var one=n*7.5+rows.length*44,sets=Math.max(2,2*Math.ceil((window.innerWidth+200)/one));
@@ -459,14 +541,14 @@ function renderTicker(){
 setInterval(renderTicker,60000);
 function pad2(n){return(n<10?"0":"")+n}
 function parts(r){var ms=Math.max(0,r-Date.now()),s=Math.floor(ms/1000);return[Math.floor(s/86400),Math.floor(s%86400/3600),Math.floor(s%3600/60),s%60]}
-function dayTxt(r){var d=parts(r)[0];return d>1?"tra "+d+" giorni":d===1?"domani":"oggi"}
-function dateTxt(r){return new Date(r).toLocaleDateString("it-IT",{day:"numeric",month:"long",year:"numeric"})}
+function dayTxt(r){var d=parts(r)[0];return EN?(d>1?"in "+d+" days":d===1?"tomorrow":"today"):(d>1?"tra "+d+" giorni":d===1?"domani":"oggi")}
+function dateTxt(r){return new Date(r).toLocaleDateString(LOC,{day:"numeric",month:"long",year:"numeric",timeZone:"Europe/Rome"})}
 function nextRelease(){var b=null;items.forEach(function(x){if(x.u&&x.r&&(!b||x.r<b.r))b=x});return b}
 var LOCK='<svg class="lk" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.3 7V5a2.7 2.7 0 0 1 5.4 0v2" fill="none" stroke-width="1.6"/></svg>';
-function cdTxt(r){var p=parts(r);return(p[0]?p[0]+"g ":"")+pad2(p[1])+":"+pad2(p[2])+":"+pad2(p[3])}
+function cdTxt(r){var p=parts(r);return(p[0]?p[0]+(EN?"d ":"g "):"")+pad2(p[1])+":"+pad2(p[2])+":"+pad2(p[3])}
 function cdCard(){
   var x=nextRelease();if(!x)return"";
-  return'<div class="lockbar" role="timer">'+LOCK+'<span class="lb-t">'+x.t+'</span><span class="lb-c">'+LOCK+'<span data-cdt="'+x.r+'">'+cdTxt(x.r)+'</span></span></div>';
+  return'<div class="lockbar" role="timer">'+LOCK+'<span class="lb-t">'+x.t+'</span><span class="lb-c">'+LOCK+'<span data-cdt="'+x.r+'">'+cdTxt(x.r)+'</span></span>'+(EN?'<small class="utc">'+utcLbl(x.r)+'</small>':'')+'</div>';
 }
 function tick(){
   if(ADM_UNTIL&&Date.now()>=ADM_UNTIL){ADM_UNTIL=0;FBT=null;admClear();viewing=null;render()}
@@ -722,7 +804,7 @@ function renderMine(){
     var chips='<span>'+fmt(nx.h)+'</span>'+(nx.s?'<span>Serie</span>':'')+(nx.e?'<span>★ Essenziale</span>':'');
     html+='<div class="tkw"><section class="ticket'+(enterNext?' enter':'')+'" id="tk"><div class="tk-top"><div class="tk-hd"><p class="tk-k">Prossimo da guardare</p><span class="tk-n">N° '+(items.indexOf(nx)+1)+' di '+total+'</span></div><h2 class="tk-t">'+nx.t+'</h2><p class="tk-p">'+P[phOf[nx.id]][0]+'</p><div class="tk-c">'+chips+'</div><span class="stamp" aria-hidden="true">Visto</span></div><div class="tk-bot">'+(viewing?'<span class="tk-b ro">Solo lettura</span>':'<button type="button" class="tk-b" data-next="'+nx.id+'">Segna come visto</button>')+barcode(nx.id)+'</div></section></div>';
   }else{
-    html+='<div class="tkw"><section class="ticket done'+(enterNext?' enter':'')+'"><div class="tk-top"><h2 class="tk-t">Maratona finita</h2><p class="tk-p">'+(nextRelease()?"Hai visto tutto quello che è uscito finora. Il prossimo è "+nextRelease().t+", "+dateTxt(nextRelease().r)+".":"Hai visto tutto quello che è uscito finora. Quando uscirà qualcosa di nuovo lo trovi qui.")+'</p></div></section></div>';
+    html+='<div class="tkw"><section class="ticket done'+(enterNext?' enter':'')+'"><div class="tk-top"><span class="stamp done" aria-hidden="true">Completato</span><h2 class="tk-t">Maratona finita</h2><p class="tk-p">'+(nextRelease()?"Hai visto tutto quello che è uscito finora. Il prossimo è "+nextRelease().t+", "+dateTxt(nextRelease().r)+".":"Hai visto tutto quello che è uscito finora. Quando uscirà qualcosa di nuovo lo trovi qui.")+'</p></div></section></div>';
   }
 
   enterNext=false;
@@ -769,11 +851,11 @@ function milestone(id){
 function tear(id){
   if(tearing||viewing)return;tearing=true;
   S.me.d[id]=1;save();push();
-  setTimeout(function(){milestone(+id)},1250);
+  setTimeout(function(){milestone(+id)},2250);
   var tk=$("tk"),rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
   if(!tk||rm){tearing=false;render();return}
   tk.classList.add("tear");
-  setTimeout(function(){tearing=false;enterNext=true;render()},950);
+  setTimeout(function(){tearing=false;enterNext=true;render()},2050);
 }
 function field(box,label,ro,val,rows){
   box.appendChild(h("p","k",label));
@@ -844,10 +926,11 @@ function frInit(me){
   });
 }
 function frAux(me){
+  if(auxSig===null){try{PUB=localStorage.getItem("mcu-pub-"+me)==="1"}catch(e){}}
   Promise.all([getJ(fnUrl(me)).catch(function(){return null}),getJ(pubUrl(me)).catch(function(){return null})]).then(function(r){
     if(S.me.i!==me)return;
     var n=(r[0]&&typeof r[0]==="object")?r[0]:{},pb=r[1]===true,sig=JSON.stringify([Object.keys(n).sort(),pb]);
-    FRN=n;PUB=pb;
+    FRN=n;PUB=pb;try{localStorage.setItem("mcu-pub-"+me,pb?"1":"0")}catch(e){}
     if(sig!==auxSig){var first=auxSig===null;auxSig=sig;updBadge();if(!first&&tab==="am"&&!S.cg)renderFriends()}
   });
 }
@@ -1025,7 +1108,7 @@ function drawStrip(el){
     var bar=h("div","bar"),fi=h("i");fi.style.setProperty("--w",(100*f.d.length/total)+"%");bar.appendChild(fi);det.appendChild(bar);
     var n=nextOf(f.d);
     det.appendChild(h("small",null,n?"Prossimo: "+n:"Maratona finita!"));
-    if(!f.me&&f.u)det.appendChild(h("small",null,"Aggiornato il "+new Date(f.u).toLocaleDateString("it-IT",{day:"numeric",month:"short"})));
+    if(!f.me&&f.u)det.appendChild(h("small",null,"Aggiornato il "+new Date(f.u).toLocaleDateString(LOC,{day:"numeric",month:"short"})));
     if(r==="owner"||r==="admin")det.appendChild(h("small",null,r==="owner"?"Capogruppo ★":"Capogruppo"));
     var ax=wActions(f);if(ax)det.appendChild(ax);
   }
@@ -1058,7 +1141,7 @@ function drawList(){
     var body=h("div"),top=h("b");
     top.appendChild(h("span",null,(f.me?dn(f.n)+" (tu)":dn(f.n))+(S.cg&&GM[f.id]&&(GM[f.id].r==="owner"||GM[f.id].r==="admin")?" ★":"")));top.appendChild(h("span",null,f.d.length+"/"+total));
     var bar=h("div","bar"),fi=h("i");fi.style.width=(100*f.d.length/total)+"%";bar.appendChild(fi);
-    var n=nextOf(f.d),when=f.u?"Aggiornato il "+new Date(f.u).toLocaleDateString("it-IT",{day:"numeric",month:"short"}):"";
+    var n=nextOf(f.d),when=f.u?"Aggiornato il "+new Date(f.u).toLocaleDateString(LOC,{day:"numeric",month:"short"}):"";
     body.appendChild(top);body.appendChild(bar);
     body.appendChild(h("small",null,n?"Prossimo: "+n:"Maratona finita!"));if(!f.me&&when)body.appendChild(h("small","mt",when));
     if(!f.me&&S.cg&&isGAdmin()&&GM[f.id]){
@@ -1147,8 +1230,8 @@ function loadGcnt(){
   });
 }
 function chUrl(gid,k){return DB_URL.replace(/\/+$/,"")+"/chats/"+gid+(k?"/"+k:"")+".json"}
-function chDay(t){return new Date(t).toLocaleDateString("it-IT",{weekday:"short",day:"numeric",month:"short"})}
-function chHour(t){return new Date(t).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}
+function chDay(t){return new Date(t).toLocaleDateString(LOC,{weekday:"short",day:"numeric",month:"short"})}
+function chHour(t){return new Date(t).toLocaleTimeString(LOC,{hour:"2-digit",minute:"2-digit"})}
 function chArr(o){var a=[];if(o&&typeof o==="object")Object.keys(o).sort().forEach(function(k){var x=o[k];if(x&&typeof x.m==="string")a.push({k:k,i:String(x.i||""),n:String(x.n||""),m:x.m.slice(0,300),t:Number(x.t)||0})});return a}
 function curName(i,fb){
   if(i&&S.me&&i===S.me.i&&S.me.n)return S.me.n;
@@ -1168,6 +1251,8 @@ function fillChat(l,arr,meId,onDel){
     var nb=h("b",null,dn(curName(x.i,x.n)));nb.style.setProperty("--h",hue(x.i||x.n||"?"));d.appendChild(nb);
     d.appendChild(document.createTextNode(x.m));
     if(x.t)d.appendChild(h("span","ct",chHour(x.t)));
+    if(!me&&x.i&&S.cg){var mo=h("button","cmo","⋯");mo.type="button";mo.setAttribute("aria-label","Altre opzioni del messaggio");mo.setAttribute("aria-haspopup","menu");
+      mo.addEventListener("click",function(e){e.stopPropagation();cmMenu(mo,x)});d.appendChild(mo)}
     if(onDel&&x.k){var xb=h("button","cx","×");xb.type="button";xb.setAttribute("aria-label","Cancella il messaggio");var ar=false;
       xb.addEventListener("click",function(){if(!ar){ar=true;xb.textContent="Cancella?";setTimeout(function(){ar=false;xb.textContent="×"},3500);return}onDel(x,d)});d.appendChild(xb)}
     l.appendChild(d);
@@ -1195,7 +1280,7 @@ function chatBox(gid){
     if(Date.now()-chLast<1500){msg("Un attimo, stai scrivendo troppo in fretta.");return}
     chLast=Date.now();
     getJ(muUrl(gid,S.me.i)).catch(function(){return null}).then(function(mu){
-    if(Number(mu)>Date.now()){msg("Sei stato silenziato dall’amministratore fino alle "+new Date(Number(mu)).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+".");return}
+    if(Number(mu)>Date.now()){msg("Sei stato silenziato dall’amministratore fino alle "+new Date(Number(mu)).toLocaleTimeString(LOC,{hour:"2-digit",minute:"2-digit"})+".");return}
     i.value="";
     var m={i:S.me.i,n:S.me.n,m:t,t:Date.now()};
     CH.m.push(m);drawChat();
@@ -1324,24 +1409,74 @@ function sendReport(gid,gn,o){
   var id=rid();
   return putJ(repUrl(id),{gid:gid,gn:gn,by:S.me.i,bn:S.me.n,w:o.w||"",wn:o.wn||"",m:o.m,t:Date.now(),s:"p"});
 }
-function reportForm(gid,gn){
-  var f=h("div","box cred");f.appendChild(h("p","k","Segnala un problema"));
-  f.appendChild(h("p","m","La segnalazione arriva all’amministratore, che può leggere la chat e intervenire. Squadra: "+gn));
-  var sel=h("select");sel.setAttribute("aria-label","Chi ha fatto l’infrazione");
-  var o0=h("option",null,"Chi? (facoltativo)");o0.value="";sel.appendChild(o0);
-  Object.keys(GM||{}).forEach(function(id){if(id===S.me.i)return;var o=h("option",null,(GM[id]&&GM[id].n)||"?");o.value=id;sel.appendChild(o)});
-  var mo=h("textarea");mo.maxLength=300;mo.rows=3;mo.placeholder="Cosa è successo?";mo.setAttribute("aria-label","Motivo della segnalazione");
-  f.appendChild(sel);f.appendChild(mo);
-  var row=h("div","row"),ok=h("button","pri","Invia la segnalazione"),no=h("button",null,"Annulla");ok.type=no.type="button";row.appendChild(ok);row.appendChild(no);f.appendChild(row);
-  no.addEventListener("click",function(){f.remove()});
-  ok.addEventListener("click",function(){
-    var m=mo.value.trim();if(m.length<5){msg("Scrivi cosa è successo.");return}
-    if(Date.now()-(window.__rpLast||0)<30000){msg("Hai appena inviato una segnalazione: aspetta un attimo.");return}
-    ok.disabled=no.disabled=true;
-    sendReport(gid,gn,{w:sel.value,wn:sel.value?(GM[sel.value]&&GM[sel.value].n)||"":"",m:m}).then(function(){window.__rpLast=Date.now();msg("Segnalazione inviata all’amministratore.");f.remove()}).catch(function(){ok.disabled=no.disabled=false;msg("Segnalazione non inviata. Riprova.")});
-  });
-  return f;
+var RPR=["Linguaggio offensivo","Spam o pubblicità","Molestie o minacce","Altro"];
+function gName(){return(GR&&GR.n)||(UG&&UG[S.cg])||""}
+function cmMenu(btn,x){
+  var old=$("cmm");if(old){var same=old._b===btn;old.remove();if(same)return}
+  var m=h("div","cmm");m.id="cmm";m.setAttribute("role","menu");m._b=btn;
+  var rb=h("button",null);rb.type="button";rb.setAttribute("role","menuitem");rb.appendChild(ico(IC_FLAG));rb.appendChild(document.createTextNode(" Segnala messaggio"));
+  rb.addEventListener("click",function(){m.remove();reportModal(S.cg,gName(),{w:x.i,wn:curName(x.i,x.n),q:x.m})});
+  m.appendChild(rb);document.body.appendChild(m);
+  var r=btn.getBoundingClientRect(),w=m.offsetWidth||190,hh=m.offsetHeight||44;
+  m.style.left=Math.max(8,Math.min(window.innerWidth-w-8,r.right-w))+"px";
+  m.style.top=(r.bottom+hh+8>window.innerHeight?Math.max(8,r.top-hh-4):r.bottom+4)+"px";
+  trTree(m);
+  setTimeout(function(){
+    var close=function(e){if(e&&e.type==="keydown"&&e.key!=="Escape")return;m.remove();document.removeEventListener("click",close);document.removeEventListener("keydown",close);window.removeEventListener("scroll",close,true)};
+    document.addEventListener("click",close);document.addEventListener("keydown",close);window.addEventListener("scroll",close,true);
+  },0);
 }
+function reportModal(gid,gn,pre){
+  pre=pre||{};var old=$("rpm");if(old)old.remove();
+  var ov=h("div","mdl");ov.id="rpm";ov.setAttribute("role","dialog");ov.setAttribute("aria-modal","true");ov.setAttribute("aria-labelledby","rpmT");
+  var bx=h("div","mbox rbox"),t=h("p","k","Segnala");t.id="rpmT";bx.appendChild(t);
+  var sel=null,reason=-1;
+  if(pre.q){
+    bx.appendChild(h("p","m","Il messaggio segnalato"));
+    var q=h("blockquote","rq");q.setAttribute("data-nt","1");q.appendChild(h("b",null,pre.wn||"?"));q.appendChild(document.createTextNode(pre.q));bx.appendChild(q);
+  }else{
+    bx.appendChild(h("p","m","Chi vuoi segnalare? (facoltativo)"));
+    sel=h("select");sel.setAttribute("aria-label","Chi ha fatto l’infrazione");
+    var o0=h("option",null,"Nessuno in particolare");o0.value="";sel.appendChild(o0);
+    Object.keys(GM||{}).forEach(function(id){if(id===S.me.i)return;var o=h("option",null,(GM[id]&&GM[id].n)||"?");o.value=id;o.setAttribute("data-nt","1");sel.appendChild(o)});
+    bx.appendChild(sel);
+  }
+  bx.appendChild(h("p","m","Scegli il motivo"));
+  var chs=h("div","rchips"),btns=[];
+  RPR.forEach(function(lbl,i){var c=h("button","chip",lbl);c.type="button";c.setAttribute("aria-pressed","false");
+    c.addEventListener("click",function(){reason=i;btns.forEach(function(b2,j){b2.setAttribute("aria-pressed",String(j===i))});ok.disabled=false;er.textContent=""});btns.push(c);chs.appendChild(c)});
+  bx.appendChild(chs);
+  var mo=h("textarea");mo.maxLength=300;mo.rows=3;mo.placeholder="Aggiungi una nota (facoltativo)";mo.setAttribute("aria-label","Aggiungi una nota (facoltativo)");bx.appendChild(mo);
+  bx.appendChild(h("p","m rnote","Solo l’amministratore vede la segnalazione. La persona segnalata non riceve nessun avviso."));
+  var dt=h("details","rhow");dt.appendChild(h("summary",null,"Come funziona?"));
+  var ol=h("ol");["Scegli il motivo e invia: la segnalazione arriva solo ad Alessandro.","Lui legge la chat e può silenziare la persona o toglierla dal gruppo.","Tocca ⋯ accanto a un messaggio per segnalare proprio quel messaggio."].forEach(function(x){ol.appendChild(h("li",null,x))});
+  dt.appendChild(ol);bx.appendChild(dt);
+  var er=h("p","m gerr");er.setAttribute("role","alert");bx.appendChild(er);
+  var row=h("div","row"),ok=h("button","pri","Invia segnalazione"),no=h("button",null,"Annulla");ok.type=no.type="button";ok.disabled=true;row.appendChild(ok);row.appendChild(no);bx.appendChild(row);
+  function close(){ov.remove();document.removeEventListener("keydown",esc)}
+  function esc(e){if(e.key==="Escape")close()}
+  document.addEventListener("keydown",esc);
+  ov.addEventListener("click",function(e){if(e.target===ov)close()});
+  no.addEventListener("click",close);
+  ok.addEventListener("click",function(){
+    var note=mo.value.replace(/\s+/g," ").trim();
+    if(reason<0){er.textContent="Scegli un motivo.";return}
+    if(reason===RPR.length-1&&note.length<5){er.textContent="Scrivi cosa è successo.";mo.focus();return}
+    if(Date.now()-(window.__rpLast||0)<30000){er.textContent="Hai appena inviato una segnalazione: aspetta un attimo.";return}
+    var w=pre.w||(sel?sel.value:""),wn=pre.w?pre.wn:(w?(GM[w]&&GM[w].n)||"":"");
+    var m=RPR[reason]+(note?" — "+note:"")+(pre.q?" — Messaggio: «"+pre.q.slice(0,200)+"»":"");
+    ok.disabled=no.disabled=true;
+    sendReport(gid,gn,{w:w,wn:wn,m:m.slice(0,500)}).then(function(){
+      window.__rpLast=Date.now();bx.textContent="";
+      var ck=h("p","rok","✓");ck.setAttribute("aria-hidden","true");bx.appendChild(ck);
+      bx.appendChild(h("p","k","Segnalazione inviata. Grazie: la guarda l’amministratore."));
+      bx.appendChild(h("p","m","Solo l’amministratore vede la segnalazione. La persona segnalata non riceve nessun avviso."));
+      var cl=h("button","pri","Ok");cl.type="button";cl.addEventListener("click",close);bx.appendChild(cl);cl.focus();
+    }).catch(function(){ok.disabled=no.disabled=false;er.textContent="Segnalazione non inviata. Riprova."});
+  });
+  ov.appendChild(bx);document.body.appendChild(ov);
+}
+function reportForm(gid,gn){reportModal(gid,gn,{});return h("span")}
 function statsBox(){
   var b=h("section","box gbox sbox"),gh=h("div","gh");gh.appendChild(h("p","k","Statistiche e backup"));
   var rf=h("button",null,"Aggiorna");rf.type="button";gh.appendChild(rf);b.appendChild(gh);
@@ -1394,7 +1529,7 @@ function reportsBox(){
   gh.appendChild(h("p","k","Segnalazioni"+(pend.length?" ("+pend.length+")":"")));b.appendChild(gh);
   if(!pend.length){b.appendChild(h("p","m","Nessuna segnalazione."));return b}
   pend.sort(function(a,c){return(RP[c].t||0)-(RP[a].t||0)}).forEach(function(k){
-    var r=RP[k],it=h("div","agi greq"),when=r.t?new Date(r.t).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"";
+    var r=RP[k],it=h("div","agi greq"),when=r.t?new Date(r.t).toLocaleString(LOC,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):"";
     it.appendChild(h("p","k","Squadra «"+(r.gn||"?")+"»"));
     it.appendChild(h("p","m","Da "+(r.bn||"?")+(r.wn?" · contro "+r.wn:"")+" · "+when));
     it.appendChild(h("p","m","Motivo: "+(r.m||"")));
@@ -1430,7 +1565,7 @@ function admLog(txt){
   if(!isAdmin())return;
   aUrlTok(logUrl()).then(function(u){return fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({t:Date.now(),a:String(txt).slice(0,200)})})}).catch(function(){});
 }
-function fmtWhen(t){return new Date(t).toLocaleString("it-IT",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}
+function fmtWhen(t){return new Date(t).toLocaleString(LOC,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}
 var AG=null;
 function agLoad(){
   var base=DB_URL.replace(/\/+$/,"");
@@ -1467,12 +1602,12 @@ function adminGroupsBox(){
     ids.forEach(function(gid){
       var g=AG.g[gid]||{},ms=AG.m[gid]||{},mu=(AG.u&&AG.u[gid])||{},ids2=Object.keys(ms),it=h("div","agi"),hd=h("button","agh");hd.type="button";
       hd.appendChild(h("span",null,(g.n||"Senza nome")));
-      hd.appendChild(h("span","agc",ids2.length+(g.max?"/"+g.max:"")+" · "+(g.t?new Date(g.t).toLocaleDateString("it-IT",{day:"numeric",month:"short"}):"")));
+      hd.appendChild(h("span","agc",ids2.length+(g.max?"/"+g.max:"")+" · "+(g.t?new Date(g.t).toLocaleDateString(LOC,{day:"numeric",month:"short"}):"")));
       var body=h("div","agb2");body.hidden=true;
       hd.addEventListener("click",function(){body.hidden=!body.hidden});
       ids2.forEach(function(id){
         var m=ms[id]||{},r=h("div","agm"),until=Number(mu[id])||0,muted=until>Date.now();
-        r.appendChild(h("span",null,(m.n||"?")+(m.r==="owner"?" (capogruppo)":"")+(muted?" 🔇 fino alle "+new Date(until).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}):"")));
+        r.appendChild(h("span",null,(m.n||"?")+(m.r==="owner"?" (capogruppo)":"")+(muted?" 🔇 fino alle "+new Date(until).toLocaleTimeString(LOC,{hour:"2-digit",minute:"2-digit"}):"")));
         var act=h("div","agn");
         if(m.r!=="owner"){var ob=h("button",null,"Capogruppo");ob.type="button";two(ob,"Capogruppo",function(){
           adminOwner(gid,id).then(function(){admLog("Capogruppo di «"+g.n+"»: ora "+(m.n||"?"));return agLoad()}).then(draw).catch(function(e){msg(gErr(e))})});act.appendChild(ob)}
@@ -1583,16 +1718,16 @@ function ico(d){
   v.setAttribute("fill","none");v.setAttribute("stroke","currentColor");v.setAttribute("stroke-width","2");v.setAttribute("stroke-linecap","round");v.setAttribute("stroke-linejoin","round");
   d.split("|").forEach(function(x){var p=document.createElementNS(ns,"path");p.setAttribute("d",x);v.appendChild(p)});return v;
 }
-var IC_ADDP="M15 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1|M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7|M19 8v6|M16 11h6",IC_GNEW="M12 5v14|M5 12h14",IC_CODE="M4 12h12|M12 6l6 6-6 6|M20 4v16";
+var IC_ADDP="M15 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1|M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7|M19 8v6|M16 11h6",IC_GNEW="M12 5v14|M5 12h14",IC_CODE="M4 12h12|M12 6l6 6-6 6|M20 4v16",IC_FLAG="M5 21V4|M5 4h12l-2.5 4L17 12H5",IC_LOCK="M6 11h12v9H6z|M8 11V8a4 4 0 0 1 8 0v3",IC_UNL="M6 11h12v9H6z|M8 11V8a4 4 0 0 1 7.5-1.5",IC_OK="M5 12.5l4.5 4.5L19 7",IC_NO="M6 6l12 12|M18 6L6 18";
 function groupsBox(){
   var b=h("section","box gbox"),gh=h("div","gh");gh.appendChild(h("p","k","Amici"));
   if(!isAdmin()){
     var pv=h("button","pubsw"+(PUB?" on":""));pv.type="button";pv.setAttribute("aria-pressed",String(PUB));
-    pv.appendChild(h("span",null,PUB?"Profilo pubblico":"Profilo privato"));
+    pv.appendChild(ico(PUB?IC_UNL:IC_LOCK));pv.appendChild(h("span",null,PUB?"Profilo pubblico":"Profilo privato"));
     pv.setAttribute("aria-label","Cambia il profilo tra pubblico e privato");
     pv.addEventListener("click",function(){
       var nv=!PUB;pv.disabled=true;
-      (nv?putJ(pubUrl(S.me.i),true):delJ(pubUrl(S.me.i))).then(function(){PUB=nv;auxSig=null;msg(nv?"Profilo pubblico: chi ti aggiunge diventa subito tuo amico e ti arriva solo un avviso.":"Profilo privato: chi ti aggiunge deve aspettare che tu accetti.");renderFriends()}).catch(function(){pv.disabled=false;msg("Non sono riuscito a cambiare il profilo. Riprova.")});
+      (nv?putJ(pubUrl(S.me.i),true):delJ(pubUrl(S.me.i))).then(function(){PUB=nv;try{localStorage.setItem("mcu-pub-"+S.me.i,nv?"1":"0")}catch(e){}auxSig=null;msg(nv?"Profilo pubblico: chi ti aggiunge diventa subito tuo amico e ti arriva solo un avviso.":"Profilo privato: chi ti aggiunge deve aspettare che tu accetti.");renderFriends()}).catch(function(){pv.disabled=false;msg("Non sono riuscito a cambiare il profilo. Riprova.")});
     });
     gh.appendChild(pv);
   }
@@ -1600,15 +1735,15 @@ function groupsBox(){
   if(!isAdmin())b.appendChild(h("p","m pubnote",PUB?"Chi ti aggiunge diventa subito tuo amico, ti arriva un avviso.":"Chi ti aggiunge aspetta che tu accetti."));
   if(!S.cg){
     Object.keys(FRQ||{}).forEach(function(id){
-      var q=FRQ[id]||{},rw=h("div","rmr");rw.appendChild(h("span",null,dn(q.n||"?")+" vuole essere tuo amico"));
-      var ok=h("button","pri","Accetta"),no=h("button",null,"Rifiuta");ok.type=no.type="button";
+      var q=FRQ[id]||{},rw=h("div","rmr min");rw.appendChild(h("span",null,dn(q.n||"?")+" vuole essere tuo amico"));
+      var ok=h("button","pri rb"),no=h("button","rb");ok.type=no.type="button";ok.appendChild(ico(IC_OK));no.appendChild(ico(IC_NO));ok.title=ok.ariaLabel="Accetta";ok.setAttribute("aria-label","Accetta");no.title="Rifiuta";no.setAttribute("aria-label","Rifiuta");ok.title="Accetta";
       ok.addEventListener("click",function(){ok.disabled=no.disabled=true;frAccept(id).catch(function(e){ok.disabled=no.disabled=false;msg(frErr(e))})});
       no.addEventListener("click",function(){no.disabled=ok.disabled=true;frReject(id).catch(function(e){no.disabled=ok.disabled=false;msg(frErr(e))})});
       rw.appendChild(ok);rw.appendChild(no);b.appendChild(rw);
     });
     Object.keys(FRN||{}).forEach(function(id){
-      var q=FRN[id]||{},rw=h("div","rmr");rw.appendChild(h("span",null,dn(q.n||"?")+" ti ha aggiunto agli amici"));
-      var ok=h("button",null,"Ok");ok.type="button";
+      var q=FRN[id]||{},rw=h("div","rmr min");rw.appendChild(h("span",null,dn(q.n||"?")+" ti ha aggiunto agli amici"));
+      var ok=h("button","rb");ok.type="button";ok.appendChild(ico(IC_OK));ok.title="Ok";ok.setAttribute("aria-label","Ok");
       ok.addEventListener("click",function(){ok.disabled=true;delJ(fnUrl(S.me.i,id)).then(function(){delete FRN[id];auxSig=null;updBadge();renderFriends()}).catch(function(){ok.disabled=false})});
       rw.appendChild(ok);b.appendChild(rw);
     });
@@ -1642,8 +1777,8 @@ function groupsBox(){
       if(!arm){arm=true;lv.textContent="Tocca ancora";setTimeout(function(){arm=false;lv.textContent=role==="owner"?"Elimina gruppo":"Esci dal gruppo"},4000);return}
       (role==="owner"?deleteGroup:leaveGroup)(S.cg).catch(function(e){msg(gErr(e))});
     });
-    var rb2=h("button",null,"Segnala un problema"),rw2=h("div");rb2.type="button";
-    rb2.addEventListener("click",function(){if(rw2.firstChild){rw2.textContent="";return}rw2.appendChild(reportForm(S.cg,nm))});
+    var rb2=h("button",null),rw2=h("div");rb2.type="button";rb2.appendChild(ico(IC_FLAG));rb2.appendChild(document.createTextNode(" Segnala"));
+    rb2.addEventListener("click",function(){ar.hidden=true;dots.setAttribute("aria-expanded","false");reportModal(S.cg,nm,{})});
     ar.appendChild(rb2);ar.appendChild(lv);ar.hidden=true;wa.appendChild(ar);wa.appendChild(rw2);
     dots.addEventListener("click",function(){ar.hidden=!ar.hidden;dots.setAttribute("aria-expanded",String(!ar.hidden))});
     var fl=h("div","wst");fl.id="fl";wa.appendChild(fl);
@@ -1669,7 +1804,7 @@ function nkOf(name){return sha("nm:"+String(name).replace(/\s+/g," ").trim().sli
 var RP={};
 function admCount(){return isAdminAcct()?Object.keys(REQ).length+Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].s==="p"}).length+Object.keys(RP||{}).filter(function(k){return RP[k]&&RP[k].s==="p"}).length:0}
 function updBadge(){var a=admCount(),n=a+frCount(),b=$("tAm");if(b){if(n)b.setAttribute("data-n",n);else b.removeAttribute("data-n")}var p=$("admPill");if(p&&!p.hidden)p.textContent=a?"Admin · "+a+" · Esci":"Admin · Esci"}
-function forceLogout(){u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("Nome o PIN sono stati cambiati. Accedi con le nuove credenziali.");render()}
+function forceLogout(){why("Ti ho disconnesso perché il tuo account non risulta più sul server. Accedi di nuovo; se succede ancora, scrivilo ad Alessandro.");u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("Nome o PIN sono stati cambiati. Accedi con le nuove credenziali.");render()}
 function moveAccount(old,newName,newPin){
   moving=true;
   return Promise.all([acctKeys(newName,newPin),nkOf(old.name)]).then(function(r){
@@ -1763,13 +1898,55 @@ function doCreate(name,pw){
       var em=u2email();
       return u2call("signUp",{email:em,password:pw,returnSecureToken:true}).then(function(o){
         u2set(o);var uid=o.localId;
-        return putJ(memUrl(uid),uid).then(function(){return putJ(aUrl(nk),{id:uid,v:3,e:em,u:uid})}).then(function(){
+        return putJ(memUrl(uid),uid).then(function(){return putJ(aUrl(nk),{id:uid,v:3,e:em,u:uid,l:LANG||"it"})}).then(function(){
           startSession(name,uid,{n:name,d:myArr()});S.me.u=Date.now();save(false);
           return Promise.all([putJ(dbUrl(uid),{n:name,d:myArr(),u:S.me.u}),putJ(frUrl(uid),{_i:1}).catch(function(){})]);
         }).catch(function(e){u2out();throw new Error(e&&e.message==="HTTP 401"?"taken":(e&&e.message)||"net")});
       });
     });
   });
+}
+function putLang(l){
+  if(!DB_URL||!S.acct||!U2||(l!=="it"&&l!=="en"))return Promise.resolve();
+  return nkOf(S.acct.name).then(function(nk){return putJ(aUrl(nk).replace(/\.json$/,"/l.json"),l)}).catch(function(){});
+}
+function switchLang(l){
+  if(l===LANG)return;setLangStore(l);
+  var go=function(){location.reload()};
+  Promise.race([putLang(l),new Promise(function(r){setTimeout(r,1500)})]).then(go,go);
+}
+function langSw(){
+  var w=h("div","lsw");w.setAttribute("role","group");w.setAttribute("data-nt","1");w.setAttribute("aria-label",EN?"Language":"Lingua");
+  [["it","IT","Italiano"],["en","EN","English"]].forEach(function(o){
+    var b=h("button",null,o[1]);b.type="button";b.title=o[2];b.setAttribute("aria-label",o[2]);b.setAttribute("aria-pressed",String(LANG===o[0]||(!LANG&&o[0]==="it")));
+    b.addEventListener("click",function(){switchLang(o[0])});w.appendChild(b);
+  });
+  return w;
+}
+function utcFull(ts){var o=romeOff(ts||Date.now());return utcLbl(ts)+" ("+(o>=120?"CEST":"CET")+")"}
+function ensureLang(){
+  var g=$("langov");
+  if(LANG){if(g)g.remove();return false}
+  if(g)return true;
+  var ov=h("div","mdl gate");ov.id="langov";ov.setAttribute("role","dialog");ov.setAttribute("aria-modal","true");ov.setAttribute("data-nt","1");ov.style.zIndex="120";
+  var bx=h("div","mbox lbox");
+  bx.appendChild(h("p","k","Scegli la lingua · Choose your language"));
+  var row=h("div","lrow");
+  [["it","Italiano","Continua in italiano"],["en","English","Continue in English"]].forEach(function(o){
+    var b=h("button","lbtn");b.type="button";b.appendChild(h("b",null,o[1]));b.appendChild(h("small",null,o[2]));
+    b.addEventListener("click",function(){
+      setLangStore(o[0]);
+      if(o[0]==="en"){b.disabled=true;Promise.race([putLang("en"),new Promise(function(r){setTimeout(r,1500)})]).then(function(){location.reload()},function(){location.reload()});return}
+      LANG="it";putLang("it");ov.remove();render();
+    });
+    row.appendChild(b);
+  });
+  bx.appendChild(row);
+  var u1=utcFull();
+  bx.appendChild(h("p","m","🇮🇹 Le date e gli orari delle uscite seguono l’ora italiana: "+u1+". La lingua scelta viene salvata nel tuo account."));
+  bx.appendChild(h("p","m","🇬🇧 Release dates and times follow "+u1+". The language you pick is saved to your account."));
+  ov.appendChild(bx);document.body.appendChild(ov);
+  return true;
 }
 function doLogin(name,pw){
   name=cleanName(name);
@@ -1786,7 +1963,9 @@ function doLogin(name,pw){
       u2set(o);
       return getJ(memUrl(o.localId)).then(function(pid){
         if(!pid||pid!==ex.id){u2out();throw new Error("bad")}
-        return getJ(dbUrl(pid)).then(function(rec){startSession(name,pid,rec)});
+        return getJ(dbUrl(pid)).then(function(rec){startSession(name,pid,rec);
+          if(ex.l&&ex.l!==LANG){setLangStore(ex.l);location.reload();return new Promise(function(){})}
+          if(!ex.l&&LANG)putLang(LANG)});
       });
     });
   })});
@@ -1802,7 +1981,7 @@ function doMigrate(name,pin,pw){
       var em=u2email(),id=ex.id;
       return u2call("signUp",{email:em,password:pw,returnSecureToken:true}).then(function(o){
         u2set(o);var uid=o.localId;
-        var rec={id:id,v:3,e:em,u:uid};if(ex.o)rec.o=ex.o;
+        var rec={id:id,v:3,e:em,u:uid,l:ex.l||LANG||"it"};if(ex.o)rec.o=ex.o;
         return putJ(claimUrl(id),uid).then(function(){return putJ(memUrl(uid),id)}).then(function(){return putJ(aUrl(nk),rec)})
           .then(function(){return getJ(dbUrl(id))}).then(function(r){startSession(name,id,r)})
           .catch(function(e){u2out();throw new Error(e&&e.message==="HTTP 401"?"claimed":(e&&e.message)||"net")});
@@ -1980,26 +2159,29 @@ function admUi(){
   var fa=$("admFoot");if(fa&&fbMode())fa.hidden=on;
   var rs=$("reset");if(rs)rs.hidden=!!S.acct;
 }
-function flyTitle(ov,ttl){
-  function done(){if(ttl.parentNode)ttl.remove();if(ov.parentNode)ov.remove();document.body.classList.remove("gated");var hh=document.querySelector("h1");if(hh)hh.style.visibility=""}
+function flyTitle(ov,ttl,after){
+  var fin=false;
+  function done(){if(fin)return;fin=true;if(ttl.parentNode)ttl.remove();if(ov.parentNode)ov.remove();document.body.classList.remove("gated");var hh=document.querySelector("h1");if(hh)hh.style.visibility="";if(after)after()}
   var hero=null;Array.prototype.forEach.call(document.querySelectorAll("h1"),function(x){if(!ov.contains(x)&&x!==ttl)hero=x});
   if(!hero||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)||!hero.animate){done();return}
   document.body.classList.remove("gated");window.scrollTo(0,0);
   requestAnimationFrame(function(){requestAnimationFrame(function(){
     function box(el){var r=document.createRange();r.selectNodeContents(el);return r.getBoundingClientRect()}
-    var a=box(ttl),b=box(hero);
+    var a=box(ttl),b=box(hero),te=ttl.getBoundingClientRect(),he=hero.getBoundingClientRect();
     if(!a.width||!b.width){done();return}
-    var fs=getComputedStyle(ttl).fontSize;
+    var hfs=getComputedStyle(hero).fontSize,k=parseFloat(hfs)/parseFloat(getComputedStyle(ttl).fontSize);
     document.body.appendChild(ttl);
-    ttl.style.cssText="position:fixed;left:"+a.left+"px;top:"+a.top+"px;margin:0;z-index:120;pointer-events:none;transform-origin:0 0;width:max-content;text-align:left;color:var(--ink);font-size:"+fs;
+    ttl.style.cssText="position:fixed;left:"+he.left+"px;top:"+he.top+"px;margin:0;z-index:120;pointer-events:none;transform-origin:0 0;width:max-content;text-align:left;color:var(--ink);font-size:"+hfs+";will-change:transform;backface-visibility:hidden";
     hero.style.visibility="hidden";
-    ov.style.transition="opacity .45s ease";ov.style.opacity="0";
-    var he=hero.getBoundingClientRect(),te=ttl.getBoundingClientRect(),k=b.width/a.width,dx=he.left-te.left,dy=he.top-te.top;
-    var an=ttl.animate([{transform:"translate(0,0) scale(1)"},{transform:"translate("+dx+"px,"+dy+"px) scale("+k+")"}],{duration:950,easing:"cubic-bezier(.2,.8,.2,1)",fill:"forwards"});
-    an.onfinish=done;an.oncancel=done;setTimeout(done,2500);
+    ov.style.webkitBackdropFilter="none";ov.style.backdropFilter="none";
+    ov.style.transition="opacity .5s ease";ov.style.opacity="0";
+    var an=ttl.animate([{transform:"translate("+(te.left-he.left)+"px,"+(te.top-he.top)+"px) scale("+(1/k)+")"},{transform:"translate(0,0) scale(1)"}],{duration:1300,easing:"cubic-bezier(.45,0,.2,1)",fill:"both"});
+    an.onfinish=done;an.oncancel=done;setTimeout(done,3000);
   })});
 }
+function why(t){try{if(t)localStorage.setItem("mcu-why",t);else localStorage.removeItem("mcu-why")}catch(e){}}
 function ensureGate(){
+  if(ensureLang())return;
   var g=$("gate");if(g&&g.getAttribute("data-fly"))return;
   if(!DB_URL||S.acct||$("mdl")||(typeof LEGACY!=="undefined"&&LEGACY&&!GATE_OK)){if(g)g.remove();document.body.classList.remove("gated");return}
   if(g)return;
@@ -2007,14 +2189,15 @@ function ensureGate(){
   var ov=h("div","mdl gate");ov.id="gate";ov.setAttribute("role","dialog");ov.setAttribute("aria-modal","true");ov.setAttribute("aria-labelledby","gateT");
   var src=document.querySelector("h1"),ttl=src?src.cloneNode(true):h("h1",null,"Maratona MCU");ttl.removeAttribute("aria-label");ttl.setAttribute("aria-hidden","true");ttl.classList.add("gtitle");
   var bx=h("div","mbox"),t=h("p","k","Accedi alla maratona");t.id="gateT";t.className="sr";bx.appendChild(t);
-  var info=h("p","m",EXP?"Per sicurezza l’accesso scade dopo un’ora di inattività. Accedi di nuovo.":"Per vedere la maratona e i tuoi amici crea un account, oppure accedi se ce l’hai già.");bx.appendChild(info);
+  var wy="";try{wy=localStorage.getItem("mcu-why")||""}catch(e){}
+  var info=h("p","m",wy?wy:EXP?"Per sicurezza l’accesso scade dopo un’ora di inattività. Accedi di nuovo.":"Per vedere la maratona e i tuoi amici crea un account, oppure accedi se ce l’hai già.");bx.appendChild(info);
   var mode="new",tabs=h("div","gtabs"),tn=h("button",null,"Crea account"),tl=h("button",null,"Accedi");tn.type=tl.type="button";tabs.appendChild(tn);tabs.appendChild(tl);bx.appendChild(tabs);
   var ni=h("input");ni.type="text";ni.maxLength=24;ni.placeholder="Username (es. mario.rossi)";ni.autocomplete="username";ni.autocapitalize="off";ni.spellcheck=false;ni.setAttribute("aria-label","Username");
   var pi=h("input");pi.type="password";pi.maxLength=64;pi.placeholder="Password (da 8 caratteri)";pi.setAttribute("aria-label","Password");
   var er=h("p","m gerr");er.setAttribute("role","alert");
   var ok=h("button","pri","Crea account");ok.type="button";
   var hint=h("p","m","Hai dimenticato la password? Scrivi ad Alessandro: ti sblocca l’account.");hint.hidden=true;
-  [ni,pi,er,ok,hint].forEach(function(x){bx.appendChild(x)});
+  [ni,pi,er,ok,hint].forEach(function(x){bx.appendChild(x)});bx.appendChild(langSw());
   function setMode(m){mode=m;tn.setAttribute("aria-pressed",String(m==="new"));tl.setAttribute("aria-pressed",String(m==="in"));ok.textContent=m==="new"?"Crea account":"Accedi";pi.autocomplete=m==="new"?"new-password":"current-password";hint.hidden=m==="new";er.textContent=""}
   tn.addEventListener("click",function(){setMode("new")});tl.addEventListener("click",function(){setMode("in")});setMode(EXP?"in":"new");
   function go(){
@@ -2023,7 +2206,7 @@ function ensureGate(){
     if(mode==="new"&&(pw.length<8||pw.length>64)){er.textContent="La password deve avere da 8 a 64 caratteri.";pi.focus();return}
     if(mode==="in"&&!pw){er.textContent="Scrivi la password.";pi.focus();return}
     ok.disabled=true;er.textContent="Un attimo…";
-    (mode==="new"?doCreate:doLogin)(nm,pw).then(function(){EXP=false;ov.setAttribute("data-fly","1");render();msg(mode==="new"?"Account creato. I tuoi progressi ora sono condivisi.":"Bentornato! Progressi ripristinati.");pull();loadUcnt();loadGcnt();flyTitle(ov,ttl)}).catch(function(e){
+    (mode==="new"?doCreate:doLogin)(nm,pw).then(function(){EXP=false;why("");ov.setAttribute("data-fly","1");render();msg(mode==="new"?"Account creato. I tuoi progressi ora sono condivisi.":"Bentornato! Progressi ripristinati.");flyTitle(ov,ttl,function(){pull();loadUcnt();loadGcnt()})}).catch(function(e){
       ok.disabled=false;var m=e&&e.message;
       if(m==="migrate"){er.textContent="";GATE_OK=true;openMigrate(e.legacy.name,e.legacy.pin,e.legacy.rs);return}
       er.textContent=m==="baduser"?"Username non valido: da 3 a 20 caratteri, solo lettere minuscole, numeri, punto e trattino basso.":m==="taken"?"Questo username è già in uso. Se è tuo, tocca Accedi.":m==="reserved"?"Questo nome è riservato.":m==="badname"?"Nome non valido.":m==="weakpw"?"La password deve avere da 8 a 64 caratteri.":m==="bad"?"Username o password non corretti.":m==="many"?"Troppi tentativi. Aspetta qualche minuto e riprova.":m==="noauth"?"Il login con password non è ancora attivo sul server.":"Non riesco a collegarmi. Riprova tra poco.";
@@ -2037,7 +2220,7 @@ function touch(){if(U2&&Date.now()-(U2.a||0)>15000){U2.a=Date.now();u2save()}}
 function expireCheck(){
   if(!DB_URL||!S.acct||!U2)return;
   var last=U2.a||0;try{var o=JSON.parse(localStorage.getItem(U2K)||"null");if(o&&o.a>last)last=o.a}catch(e){}
-  if(Date.now()-last>SESS_MIN*60000){EXP=true;u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("");render()}
+  if(Date.now()-last>SESS_MIN*60000){EXP=true;why("");u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("");render()}
 }
 ["pointerdown","keydown","touchstart","wheel"].forEach(function(ev){window.addEventListener(ev,touch,{passive:true,capture:true})});
 document.addEventListener("visibilitychange",function(){if(!document.hidden)expireCheck()});
@@ -2098,6 +2281,8 @@ if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i 
 admLoad();if(fbMode())$("admFoot").hidden=false;if(adminOk()){render();renderSponsors();loadReports()}
 $("admBtn").addEventListener("click",function(){if(adminOk()){admExit();return}location.href="admin.html"});
 refreshUpcoming();setInterval(refreshUpcoming,3600000);loadSponsors();setInterval(loadSponsors,120000);setInterval(loadReports,15000);if(window.matchMedia)window.matchMedia("(min-width:1080px)").addEventListener("change",placeSp);setInterval(tick,1000);document.addEventListener("visibilitychange",function(){if(!document.hidden)pull()});
+try{var lsl=$("lswSlot");if(lsl)lsl.appendChild(langSw())}catch(e){}
+startTr();
 </script>
 </body>
 </html>

@@ -163,7 +163,8 @@ function migrateGroups(){
       if(g.ph){var ng=Object.assign({},g);delete ng.ph;q.push(PUT("groupSec/"+gid,{ph:g.ph}).then(function(){return PUT("groups/"+gid,ng)}).then(function(){return PUT("groupIndex/"+gid,true)}).then(function(){delete g.ph}))}
       else if(!ix[gid])q.push(PUT("groupIndex/"+gid,true));
     });
-    return q.length?Promise.all(q).catch(function(){}):null;
+    if(!q.length)return null;
+    return Promise.all(q).then(function(){setTimeout(function(){toast("Ho sistemato "+q.length+(q.length===1?" gruppo":" gruppi")+" creati prima dell’aggiornamento.")},400)},function(e){setTimeout(function(){toast("Non sono riuscito a sistemare i gruppi ("+(e&&e.message||"errore")+"). Scrivilo ad Alessandro… cioè a Claude.")},400)});
   });
 }
 function load(){
