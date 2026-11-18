@@ -379,8 +379,8 @@ body.gated{overflow:hidden}
 .cm{position:relative}.cm:has(.cmo) b{padding-right:22px}
 .cmo{position:absolute;top:1px;right:3px;width:26px;height:26px;border:0;border-radius:50%;background:none;color:inherit;opacity:.55;font:700 17px/1 "Instrument Sans",sans-serif;cursor:pointer;display:grid;place-items:center;padding:0}
 .cmo:hover,.cmo:focus-visible{opacity:1;background:rgba(127,127,127,.2)}
-#cmm{position:fixed;z-index:130;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:4px}
-#cmm button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:0;border-radius:8px;background:none;color:inherit;font:600 14px "Instrument Sans",system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+#cmm{position:absolute;top:30px;right:2px;z-index:130;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.28);padding:4px}
+#cmm.up{top:auto;bottom:30px}#cmm button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:0;border-radius:8px;background:none;color:inherit;font:600 14px "Instrument Sans",system-ui,sans-serif;cursor:pointer;white-space:nowrap}
 #cmm button:hover{background:var(--bg)}
 .rbox{max-height:92vh;overflow:auto}.rbox select,.rbox textarea{width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
 .rq{margin:0;padding:8px 12px;border-left:3px solid var(--amber);background:var(--bg);border-radius:0 10px 10px 0;font-size:14px;line-height:1.35;overflow-wrap:anywhere}.rq b{display:block;font-size:12px;opacity:.75}
@@ -457,7 +457,7 @@ TXF.push.apply(TXF,["Capogruppo di «", "Group leader of «", "Squadra «", "Tea
 TXR.push([/^Dai (\d+) stell[ae]$/g,"Rate $1 star(s)"],[/^Dai 1 stella$/g,"Rate 1 star"]);
 (function(a){for(var i=0;i<a.length;i+=2)TXD[a[i]]=a[i+1]})(["ore", "hours", "per vedere tutto l’MCU uscito finora.", "to watch all the MCU released so far.", "Hai appena iniziato la maratona.", "You’ve just started the marathon."]);
 TXR.push([/^Sei al (\d+)% della maratona\.$/g,"You’re at $1% of the marathon."],[/^ore e (\d+) min$/g,"hours and $1 min"]);
-TXD["Modifica posti"]="Edit seats";TXD["Richiedi una modifica"]="Request a change";TXD["Cosa ti serve?"]="What do you need?";TXD["Cambiare il numero di persone del gruppo"]="Change the number of people in the group";TXD["Tipo di richiesta"]="Type of request";TXD["La richiesta arriva ad Alessandro, che la approva o la rifiuta."]="The request goes to Alessandro, who approves or declines it.";TXD["Scegli quante persone (da 2 a 10, oppure 10+ fino a 20)."]="Choose how many people (2 to 10, or 10+ up to 20).";TXD["Il gruppo ha già questo numero di posti."]="The group already has this many seats.";TXD["Invia la richiesta"]="Send the request";TXD["Richiesta inviata ad Alessandro."]="Request sent to Alessandro.";TXD["Richiesta non inviata. Riprova."]="Request not sent. Please try again.";TXD["Quante persone? (da 2 a 10, oppure 10+ fino a 20)"]="How many people? (2 to 10, or 10+ up to 20)";TXD["Scegli quante persone sarete (da 2 a 10, oppure 10+ fino a 20)."]="Choose how many of you there will be (2 to 10, or 10+ up to 20).";TXD["max. 20"]="max. 20";TXD["Numero di persone"]="Number of people";TXF.push("Quante persone? (ora: ","How many people? (now: ");TXD["Notifica inviata all’admin: risponderà al più presto."]="Notification sent to the admin: they will reply as soon as possible.";TXD["Richiesta inviata ad Alessandro. Ti avviserà qui quando risponde. Notifica inviata all’admin: risponderà al più presto."]="Request sent to Alessandro. He’ll let you know here when he replies. Notification sent to the admin: they will reply as soon as possible.";TXD["Richiesta inviata ad Alessandro: ti darà un nuovo PIN. Poi accedi con quello. Notifica inviata all’admin: risponderà al più presto."]="Request sent to Alessandro: he’ll give you a new PIN. Then log in with it. Notification sent to the admin: they will reply as soon as possible.";TXD["Cambia il nome del gruppo"]="Change the group name";TXD["Cambia nome"]="Change name";TXD["✎ Cambia nome"]="✎ Change name";TXD["Richiedi modifica"]="Request a change";TXD["Cambiare il capogruppo"]="Change the group leader";TXD["Chi deve diventare capogruppo?"]="Who should become group leader?";TXD["Scegli una persona"]="Choose a person";TXD["Nuovo capogruppo"]="New group leader";TXD["Scegli chi deve diventare capogruppo."]="Choose who should become group leader.";TXD["Serve se il capogruppo non c’è più o è successo qualcosa. Se il capogruppo esce dal gruppo, il sito ne sceglie uno a caso."]="Use this if the group leader is gone or something happened. If the group leader leaves the group, the site picks one at random.";TXD["Non riesco a cambiare il nome. Riprova."]="Can’t change the name. Please try again.";TXD["Nome del gruppo"]="Group name";TXD["Rimuovi Instagram"]="Remove Instagram";TXD["Aggiungi Instagram"]="Add Instagram";TXD["Scrivi un nome Instagram valido."]="Enter a valid Instagram name.";TXD["Sposta indietro"]="Move back";TXD["Sposta avanti"]="Move forward";
+TXD["Modifica posti"]="Edit seats";TXD["Richiedi una modifica"]="Request a change";TXD["Cosa ti serve?"]="What do you need?";TXD["Cambiare il numero di persone del gruppo"]="Change the number of people in the group";TXD["Tipo di richiesta"]="Type of request";TXD["La richiesta arriva ad Alessandro, che la approva o la rifiuta."]="The request goes to Alessandro, who approves or declines it.";TXD["Scegli quante persone (da 2 a 10, oppure 10+ fino a 20)."]="Choose how many people (2 to 10, or 10+ up to 20).";TXD["Il gruppo ha già questo numero di posti."]="The group already has this many seats.";TXD["Invia la richiesta"]="Send the request";TXD["Richiesta inviata ad Alessandro."]="Request sent to Alessandro.";TXD["Richiesta non inviata. Riprova."]="Request not sent. Please try again.";TXD["Quante persone? (da 2 a 10, oppure 10+ fino a 20)"]="How many people? (2 to 10, or 10+ up to 20)";TXD["Scegli quante persone sarete (da 2 a 10, oppure 10+ fino a 20)."]="Choose how many of you there will be (2 to 10, or 10+ up to 20).";TXD["max. 20"]="max. 20";TXD["Numero di persone"]="Number of people";TXF.push("Quante persone? (ora: ","How many people? (now: ");TXD["Notifica inviata all’admin: risponderà al più presto."]="Notification sent to the admin: they will reply as soon as possible.";TXD["Richiesta inviata ad Alessandro. Ti avviserà qui quando risponde. Notifica inviata all’admin: risponderà al più presto."]="Request sent to Alessandro. He’ll let you know here when he replies. Notification sent to the admin: they will reply as soon as possible.";TXD["Richiesta inviata ad Alessandro: ti darà un nuovo PIN. Poi accedi con quello. Notifica inviata all’admin: risponderà al più presto."]="Request sent to Alessandro: he’ll give you a new PIN. Then log in with it. Notification sent to the admin: they will reply as soon as possible.";TXD["Cambia il nome del gruppo"]="Change the group name";TXD["Cambia nome"]="Change name";TXD["✎ Cambia nome"]="✎ Change name";TXD["Richiedi modifica"]="Request a change";TXD["Cambiare il capogruppo"]="Change the group leader";TXD["Chi deve diventare capogruppo?"]="Who should become group leader?";TXD["Scegli una persona"]="Choose a person";TXD["Nuovo capogruppo"]="New group leader";TXD["Scegli chi deve diventare capogruppo."]="Choose who should become group leader.";TXD["Serve se il capogruppo non c’è più o è successo qualcosa. Se il capogruppo esce dal gruppo, il sito ne sceglie uno a caso."]="Use this if the group leader is gone or something happened. If the group leader leaves the group, the site picks one at random.";TXD["Non riesco a cambiare il nome. Riprova."]="Can’t change the name. Please try again.";TXD["Nome del gruppo"]="Group name";TXD["Scrivi all’amministratore"]="Write to the administrator";TXD["✉ Scrivi all’amministratore"]="✉ Write to the administrator";TXD["Di cosa hai bisogno?"]="What do you need?";TXD["Creare un nuovo gruppo"]="Create a new group";TXD["Altro (scrivo un messaggio)"]="Other (I’ll write a message)";TXD["Gruppo"]="Group";TXD["Si apre il modulo per richiedere un gruppo. La richiesta arriva ad Alessandro."]="The form to request a group will open. The request goes to Alessandro.";TXD["Continua"]="Continue";TXD["Scrivi qui il tuo messaggio"]="Write your message here";TXD["Messaggio per l’amministratore"]="Message for the administrator";TXD["Scrivi il messaggio."]="Write the message.";TXD["Scegli un gruppo."]="Choose a group.";TXD["Non riesco a leggere il gruppo."]="Can’t read the group.";TXD["Solo il capogruppo può chiedere di cambiare i posti."]="Only the group leader can ask to change the seats.";TXD["Un attimo…"]="One moment…";TXD["Rimuovi Instagram"]="Remove Instagram";TXD["Aggiungi Instagram"]="Add Instagram";TXD["Scrivi un nome Instagram valido."]="Enter a valid Instagram name.";TXD["Sposta indietro"]="Move back";TXD["Sposta avanti"]="Move forward";
 var TXN=typeof WeakMap!=="undefined"?new WeakMap():null,TXA=["placeholder","aria-label","title","alt"];
 function trSkip(n,at){var p=n.nodeType===1?n:n.parentNode;if(!p)return true;if(p.closest&&p.closest("[data-nt]"))return true;if(at)return false;if(p.nodeName==="SCRIPT"||p.nodeName==="STYLE"||p.nodeName==="TEXTAREA")return true;var c=p.classList,pp=p.parentNode;return !!((c&&c.contains("cm"))||(p.nodeName==="B"&&pp&&pp.classList&&pp.classList.contains("cm")))}
 function trText(n){
@@ -1432,26 +1432,49 @@ function sizePicker(cur){
   if(cur>10){set("10+");xi.value=String(Math.min(20,cur))}else if(cur>=2)set(cur);
   return{el:w,get:function(){if(pick==="10+"){var n=parseInt(xi.value,10);return n>=11&&n<=20?n:0}return pick||0}};
 }
-function sizeModal(gid,gn,cur,role){
-  var old=$("szm");if(old)old.remove();var isOwn=role==="owner"||role==="admin";
+function sizeModal(gid){reqModal({gid:gid})}
+function reqModal(pre){
+  pre=pre||{};var old=$("szm");if(old)old.remove();
   var ov=h("div","mdl");ov.id="szm";ov.setAttribute("role","dialog");ov.setAttribute("aria-modal","true");
-  var bx=h("div","mbox rbox");bx.appendChild(h("p","k","Richiedi una modifica"));
-  bx.appendChild(h("p","m","Cosa ti serve?"));
-  var sel=h("select");sel.setAttribute("aria-label","Tipo di richiesta");
-  if(isOwn){var o1=h("option",null,"Cambiare il numero di persone del gruppo");o1.value="size";sel.appendChild(o1)}
-  var o2=h("option",null,"Cambiare il capogruppo");o2.value="owner";sel.appendChild(o2);bx.appendChild(sel);
-  var slot=h("div"),sp=null,ps=null;bx.appendChild(slot);
-  function draw(){
-    slot.textContent="";
-    if(sel.value==="size"){slot.appendChild(h("p","m","Quante persone? (ora: "+(cur||"?")+")"));sp=sizePicker(cur);slot.appendChild(sp.el)}
-    else{
-      slot.appendChild(h("p","m","Chi deve diventare capogruppo?"));ps=h("select");ps.setAttribute("aria-label","Nuovo capogruppo");
-      var o0=h("option",null,"Scegli una persona");o0.value="";ps.appendChild(o0);
-      Object.keys(GM||{}).forEach(function(id){if(GM[id]&&(GM[id].r==="owner"||GM[id].r==="admin"))return;var o=h("option",null,(GM[id]&&GM[id].n)||"?");o.value=id;o.setAttribute("data-nt","1");ps.appendChild(o)});
-      slot.appendChild(ps);slot.appendChild(h("p","m","Serve se il capogruppo non c’è più o è successo qualcosa. Se il capogruppo esce dal gruppo, il sito ne sceglie uno a caso."));
-    }
+  var bx=h("div","mbox rbox");bx.appendChild(h("p","k",pre.gid?"Richiedi una modifica":"Scrivi all’amministratore"));
+  bx.appendChild(h("p","m","Di cosa hai bisogno?"));
+  var ugs=Object.keys(UG||{}),sel=h("select");sel.setAttribute("aria-label","Tipo di richiesta");
+  function opt(v,t){var o=h("option",null,t);o.value=v;sel.appendChild(o)}
+  if(!pre.gid)opt("newgroup","Creare un nuovo gruppo");
+  if(pre.gid||ugs.length){opt("size","Cambiare il numero di persone del gruppo");opt("owner","Cambiare il capogruppo")}
+  opt("other","Altro (scrivo un messaggio)");
+  bx.appendChild(sel);
+  var gsel=h("select");gsel.setAttribute("aria-label","Gruppo");gsel.hidden=true;
+  if(!pre.gid){ugs.forEach(function(g){var o=h("option",null,UG[g]);o.value=g;o.setAttribute("data-nt","1");gsel.appendChild(o)});bx.appendChild(gsel)}
+  var slot=h("div");bx.appendChild(slot);
+  var G=null,sp=null,ps=null,ta=null,busy=false;
+  function curGid(){return pre.gid||gsel.value}
+  function load(){
+    var g=curGid();if(!g){G=null;return Promise.resolve()}
+    return Promise.all([getJ(gUrl(g)),getJ(gmUrl(g))]).then(function(r){G={gid:g,gn:(r[0]&&r[0].n)||UG[g]||"",max:r[0]&&r[0].max,ms:r[1]||{}}}).catch(function(){G=null});
   }
-  sel.addEventListener("change",draw);draw();
+  function draw(){
+    var t=sel.value;slot.textContent="";er.textContent="";gsel.hidden=pre.gid||!(t==="size"||t==="owner");
+    ok.textContent=t==="newgroup"?"Continua":"Invia la richiesta";
+    if(t==="newgroup"){slot.appendChild(h("p","m","Si apre il modulo per richiedere un gruppo. La richiesta arriva ad Alessandro."));return}
+    if(t==="other"){ta=h("textarea");ta.maxLength=300;ta.rows=4;ta.placeholder="Scrivi qui il tuo messaggio";ta.setAttribute("aria-label","Messaggio per l’amministratore");slot.appendChild(ta);return}
+    slot.appendChild(h("p","m","Un attimo…"));
+    load().then(function(){
+      if(sel.value!==t)return;slot.textContent="";
+      if(!G){slot.appendChild(h("p","m","Non riesco a leggere il gruppo."));return}
+      var me=(G.ms[S.me.i]||{}).r,isOwn=me==="owner"||me==="admin";
+      if(t==="size"){
+        if(!isOwn){slot.appendChild(h("p","m","Solo il capogruppo può chiedere di cambiare i posti."));return}
+        slot.appendChild(h("p","m","Quante persone? (ora: "+(G.max||"?")+")"));sp=sizePicker(G.max);slot.appendChild(sp.el);
+      }else{
+        slot.appendChild(h("p","m","Chi deve diventare capogruppo?"));ps=h("select");ps.setAttribute("aria-label","Nuovo capogruppo");
+        var o0=h("option",null,"Scegli una persona");o0.value="";ps.appendChild(o0);
+        Object.keys(G.ms).forEach(function(id){var m=G.ms[id];if(!m||m.r==="owner"||m.r==="admin")return;var o=h("option",null,m.n||"?");o.value=id;o.setAttribute("data-nt","1");ps.appendChild(o)});
+        slot.appendChild(ps);slot.appendChild(h("p","m","Serve se il capogruppo non c’è più o è successo qualcosa. Se il capogruppo esce dal gruppo, il sito ne sceglie uno a caso."));
+      }
+    });
+  }
+  sel.addEventListener("change",draw);gsel.addEventListener("change",draw);
   bx.appendChild(h("p","m rnote","La richiesta arriva ad Alessandro, che la approva o la rifiuta."));
   var er=h("p","m gerr");er.setAttribute("role","alert");bx.appendChild(er);
   var row=h("div","row"),ok=h("button","pri","Invia la richiesta"),no=h("button",null,"Annulla");ok.type=no.type="button";row.appendChild(ok);row.appendChild(no);bx.appendChild(row);
@@ -1459,25 +1482,34 @@ function sizeModal(gid,gn,cur,role){
   function esc(e){if(e.key==="Escape")close()}
   document.addEventListener("keydown",esc);ov.addEventListener("click",function(e){if(e.target===ov)close()});no.addEventListener("click",close);
   ok.addEventListener("click",function(){
-    var rec,nt;
-    if(sel.value==="size"){
-      var n=sp.get();if(!n){er.textContent="Scegli quante persone (da 2 a 10, oppure 10+ fino a 20).";return}
-      if(n===cur){er.textContent="Il gruppo ha già questo numero di posti.";return}
-      rec={k:"size",n:n,m:"Richiesta posti: da "+(cur||"?")+" a "+n};nt=["Richiesta posti",S.me.n+" · «"+gn+"»: da "+(cur||"?")+" a "+n+" persone"];
+    var t=sel.value,rec,nt;
+    if(t==="newgroup"){close();if(pre.onNew)pre.onNew();return}
+    if(t==="other"){
+      var tx=(ta&&ta.value||"").replace(/\s+/g," ").trim();if(tx.length<5){er.textContent="Scrivi il messaggio.";return}
+      rec={k:"other",gid:"",gn:"",m:tx};nt=["Messaggio da "+S.me.n,tx.slice(0,200)];
     }else{
-      var pid=ps.value;if(!pid){er.textContent="Scegli chi deve diventare capogruppo.";return}
-      var pn=(GM[pid]&&GM[pid].n)||"?";
-      rec={k:"owner",n:pid,nn:pn,m:"Richiesta capogruppo: "+pn};nt=["Richiesta capogruppo",S.me.n+" · «"+gn+"»: nuovo capogruppo "+pn];
+      if(!G){er.textContent="Scegli un gruppo.";return}
+      var me=(G.ms[S.me.i]||{}).r,isOwn=me==="owner"||me==="admin";
+      if(t==="size"){
+        if(!isOwn){er.textContent="Solo il capogruppo può chiedere di cambiare i posti.";return}
+        var n=sp&&sp.get();if(!n){er.textContent="Scegli quante persone (da 2 a 10, oppure 10+ fino a 20).";return}
+        if(n===G.max){er.textContent="Il gruppo ha già questo numero di posti.";return}
+        rec={k:"size",n:n,gid:G.gid,gn:G.gn,m:"Richiesta posti: da "+(G.max||"?")+" a "+n};nt=["Richiesta posti",S.me.n+" · «"+G.gn+"»: da "+(G.max||"?")+" a "+n+" persone"];
+      }else{
+        var pid=ps&&ps.value;if(!pid){er.textContent="Scegli chi deve diventare capogruppo.";return}
+        var pn=(G.ms[pid]&&G.ms[pid].n)||"?";
+        rec={k:"owner",n:pid,nn:pn,gid:G.gid,gn:G.gn,m:"Richiesta capogruppo: "+pn};nt=["Richiesta capogruppo",S.me.n+" · «"+G.gn+"»: nuovo capogruppo "+pn];
+      }
     }
     ok.disabled=no.disabled=true;
-    var r={gid:gid,gn:gn,by:S.me.i,bn:S.me.n,w:"",wn:"",t:Date.now(),s:"p"};for(var q in rec)r[q]=rec[q];
+    var r={by:S.me.i,bn:S.me.n,w:"",wn:"",t:Date.now(),s:"p"};for(var q in rec)r[q]=rec[q];
     putJ(repUrl(rid()),r).then(function(){
       notifyAdmin(nt[0],nt[1]);bx.textContent="";var ck=h("p","rok","✓");ck.setAttribute("aria-hidden","true");bx.appendChild(ck);
       bx.appendChild(h("p","k","Richiesta inviata ad Alessandro."));bx.appendChild(h("p","m","Notifica inviata all’admin: risponderà al più presto."));
       var c=h("button","pri","Chiudi");c.type="button";c.addEventListener("click",close);bx.appendChild(c);
     }).catch(function(){ok.disabled=no.disabled=false;er.textContent="Richiesta non inviata. Riprova."});
   });
-  ov.appendChild(bx);document.body.appendChild(ov);
+  ov.appendChild(bx);document.body.appendChild(ov);draw();
 }
 function renameGroup(gid,name){
   return putJ(gUrl(gid).replace(/\.json$/,"/n.json"),name).then(function(){
@@ -1564,14 +1596,12 @@ function gName(){return(GR&&GR.n)||(UG&&UG[S.cg])||""}
 function cmMenu(btn,x){
   var old=$("cmm");if(old){var same=old._b===btn;old.remove();if(same)return}
   var m=h("div","cmm");m.id="cmm";m.setAttribute("role","menu");m._b=btn;
-  var rb=h("button",null);rb.type="button";rb.setAttribute("role","menuitem");rb.appendChild(ico(IC_FLAG));rb.appendChild(document.createTextNode(" Segnala messaggio"));
+  var rb=h("button",null);rb.type="button";rb.setAttribute("role","menuitem");rb.appendChild(ico(IC_FLAG));rb.appendChild(document.createTextNode(" "+tr("Segnala messaggio")));
   rb.addEventListener("click",function(){m.remove();reportModal(S.cg,gName(),{w:x.i,wn:curName(x.i,x.n),q:x.m})});
-  m.appendChild(rb);document.body.appendChild(m);
-  var r=btn.getBoundingClientRect(),w=m.offsetWidth||190,hh=m.offsetHeight||44;
-  var sx=window.pageXOffset||0,sy=window.pageYOffset||0,vw=document.documentElement.clientWidth||window.innerWidth;
-  m.style.position="absolute";
-  m.style.left=(sx+Math.max(8,Math.min(vw-w-8,r.right-w)))+"px";
-  m.style.top=(sy+(r.bottom+hh+8>window.innerHeight?Math.max(8,r.top-hh-4):r.bottom+4))+"px";
+  m.appendChild(rb);
+  var host=btn.closest?btn.closest(".cm"):btn.parentNode;(host||document.body).appendChild(m);
+  var cl=$("chl"),rr=btn.getBoundingClientRect(),cr=cl?cl.getBoundingClientRect():{bottom:window.innerHeight};
+  if(rr.bottom+60>Math.min(cr.bottom,window.innerHeight))m.classList.add("up");
   trTree(m);
   setTimeout(function(){
     var close=function(e){if(e&&e.type==="keydown"&&e.key!=="Escape")return;m.remove();document.removeEventListener("click",close);document.removeEventListener("keydown",close);window.removeEventListener("scroll",close,true)};
@@ -1939,9 +1969,9 @@ function groupsBox(){
     var dl=role==="owner"?armBtn("Elimina gruppo",function(){return deleteGroup(S.cg)}):null;
     var rb2=h("button",null),rw2=h("div");rb2.type="button";rb2.appendChild(ico(IC_FLAG));rb2.appendChild(document.createTextNode(" Segnala"));
     rb2.addEventListener("click",function(){ar.hidden=true;dots.setAttribute("aria-expanded","false");reportModal(S.cg,nm,{})});
-    var sb2=h("button",null);sb2.type="button";sb2.appendChild(ico(IC_PPL));sb2.appendChild(document.createTextNode(" Richiedi modifica"));sb2.addEventListener("click",function(){ar.hidden=true;dots.setAttribute("aria-expanded","false");sizeModal(S.cg,nm,GR&&GR.max,role)});
+    var sb2=h("button",null);sb2.type="button";sb2.appendChild(ico(IC_PPL));sb2.appendChild(document.createTextNode(" Richiedi modifica"));sb2.addEventListener("click",function(){ar.hidden=true;dots.setAttribute("aria-expanded","false");sizeModal(S.cg)});
     if(role==="owner"||role==="admin"){var rn=h("button",null);rn.type="button";rn.appendChild(document.createTextNode("✎ Cambia nome"));rn.addEventListener("click",function(){ar.hidden=true;dots.setAttribute("aria-expanded","false");renameModal(S.cg,nm)});ar.appendChild(rn)}
-    ar.appendChild(sb2);ar.appendChild(rb2);ar.appendChild(lv);if(dl)ar.appendChild(dl);
+    ar.appendChild(sb2);ar.appendChild(rb2);ar.appendChild(lv);if(dl)ar.appendChild(dl);ar.hidden=true;wa.appendChild(ar);wa.appendChild(rw2);
     dots.addEventListener("click",function(){ar.hidden=!ar.hidden;dots.setAttribute("aria-expanded",String(!ar.hidden))});
     var fl=h("div","wst");fl.id="fl";wa.appendChild(fl);
     var wd=h("div","wd");wd.id="wd";wd.hidden=true;wa.appendChild(wd);
@@ -1953,7 +1983,9 @@ function groupsBox(){
   bj.appendChild(ico(IC_CODE));bj.appendChild(document.createTextNode(" Entra con il codice"));
   bn.addEventListener("click",function(){wrap.textContent="";wrap.appendChild(requestForm())});
   bj.addEventListener("click",function(){wrap.textContent="";wrap.appendChild(groupForm())});
-  row.appendChild(bn);row.appendChild(bj);b.appendChild(row);b.appendChild(wrap);
+  var bw=h("button",null);bw.type="button";bw.appendChild(document.createTextNode("✉ Scrivi all’amministratore"));
+  bw.addEventListener("click",function(){reqModal({onNew:function(){wrap.textContent="";wrap.appendChild(requestForm())}})});
+  row.appendChild(bn);row.appendChild(bj);b.appendChild(row);var row2=h("div","row ar mini");row2.appendChild(bw);b.appendChild(row2);b.appendChild(wrap);
   Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].by===S.me.i}).forEach(function(k){
     var q=GRQ[k],rw=h("div","rmr"),st=h("span",null,"Richiesta «"+q.gn+"»: "+(q.s==="no"?"rifiutata":"in attesa di Alessandro"));rw.appendChild(st);
     var x=h("button",null,q.s==="no"?"Ok":"Annulla");x.type="button";x.addEventListener("click",function(){dropGroupReq(k).catch(function(e){msg(gErr(e))})});rw.appendChild(x);b.appendChild(rw);
