@@ -439,8 +439,10 @@ function remUrl(id){return DB_URL.replace(/\/+$/,"")+"/removed/"+ROOM+(id?"/"+id
 var FB_API_KEY="AIzaSyCvYDHW-dleGjx9U0WT50PcayjGx2m3Iik",ADMIN_EMAIL="luinialessandro9@gmail.com",ADMIN_UID="lvhh3G1jVUfsmZDeGHoArysTVpr1",FBT=null; // accesso amministratore Firebase (vuoto = non attivo)
 function fbSignIn(){return Promise.resolve(false)}
 function admBox(){
-  var f=h("div","box cred");f.appendChild(h("p","k","Amministratore attivo"));
-  var lk=h("button",null,"Esci dall’amministratore");lk.type="button";lk.addEventListener("click",admExit);f.appendChild(lk);return f;
+  var f=h("div","box cred");f.appendChild(h("p","k","Sei amministratore"));
+  var n=admCount();f.appendChild(h("p","m",n?"Hai "+n+(n===1?" cosa":" cose")+" da controllare: richieste, segnalazioni o PIN.":"Nessuna richiesta o segnalazione in attesa."));
+  var row=h("div","row"),go=h("a","pri","Apri il pannello admin");go.href="admin.html";go.style.cssText="display:flex;align-items:center;justify-content:center;text-decoration:none;text-align:center";
+  var lk=h("button",null,"Esci dall’amministratore");lk.type="button";lk.addEventListener("click",admExit);row.appendChild(go);row.appendChild(lk);f.appendChild(row);return f;
 }
 var ADM_KEY="mcu-adm";
 function admStore(){try{if(FBT&&ADM_UNTIL)localStorage.setItem(ADM_KEY,JSON.stringify({t:FBT.t,r:FBT.r,x:FBT.x,uid:FBT.uid,u:ADM_UNTIL}))}catch(e){}}
@@ -1382,7 +1384,7 @@ function renderFriends(){
       }
     }
     el.appendChild(groupsBox());
-    if(isAdmin()){loadReports();el.appendChild(reportsBox());el.appendChild(adminGroupsBox());el.appendChild(statsBox());el.appendChild(logBox())}
+    if(isAdmin()){loadReports()}
     var fl=h("div","anim");fl.id="fl";el.appendChild(fl);setSync();drawList();pull();
     return;
   }
