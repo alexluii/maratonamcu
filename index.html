@@ -741,6 +741,7 @@ function pull(force){
     {
       var ch=false;all=(all&&typeof all==="object")?all:{};lastAll=all;
       var mine=all[S.me.i],mch=false;
+      if(mine&&typeof mine==="object"&&!pushT&&cn(mine.n)&&cn(mine.n)!==S.me.n){S.me.n=cn(mine.n);if(S.acct)S.acct.name=S.me.n;save(false);mch=true}
       if(mine&&typeof mine==="object"&&!pushT&&Number(mine.u)>(S.me.u||0)){S.me.d=toMap(valid(Array.isArray(mine.d)?mine.d:[]));S.me.u=Number(mine.u);if(mine.n)S.me.n=cn(mine.n)||S.me.n;save(false);mch=true}
       else if(S.me.u&&!pushT&&canPush()&&!mine){var me0=S.acct;nkOf(me0.name).then(function(nk){return getJ(aUrl(nk))}).then(function(a){if(S.acct&&S.acct.id===me0.id){if(a&&a.id===me0.id)push();else forceLogout()}}).catch(function(){})}
       else if(S.me.u&&!pushT&&canPush()&&mine&&Number(mine.u)<S.me.u)push();
@@ -815,6 +816,41 @@ function frReject(id){return delJ(fqUrl(S.me.i,id)).then(function(){delete FRQ[i
 function frRemove(id){
   var me=S.me.i;
   return Promise.all([delJ(frUrl(me,id)),delJ(frUrl(id,me))]).then(function(){if(FR)delete FR[id];delete S.f[id];frSig=null;save(false);drawList()});
+}
+function adminRenameUser(id,old,nn){
+  nn=cn(nn);if(!nn||!validName(nn))return Promise.reject(new Error("badname"));
+  return Promise.all([nkOf(old),nkOf(nn)]).then(function(k){
+    return Promise.all([getJ(aUrl(k[0])),k[0]===k[1]?null:getJ(aUrl(k[1]))]).then(function(r){
+      var rec=r[0];if(!rec||rec.id!==id)throw new Error("none");if(r[1])throw new Error("taken");
+      return putJ(aUrl(k[1]),{id:id,v:rec.v||2,o:rec.o||old}).then(function(){return k[0]===k[1]?null:delJ(aUrl(k[0]))});
+    });
+  }).then(function(){
+    var base=DB_URL.replace(/\/+$/,""),q=[putJ(dbUrl(id+"/n"),nn)];
+    q.push(getJ(ugUrl(id)).then(function(ug){return Promise.all(Object.keys(ug||{}).map(function(g){return putJ(gmUrl(g,id+"/n"),nn)}))}).catch(function(){}));
+    q.push(getJ(base+"/friends.json").then(function(fa){fa=fa||{};return Promise.all(Object.keys(fa).filter(function(x){return x!==id&&fa[x]&&fa[x][id]!==undefined}).map(function(x){return putJ(frUrl(x,id),nn)}))}).catch(function(){}));
+    q.push(getJ(base+"/friendReq.json").then(function(qa){qa=qa||{};return Promise.all(Object.keys(qa).filter(function(t){return qa[t]&&qa[t][id]}).map(function(t){return putJ(fqUrl(t,id+"/n"),nn)}))}).catch(function(){}));
+    return Promise.all(q);
+  }).then(function(){
+    admLog("Cambiato il nome di "+old+" in "+nn);
+    if(S.f[id])S.f[id].n=nn;if(lastAll[id])lastAll[id].n=nn;
+    if(id===S.me.i){S.me.n=nn;if(S.acct)S.acct.name=nn;save(false)}
+    return nn;
+  });
+}
+function renameCtl(id,name){
+  var rn=h("button",null,"Cambia nome");rn.type="button";var rw=h("div","mvw");
+  rn.addEventListener("click",function(){
+    if(rw.firstChild){rw.textContent="";return}
+    var i=h("input");i.type="text";i.maxLength=24;i.value=name;i.autocapitalize="off";i.setAttribute("aria-label","Nuovo nome");
+    var ok=h("button","pri","Salva");ok.type="button";
+    ok.addEventListener("click",function(){
+      var nn=cn(i.value);if(!nn||nn===name){msg("Scrivi un nome diverso.");return}
+      ok.disabled=true;
+      adminRenameUser(id,name,nn).then(function(n2){msg("Nome cambiato: ora è "+n2+".");rw.textContent="";drawList()}).catch(function(e){ok.disabled=false;var m=e&&e.message;msg(m==="taken"?"Questo nome è già preso da un altro.":m==="badname"?"Nome non valido: lettere, numeri, spazi e . ' _ -":"Operazione non riuscita ("+(m||"errore")+").")});
+    });
+    rw.appendChild(i);rw.appendChild(ok);
+  });
+  return{b:rn,w:rw};
 }
 function moveFriends(oid,nid,nname){
   var base=DB_URL.replace(/\/+$/,"");
@@ -918,7 +954,7 @@ function drawList(){
       }
       body.appendChild(gx);
     }else if(f.me&&!S.cg&&isAdmin()){
-      var sx=h("div","adm"),sc=moveCtl(f.id,f.n);sx.appendChild(sc.b);body.appendChild(sx);body.appendChild(sc.w);
+      var sx=h("div","adm"),sc=moveCtl(f.id,f.n),rc=renameCtl(f.id,f.n);sx.appendChild(sc.b);sx.appendChild(rc.b);body.appendChild(sx);body.appendChild(sc.w);body.appendChild(rc.w);
     }else if(!f.me&&!S.cg&&isAdmin()){
       var bx=h("div","adm"),vw=h("button",null,"Guarda");vw.type="button";vw.addEventListener("click",function(){viewUser(f.id)});
       var rm=h("button",null,"Rimuovi");rm.type="button";var arm=false;
@@ -929,7 +965,7 @@ function drawList(){
       var ed=h("button",null,"Modifica");ed.type="button";var ew=h("div");
       ed.addEventListener("click",function(){if(ew.firstChild){ew.textContent="";return}ew.appendChild(adminCred(f.id,f.n))});
       var mc=moveCtl(f.id,f.n),mv=mc.b,mw=mc.w;
-      bx.appendChild(vw);bx.appendChild(ed);bx.appendChild(mv);bx.appendChild(rm);body.appendChild(bx);body.appendChild(mw);body.appendChild(ew);
+      var rc2=renameCtl(f.id,f.n);bx.appendChild(vw);bx.appendChild(rc2.b);bx.appendChild(ed);bx.appendChild(mv);bx.appendChild(rm);body.appendChild(bx);body.appendChild(rc2.w);body.appendChild(mw);body.appendChild(ew);
     }
     else if(!f.me&&!S.cg&&!isAdmin()&&isFr(f.id)){
       var fx=h("div","adm"),fv=h("button",null,"Guarda i suoi film");fv.type="button";fv.addEventListener("click",function(){viewUser(f.id)});fx.appendChild(fv);
@@ -961,7 +997,7 @@ function acctKeys(name,pin,v){
   var idp=v===2?pbk(pin,"mcu-id:"+l):sha("id:"+l+":"+pin);
   return Promise.all([idp,sha("nm:"+l)]).then(function(r){return{id:r[0].slice(0,20),nk:r[1].slice(0,20),name:nm}});
 }
-function verifyPw(name,pw){return nkOf(name).then(function(nk){return getJ(aUrl(nk))}).then(function(a){if(!a)throw new Error("bad");return acctKeys(name,pw,a.v||1)})}
+function verifyPw(name,pw){return nkOf(name).then(function(nk){return getJ(aUrl(nk))}).then(function(a){if(!a)throw new Error("bad");return acctKeys(a.o||name,pw,a.v||1)})}
 function aUrl(nk){return DB_URL.replace(/\/+$/,"")+"/accounts/"+ROOM+"/"+nk+".json"}
 function getJ(u){return fetch(u).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})}
 function putJ(u,v){return fetch(u,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(v)}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})}
@@ -1545,8 +1581,9 @@ function doLogin(name,pin){
   name=String(name).replace(/^@/,"").trim();
   return nkOf(name).then(function(nk){return getJ(aUrl(nk))}).then(function(ex){
     if(!ex)throw new Error("bad");
-    return acctKeys(name,pin,ex.v||1).then(function(k){
+    return acctKeys(ex.o||name,pin,ex.v||1).then(function(k){
       if(ex.id!==k.id)throw new Error("bad");
+      k.name=cn(name)||k.name;
       return getJ(dbUrl(k.id)).then(function(rec){
         var r=rec||{};
         S.acct={name:k.name,id:k.id};
