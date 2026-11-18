@@ -292,7 +292,7 @@ a.sp-tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)
 .ring .av{width:100%;height:100%;box-sizing:border-box;border:2px solid var(--panel);font-size:23px}
 .wm .nm{max-width:66px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:600 12px "Instrument Sans",sans-serif}
 .wm.on .nm{font-weight:800}
-@media(prefers-reduced-motion:no-preference){.wm .ring{transition:transform .18s}.wm:hover .ring{transform:scale(1.07)}}
+
 .wd{padding:12px 14px 14px;background:var(--panel);border-top:1px solid var(--line)}
 .wd .wdt{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 .wd .wdt b{font-size:16px}.wd .wdt span{font-weight:700}
@@ -726,7 +726,7 @@ function pull(force){
 }
 
 function hue(t){var x=0;for(var i=0;i<t.length;i++)x=(x*31+t.charCodeAt(i))%360;return x}
-var WSEL="";
+var WSEL="",HT=0;
 function wActions(f){
   if(f.me||!S.cg||!isGAdmin()||!GM[f.id])return null;
   var gx=h("div","adm"),gv=h("button",null,"Guarda");gv.type="button";gv.addEventListener("click",function(){viewUser(f.id)});gx.appendChild(gv);
@@ -779,10 +779,10 @@ function drawStrip(el){
     var r=GM[f.id]&&GM[f.id].r;
     b.appendChild(h("span","nm",(f.me?"Tu":f.n)+(r==="owner"||r==="admin"?" ★":"")));
     b.addEventListener("click",function(){WSEL=WSEL===f.id?"":f.id;el._sig="";drawStrip(el)});
-    b.addEventListener("pointerenter",function(e){if(e.pointerType==="mouse")show(f)});
+    b.addEventListener("pointerenter",function(e){if(e.pointerType!=="mouse")return;clearTimeout(HT);HT=setTimeout(function(){show(f)},1800)});b.addEventListener("pointerleave",function(e){if(e.pointerType==="mouse")clearTimeout(HT)});
     el.appendChild(b);
   });
-  el.onpointerleave=function(e){if(e.pointerType==="mouse")show(pinned)};
+  el.onpointerleave=function(e){if(e.pointerType!=="mouse")return;clearTimeout(HT);HT=setTimeout(function(){show(pinned)},600)};
 }
 function drawList(){
   var el=$("fl");if(!el)return;
