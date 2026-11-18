@@ -326,6 +326,13 @@ body:has(.tkr:not([hidden])) .adm-pill{top:46px}
 #reset[hidden]{display:none}
 .cm.me b{color:#0b1030;opacity:.7}
 .cm b{font-style:italic}
+.rt{display:flex;align-items:center;flex-wrap:wrap;gap:2px 10px;padding:2px 12px 8px 50px;margin-top:-2px}
+.rt .st{border:0;background:none;padding:2px 3px;margin:0;border-radius:6px;font-size:22px;line-height:1;color:var(--cell);cursor:pointer}
+.rt .st.on{color:var(--amber)}
+@media(hover:hover){.rt .st:hover{color:var(--amber);transform:scale(1.12)}}
+.rt .sth{font-size:16px;letter-spacing:1px;color:var(--cell)}.rt .sth .on{color:var(--amber)}
+.rt .ra{font-size:13px;color:var(--mute)}
+.mdl{position:fixed;inset:0;z-index:99;background:rgba(5,8,28,.72);display:flex;align-items:center;justify-content:center;padding:16px}.mbox{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:10px}.mbox input{width:100%}
 </style>
 </head>
 <body class="boot">
@@ -543,6 +550,30 @@ function fbToken(){
 function aUrlTok(u){return fbToken().then(function(t){return t?u+"?auth="+encodeURIComponent(t):u})}
 function aPut(u,v){return aUrlTok(u).then(function(x){return putJ(x,v)})}
 function aDel(u){return aUrlTok(u).then(function(x){return delJ(x)})}
+// ---- accesso con password (Firebase Authentication)
+var U2=null,U2K="mcu-u2",FB_AUTH="https://identitytoolkit.googleapis.com/v1/accounts:",RAWF=window.fetch.bind(window);
+function u2save(){try{if(U2)localStorage.setItem(U2K,JSON.stringify(U2));else localStorage.removeItem(U2K)}catch(e){}}
+function u2load(){try{var o=JSON.parse(localStorage.getItem(U2K)||"null");if(o&&o.r&&o.uid)U2=o}catch(e){}}
+function u2set(o){U2={t:o.idToken,r:o.refreshToken,x:Date.now()+Number(o.expiresIn||3600)*1000,uid:o.localId};u2save()}
+function u2out(){U2=null;u2save()}
+function authErr(m){m=String(m||"");if(/EMAIL_EXISTS/.test(m))return"taken";if(/INVALID_PASSWORD|INVALID_LOGIN|EMAIL_NOT_FOUND|INVALID_EMAIL|USER_DISABLED/.test(m))return"bad";if(/WEAK_PASSWORD/.test(m))return"weakpw";if(/TOO_MANY/.test(m))return"many";if(/OPERATION_NOT_ALLOWED|CONFIGURATION/.test(m))return"noauth";return"net"}
+function u2call(m,body){return RAWF(FB_AUTH+m+"?key="+FB_API_KEY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(j){if(!r.ok||j.error)throw new Error(authErr(j.error&&j.error.message));return j})})}
+function u2email(){var a=new Uint8Array(10);crypto.getRandomValues(a);return"u"+Array.prototype.map.call(a,function(b){return("0"+b.toString(16)).slice(-2)}).join("")+"@maratona-mcu.app"}
+function u2token(){
+  if(!U2)return Promise.resolve(null);
+  if(U2.x-Date.now()>120000)return Promise.resolve(U2.t);
+  return RAWF("https://securetoken.googleapis.com/v1/token?key="+FB_API_KEY,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"grant_type=refresh_token&refresh_token="+encodeURIComponent(U2.r)})
+    .then(function(r){return r.json()}).then(function(o){if(!o.id_token)throw 0;U2={t:o.id_token,r:o.refresh_token,x:Date.now()+Number(o.expires_in||3600)*1000,uid:U2.uid};u2save();return U2.t}).catch(function(){return U2?U2.t:null});
+}
+function curTok(){return(FBT&&adminOk())?fbToken():(U2?u2token():Promise.resolve(null))}
+u2load();
+window.fetch=function(u,o){
+  var b=DB_URL?DB_URL.replace(/\/+$/,""):null;
+  if(b&&typeof u==="string"&&u.indexOf(b)===0&&u.indexOf("auth=")<0)return curTok().then(function(t){return RAWF(t?u+(u.indexOf("?")<0?"?":"&")+"auth="+encodeURIComponent(t):u,o)});
+  return RAWF(u,o);
+};
+function memUrl(uid){return DB_URL.replace(/\/+$/,"")+"/members/"+uid+".json"}
+function claimUrl(pid){return DB_URL.replace(/\/+$/,"")+"/claims/"+pid+".json"}
 // ---- sponsor
 var SP={};
 function spUrl(id){return DB_URL.replace(/\/+$/,"")+"/sponsors/"+ROOM+(id?"/"+id:"")+".json"}
@@ -673,7 +704,7 @@ function renderMine(){
     ph[1].forEach(function(r){
       var x=byId[r[0]],id=x.id,d=!!D()[id]&&!x.u,cls=(x.s?"s ":"")+(d?"d ":"")+(x.u?"u ":"")+(nx&&nx.id===id?"n ":"")+(fresh&&fresh[id]?"just ":"");
       if(!x.u){pt++;if(d)pc++}
-      rw+='<li class="'+cls+'"><label><input type="checkbox" data-i="'+id+'"'+(d?" checked":"")+((x.u||viewing)?" disabled":"")+'><span class="t">'+(x.e?'<span class="e" title="essenziale">★ </span>':'')+x.t+'</span><span class="h">'+(x.u&&x.r?'<span class="rd">'+LOCK+'<span data-cdt="'+x.r+'">'+cdTxt(x.r)+"</span></span>":fmt(x.h))+'</span></label></li>';
+      rw+='<li class="'+cls+'"><label><input type="checkbox" data-i="'+id+'"'+(d?" checked":"")+((x.u||viewing)?" disabled":"")+'><span class="t">'+(x.e?'<span class="e" title="essenziale">★ </span>':'')+esc(x.t)+'</span><span class="h">'+(x.u&&x.r?'<span class="rd">'+LOCK+'<span data-cdt="'+x.r+'">'+cdTxt(x.r)+"</span></span>":fmt(x.h))+'</span></label>'+rtRow(id,d,x.u)+'</li>';
     });
     var open=(pi in openPh)?openPh[pi]:!!(nx&&phOf[nx.id]===pi);
     html+='<details class="ph" data-p="'+pi+'"'+(open?" open":"")+'><summary><span class="pn">'+ph[0]+'</span><small>'+pc+'/'+pt+'</small><span class="pp"><i style="width:'+(pt?Math.round(100*pc/pt):0)+'%"></i></span></summary><ul>'+rw+'</ul></details>';
@@ -737,7 +768,7 @@ function push(){
 function pull(force){
   var cg0=S.cg;
   if(!DB_URL||!S.acct||(pulling&&!force)||document.hidden||moving)return;
-  frLoad();
+  frLoad();rtLoad();
   pulling=true;
   Promise.all([getJ(dbUrl()),getJ(remUrl()).catch(function(){return null}),isAdminAcct()?getJ(reqUrl()).catch(function(){return null}):Promise.resolve(null),getJ(ugUrl(S.me.i)).catch(function(){return null}),S.cg?getJ(gmUrl(S.cg)).catch(function(){return null}):Promise.resolve(null),S.cg?getJ(gUrl(S.cg)).catch(function(){return null}):Promise.resolve(null),getJ(grUrl()).catch(function(){return null})]).then(function(res){
     if(S.cg!==cg0){setTimeout(function(){pull(true)},80);return}
@@ -795,9 +826,6 @@ function frLoad(){
     var sig=JSON.stringify([FRLEG,Object.keys(nf).sort(),Object.keys(q).sort()]),chg=sig!==frSig||FRO!==me;
     FR=nf;FRQ=q;FRO=me;frSig=sig;
     if(chg){
-      if(!FRLEG)getJ(DB_URL.replace(/\/+$/,"")+"/friends.json").then(function(all){
-        all=all||{};Object.keys(nf).forEach(function(k){if(!(all[k]&&all[k][me]!==undefined))putJ(frUrl(k,me),S.me.n).catch(function(){})});
-      }).catch(function(){});
       updBadge();if(tab==="am")renderFriends();else if(!S.cg)drawList();pull(true)
     }
   }).catch(function(){frBusy=false});
@@ -809,12 +837,12 @@ function frSend(name){
     var id=a.id;if(id===me)throw new Error("fself");
     if(FR&&FR[id])throw new Error("fhave");
     if(FRQ[id])return frAccept(id).then(function(){return"acc"});
-    return getJ(fqUrl(id,me)).then(function(ex){if(ex)throw new Error("freq");return putJ(fqUrl(id,me),{n:S.me.n,t:Date.now()})}).then(function(){return"sent"});
+    return putJ(fqUrl(id,me),{n:S.me.n,t:Date.now()}).then(function(){return"sent"},function(){throw new Error("freq")});
   });
 }
 function frAccept(id){
   var me=S.me.i,n=(FRQ[id]&&FRQ[id].n)||(lastAll[id]&&lastAll[id].n)||"?";
-  return Promise.all([putJ(frUrl(me,id),n),putJ(frUrl(id,me),S.me.n),delJ(fqUrl(me,id))]).then(function(){
+  return putJ(frUrl(me,id),n).then(function(){return putJ(frUrl(id,me),S.me.n)}).then(function(){return delJ(fqUrl(me,id))}).then(function(){
     FR=FR||{};FR[id]=n;delete FRQ[id];frSig=null;updBadge();renderFriends();pull(true);
   });
 }
@@ -877,6 +905,43 @@ function moveFriends(oid,nid,nname){
     Object.keys(qa).forEach(function(x){if(x!==oid&&qa[x]&&qa[x][oid]){var v=qa[x][oid];v.n=nname;q.push(putJ(fqUrl(x,nid),v));q.push(delJ(fqUrl(x,oid)))}});
     return Promise.all(q);
   }).catch(function(){});
+}
+var RT={},rtAt=0,rtSig="";
+function esc(t){return String(t==null?"":t).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function rtUrl(f,u){return DB_URL.replace(/\/+$/,"")+"/ratings/"+ROOM+(f?"/"+f:"")+(u?"/"+u:"")+".json"}
+function rtLoad(force){
+  if(!DB_URL||!S.acct||document.hidden)return;
+  if(!force&&Date.now()-rtAt<20000)return;rtAt=Date.now();
+  getJ(rtUrl()).then(function(o){
+    var n=(o&&typeof o==="object")?o:{},sig=JSON.stringify(n);
+    if(sig!==rtSig){rtSig=sig;RT=n;if(tab==="io")render()}
+  }).catch(function(){});
+}
+function rtStat(id){
+  var o=RT[id]||{},n=0,sum=0;
+  Object.keys(o).forEach(function(u){var v=Number(o[u]);if(!(v>=1&&v<=5))return;if(u===S.me.i||isFr(u)){n++;sum+=v}});
+  return{n:n,avg:n?sum/n:0,mine:Number(o[S.me.i])||0,his:viewing?(Number(o[viewing.id])||0):0};
+}
+function rtRow(id,d,locked){
+  if(!DB_URL||!S.acct||locked)return"";
+  var st=rtStat(id),b="",i;
+  if(d&&!viewing){
+    for(i=1;i<=5;i++)b+='<button type="button" class="st'+(st.mine>=i?" on":"")+'" data-rt="'+id+":"+i+'" aria-pressed="'+(st.mine===i)+'" aria-label="'+(st.mine===i?"Togli il voto":"Dai "+i+(i===1?" stella":" stelle"))+'">★</button>';
+  }else if(viewing&&st.his){
+    var ss="";for(i=1;i<=5;i++)ss+='<span class="'+(st.his>=i?"on":"")+'">★</span>';
+    b='<span class="sth" role="img" aria-label="Voto di '+esc(viewing.n)+': '+st.his+' su 5">'+ss+'</span>';
+  }
+  var a=st.n?'<span class="ra">Media amici '+st.avg.toFixed(1).replace(".",",")+' ★ · '+st.n+(st.n===1?" voto":" voti")+'</span>':"";
+  return(b||a)?'<div class="rt">'+b+a+'</div>':"";
+}
+function rate(f,v){
+  if(!/^\d+$/.test(f)||!(v>=1&&v<=5)||viewing||!S.acct||!D()[f])return;
+  var me=S.me.i,cur=Number((RT[f]||{})[me])||0,clear=cur===v,old=RT[f]?JSON.parse(JSON.stringify(RT[f])):null;
+  RT[f]=RT[f]||{};if(clear)delete RT[f][me];else RT[f][me]=v;
+  rtSig="";render();
+  (clear?delJ(rtUrl(f,me)):putJ(rtUrl(f,me),v)).then(function(){rtLoad(true)}).catch(function(){
+    if(old)RT[f]=old;else delete RT[f];rtSig="";render();msg("Voto non salvato. Riprova.");
+  });
 }
 function hue(t){var x=0;for(var i=0;i<t.length;i++)x=(x*31+t.charCodeAt(i))%360;return x}
 var WSEL="",HT=0;
@@ -1017,6 +1082,9 @@ function aUrl(nk){return DB_URL.replace(/\/+$/,"")+"/accounts/"+ROOM+"/"+nk+".js
 function getJ(u){return fetch(u).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})}
 function putJ(u,v){return fetch(u,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(v)}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})}
 function grUrl(id){return DB_URL.replace(/\/+$/,"")+"/groupRequests/"+ROOM+(id?"/"+id:"")+".json"}
+function gsUrl(gid){return DB_URL.replace(/\/+$/,"")+"/groupSec/"+gid+".json"}
+function giUrl(gid){return DB_URL.replace(/\/+$/,"")+"/groupIndex/"+gid+".json"}
+function grsUrl(gid){return DB_URL.replace(/\/+$/,"")+"/groupReqSec/"+ROOM+"/"+gid+".json"}
 function gUrl(gid){return DB_URL.replace(/\/+$/,"")+"/groups/"+gid+".json"}
 function gmUrl(gid,id){return DB_URL.replace(/\/+$/,"")+"/groupMembers/"+gid+(id?"/"+id:"")+".json"}
 function ugUrl(id,gid){return DB_URL.replace(/\/+$/,"")+"/userGroups/"+id+(gid?"/"+gid:"")+".json"}
@@ -1025,13 +1093,13 @@ function gcntTxt(){return GCNT===null?"gruppi: —":GCNT+(GCNT===1?" gruppo aper
 var UCNT=null;
 function loadUcnt(){
   if(!DB_URL||document.hidden)return;
-  getJ(DB_URL.replace(/\/+$/,"")+"/accounts/"+ROOM+".json?shallow=true").then(function(o){UCNT=o&&typeof o==="object"?Object.keys(o).length:0}).catch(function(){UCNT=null}).then(function(){
+  getJ(DB_URL.replace(/\/+$/,"")+"/rooms/"+ROOM+".json?shallow=true").then(function(o){UCNT=o&&typeof o==="object"?Object.keys(o).length:0}).catch(function(){UCNT=null}).then(function(){
     var g=$("ucnt");if(g&&g.lastChild){g.hidden=UCNT===null;g.firstChild.className="led"+(UCNT===null?"":" on");g.lastChild.textContent=UCNT===null?"iscritti: —":UCNT+(UCNT===1?" persona iscritta":" persone iscritte")}
   });
 }
 function loadGcnt(){
   if(!DB_URL||document.hidden)return;
-  getJ(DB_URL.replace(/\/+$/,"")+"/groups.json?shallow=true").then(function(o){GCNT=o&&typeof o==="object"?Object.keys(o).length:0}).catch(function(){GCNT=null}).then(function(){
+  getJ(DB_URL.replace(/\/+$/,"")+"/groupIndex.json?shallow=true").then(function(o){GCNT=o&&typeof o==="object"?Object.keys(o).length:0}).catch(function(){GCNT=null}).then(function(){
     var g=$("gcnt");if(g&&g.lastChild){g.hidden=GCNT===null;g.firstChild.className="led"+(GCNT===null?"":" on");g.lastChild.textContent=gcntTxt()}
   });
 }
@@ -1105,47 +1173,52 @@ function gKeys(name,pass){
 function enterGroup(gid){S.cg=gid;S.f={};GM={};GR=null;save(false);viewing=null;render()}
 function joinGroup(name,pass){
   return gKeys("",pass).then(function(k){
-    return getJ(gUrl(k.gid)).then(function(g){
-      if(!g||g.ph!==k.ph)throw new Error("gbad");k.n=g.n||k.n;
-      return getJ(gmUrl(k.gid)).then(function(ms){
-        ms=ms||{};var cnt=Object.keys(ms).length;
-        if(!ms[S.me.i]&&g.max&&cnt>=g.max)throw new Error("gfull");
-        return putJ(gmUrl(k.gid,S.me.i),{n:S.me.n,r:ms[S.me.i]&&ms[S.me.i].r?ms[S.me.i].r:"member"});
+    return getJ(gmUrl(k.gid,S.me.i)).catch(function(){return null}).then(function(mine){
+      return mine?null:putJ(gmUrl(k.gid,S.me.i),{n:S.me.n,r:"member",ph:k.ph}).catch(function(){throw new Error("gbad")});
+    }).then(function(){
+      return Promise.all([getJ(gUrl(k.gid)),getJ(gmUrl(k.gid))]).then(function(x){
+        var g=x[0],ms=x[1]||{},isNew=!ms[S.me.i]||ms[S.me.i].r==="member";
+        if(!g)return delJ(gmUrl(k.gid,S.me.i)).then(function(){throw new Error("gbad")});
+        if(g.max&&Object.keys(ms).length>g.max&&isNew)return delJ(gmUrl(k.gid,S.me.i)).then(function(){throw new Error("gfull")});
+        k.n=g.n||k.n;return putJ(ugUrl(S.me.i,k.gid),k.n);
       });
-    }).then(function(){return putJ(ugUrl(S.me.i,k.gid),k.n)}).then(function(){UG[k.gid]=k.n;enterGroup(k.gid)});
+    }).then(function(){UG[k.gid]=k.n;enterGroup(k.gid)});
   });
 }
 function leaveGroup(gid){return Promise.all([delJ(gmUrl(gid,S.me.i)),delJ(ugUrl(S.me.i,gid))]).then(function(){delete UG[gid];enterGroup("")})}
 function deleteGroup(gid){
   return getJ(gmUrl(gid)).then(function(ms){
-    var q=Object.keys(ms||{}).map(function(id){return delJ(ugUrl(id,gid))});
-    q.push(delJ(gmUrl(gid)));q.push(delJ(gUrl(gid)));q.push(delJ(chUrl(gid)));return Promise.all(q);
+    ms=ms||{};var ids=Object.keys(ms),me=S.me.i,seq=Promise.resolve();
+    ids.forEach(function(id){seq=seq.then(function(){return delJ(ugUrl(id,gid))})});
+    seq=seq.then(function(){return delJ(chUrl(gid))}).then(function(){return delJ(gsUrl(gid))}).then(function(){return delJ(giUrl(gid))}).then(function(){return delJ(gUrl(gid))});
+    ids.filter(function(id){return id!==me}).forEach(function(id){seq=seq.then(function(){return delJ(gmUrl(gid,id))})});
+    return seq.then(function(){return delJ(gmUrl(gid,me))});
   }).then(function(){delete UG[gid];enterGroup("")});
 }
 function setMemberRole(gid,id,role){var n=(S.f[id]&&S.f[id].n)||(GM[id]&&GM[id].n)||"?";return putJ(gmUrl(gid,id),{n:n,r:role}).then(function(){GM[id]={n:n,r:role};drawList()})}
 function kickMember(gid,id){return Promise.all([delJ(gmUrl(gid,id)),delJ(ugUrl(id,gid))]).then(function(){delete GM[id];delete S.f[id];drawList()})}
 function sendGroupReq(o){
   return gKeys(o.gn,o.pw).then(function(k){
-    return Promise.all([getJ(gUrl(k.gid)),getJ(grUrl(k.gid))]).then(function(x){
+    return Promise.all([getJ(giUrl(k.gid)),getJ(grUrl(k.gid))]).then(function(x){
       if(x[0])throw new Error("gtaken");if(x[1])throw new Error("greq");
-      return putJ(grUrl(k.gid),{gn:k.n,an:o.an,ph:k.ph,m:o.m,p:o.p,by:S.me.i,bn:S.me.n,t:Date.now(),s:"p"});
-    }).then(function(){GRQ[k.gid]={gn:k.n,s:"p",by:S.me.i}});
+      return putJ(grUrl(k.gid),{gn:k.n,an:o.an,m:o.m,p:o.p,by:S.me.i,bn:S.me.n,t:Date.now(),s:"p"});
+    }).then(function(){return putJ(grsUrl(k.gid),{ph:k.ph})}).then(function(){GRQ[k.gid]={gn:k.n,s:"p",by:S.me.i}});
   });
 }
 function approveGroup(gid){
   var q=GRQ[gid];if(!q||!isAdmin())return Promise.resolve();
-  return getJ(gUrl(gid)).then(function(ex){
-    if(ex)throw new Error("gtaken");
-    return putJ(gUrl(gid),{n:q.gn,ph:q.ph,o:q.by,a:q.an,max:q.p,t:Date.now()});
-  }).then(function(){return putJ(gmUrl(gid,q.by),{n:q.bn,r:"owner"})}).then(function(){return putJ(ugUrl(q.by,gid),q.gn)}).then(function(){return delJ(grUrl(gid))}).then(function(){delete GRQ[gid];updBadge();renderFriends()});
+  return Promise.all([getJ(giUrl(gid)),getJ(grsUrl(gid))]).then(function(r){
+    if(r[0])throw new Error("gtaken");var ph=r[1]&&r[1].ph;if(!ph)throw new Error("gnone");
+    return putJ(gUrl(gid),{n:q.gn,o:q.by,a:q.an,max:q.p,t:Date.now()}).then(function(){return putJ(gsUrl(gid),{ph:ph})}).then(function(){return putJ(giUrl(gid),true)});
+  }).then(function(){return putJ(gmUrl(gid,q.by),{n:q.bn,r:"owner"})}).then(function(){return putJ(ugUrl(q.by,gid),q.gn)}).then(function(){return delJ(grUrl(gid))}).then(function(){return delJ(grsUrl(gid))}).then(function(){delete GRQ[gid];updBadge();renderFriends()});
 }
 function rejectGroup(gid){var q=GRQ[gid];if(!q||!isAdmin())return Promise.resolve();q.s="no";return putJ(grUrl(gid),q).then(function(){updBadge();renderFriends()})}
-function dropGroupReq(gid){return delJ(grUrl(gid)).then(function(){delete GRQ[gid];renderFriends()})}
+function dropGroupReq(gid){return delJ(grUrl(gid)).then(function(){return delJ(grsUrl(gid))}).then(function(){delete GRQ[gid];renderFriends()})}
 function createGroupNow(o){
   return gKeys(o.gn,o.pw).then(function(k){
-    return getJ(gUrl(k.gid)).then(function(ex){
+    return getJ(giUrl(k.gid)).then(function(ex){
       if(ex)throw new Error("gtaken");
-      return putJ(gUrl(k.gid),{n:k.n,ph:k.ph,o:S.me.i,a:o.an,max:o.p,t:Date.now()});
+      return putJ(gUrl(k.gid),{n:k.n,o:S.me.i,a:o.an,max:o.p,t:Date.now()}).then(function(){return putJ(gsUrl(k.gid),{ph:k.ph})}).then(function(){return putJ(giUrl(k.gid),true)});
     }).then(function(){return putJ(gmUrl(k.gid,S.me.i),{n:S.me.n,r:"owner"})}).then(function(){return putJ(ugUrl(S.me.i,k.gid),k.n)}).then(function(){UG[k.gid]=k.n;loadGcnt();admLog("Creata la squadra «"+k.n+"»");enterGroup(k.gid)});
   });
 }
@@ -1411,13 +1484,13 @@ function adminCode(gid,code){
   return Promise.all([getJ(gUrl(gid)),getJ(gmUrl(gid)),getJ(chUrl(gid))]).then(function(r){
     var g=r[0],ms=r[1]||{},ch=r[2];if(!g)throw new Error("gnone");
     return gKeys(g.n,code).then(function(k){
-      return getJ(gUrl(k.gid)).then(function(ex){
+      return getJ(giUrl(k.gid)).then(function(ex){
         if(ex)throw new Error("gtaken");
-        var ng=Object.assign({},g,{ph:k.ph}),q=[putJ(gUrl(k.gid),ng),putJ(gmUrl(k.gid),ms)];
+        var ng=Object.assign({},g);delete ng.ph;var q=[putJ(gUrl(k.gid),ng),putJ(gsUrl(k.gid),{ph:k.ph}),putJ(giUrl(k.gid),true),putJ(gmUrl(k.gid),ms)];
         if(ch)q.push(putJ(chUrl(k.gid),ch));
         Object.keys(ms).forEach(function(id){q.push(putJ(ugUrl(id,k.gid),g.n))});
         return Promise.all(q).then(function(){
-          var d=[delJ(gUrl(gid)),delJ(gmUrl(gid)),delJ(chUrl(gid))];Object.keys(ms).forEach(function(id){d.push(delJ(ugUrl(id,gid)))});
+          var d=[delJ(gUrl(gid)),delJ(gmUrl(gid)),delJ(chUrl(gid)),delJ(gsUrl(gid)),delJ(giUrl(gid))];Object.keys(ms).forEach(function(id){d.push(delJ(ugUrl(id,gid)))});
           return Promise.all(d);
         }).then(function(){if(S.cg===gid)enterGroup(k.gid)});
       });
@@ -1524,7 +1597,7 @@ function nkOf(name){return sha("nm:"+String(name).replace(/\s+/g," ").trim().sli
 var RP={};
 function admCount(){return isAdminAcct()?Object.keys(REQ).length+Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].s==="p"}).length+Object.keys(RP||{}).filter(function(k){return RP[k]&&RP[k].s==="p"}).length:0}
 function updBadge(){var a=admCount(),n=a+frCount(),b=$("tAm");if(b){if(n)b.setAttribute("data-n",n);else b.removeAttribute("data-n")}var p=$("admPill");if(p&&!p.hidden)p.textContent=a?"Admin · "+a+" · Esci":"Admin · Esci"}
-function forceLogout(){viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("Nome o PIN sono stati cambiati. Accedi con le nuove credenziali.");render()}
+function forceLogout(){u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("Nome o PIN sono stati cambiati. Accedi con le nuove credenziali.");render()}
 function moveAccount(old,newName,newPin){
   moving=true;
   return Promise.all([acctKeys(newName,newPin),nkOf(old.name)]).then(function(r){
@@ -1578,48 +1651,116 @@ function credForm(o){
   return f;
 }
 function selfCred(){
-  return credForm({title:"Cambia username o PIN",user:true,name:S.acct.name,lockName:!fbMode()&&isAdminAcct(),strong:!fbMode()&&isAdminAcct(),needCur:true,okMsg:function(){return"Fatto. Nome e PIN aggiornati."},
-    onSave:function(nm,np,cur){
-      return verifyPw(S.acct.name,cur).then(function(k0){
-        if(k0.id!==S.acct.id)throw new Error("badpin");
-        return moveAccount({id:S.acct.id,name:S.acct.name},nm,np||cur);
-      }).then(function(x){S.acct={name:x.k.name,id:x.k.id};S.me.i=x.k.id;S.me.n=x.k.name;S.me.u=x.u;save(false);
-        renderFriends()});
-    }});
+  var f=h("div","box cred");f.appendChild(h("p","k","Cambia password"));
+  var ci=h("input");ci.type="password";ci.maxLength=64;ci.placeholder="Password attuale";ci.autocomplete="current-password";ci.setAttribute("aria-label","Password attuale");
+  var pi=h("input");pi.type="password";pi.maxLength=64;pi.placeholder="Nuova password (da 8 caratteri)";pi.autocomplete="new-password";pi.setAttribute("aria-label","Nuova password");
+  f.appendChild(ci);f.appendChild(pi);
+  var row=h("div","row"),ok=h("button","pri","Salva"),no=h("button",null,"Annulla");ok.type=no.type="button";row.appendChild(ok);row.appendChild(no);f.appendChild(row);
+  no.addEventListener("click",function(){f.remove()});
+  ok.addEventListener("click",function(){
+    if(!ci.value){msg("Scrivi la password attuale.");return}
+    if(pi.value.length<8||pi.value.length>64){msg("La nuova password deve avere da 8 a 64 caratteri.");return}
+    ok.disabled=no.disabled=true;msg("Un attimo…");
+    nkOf(S.acct.name).then(function(nk){return getJ(aUrl(nk))}).then(function(a){
+      return u2call("signInWithPassword",{email:a.e,password:ci.value,returnSecureToken:true})}).then(function(o){
+      return u2call("update",{idToken:o.idToken,password:pi.value,returnSecureToken:true})}).then(function(o){u2set(o);msg("Password cambiata.");f.remove()})
+    .catch(function(e){ok.disabled=no.disabled=false;msg(e&&e.message==="bad"?"La password attuale non è corretta.":"Non è stato possibile cambiarla. Riprova.")});
+  });
+  return f;
 }
 function adminCred(id,name){
   return credForm({title:"Nuove credenziali per "+name,name:name,needCur:false,okMsg:function(n){return"Fatto. Comunica a "+n+" il nuovo nome e PIN."},
     onSave:function(nm,np){return moveAccount({id:id,name:name},nm,np).then(function(){delete REQ[id];delete S.f[id];updBadge();pull(true)})}});
 }
-function doCreate(name,pin){
-  name=String(name).replace(/^@/,"").trim().toLowerCase();
+function startSession(name,pid,rec){
+  var r=rec||{};
+  S.acct={name:name,id:pid};
+  S.me={i:pid,n:cn(r.n)||name,d:toMap(r.d),u:Number(r.u)||Date.now()};
+  S.f={};S.h={};S.cg="";UG={};GM={};save(false);
+}
+function cleanName(n){return String(n).replace(/^@/,"").replace(/\s+/g," ").trim().toLowerCase()}
+function doCreate(name,pw){
+  name=cleanName(name);
   if(!validUser(name))return Promise.reject(new Error("baduser"));
   if(!validName(name))return Promise.reject(new Error("badname"));
   if(reservedName(name))return Promise.reject(new Error("reserved"));
-  return acctKeys(name,pin).then(function(k){
-    return getJ(aUrl(k.nk)).then(function(ex){
+  if(pw.length<8||pw.length>64)return Promise.reject(new Error("weakpw"));
+  return nkOf(name).then(function(nk){
+    return getJ(aUrl(nk)).then(function(ex){
       if(ex)throw new Error("taken");
-      return putJ(aUrl(k.nk),{id:k.id,v:2}).then(function(){
-        S.acct={name:k.name,id:k.id};S.me.i=k.id;S.me.n=k.name;S.me.u=Date.now();S.f={};S.h={};S.cg="";UG={};GM={};save(false);
-        return Promise.all([putJ(dbUrl(k.id),{n:S.me.n,d:myArr(),u:S.me.u}),putJ(frUrl(k.id),{_i:1}).catch(function(){})]);
+      var em=u2email();
+      return u2call("signUp",{email:em,password:pw,returnSecureToken:true}).then(function(o){
+        u2set(o);var uid=o.localId;
+        return putJ(memUrl(uid),uid).then(function(){return putJ(aUrl(nk),{id:uid,v:3,e:em,u:uid})}).then(function(){
+          startSession(name,uid,{n:name,d:myArr()});S.me.u=Date.now();save(false);
+          return Promise.all([putJ(dbUrl(uid),{n:name,d:myArr(),u:S.me.u}),putJ(frUrl(uid),{_i:1}).catch(function(){})]);
+        }).catch(function(e){u2out();throw new Error(e&&e.message==="HTTP 401"?"taken":(e&&e.message)||"net")});
       });
     });
   });
 }
-function doLogin(name,pin){
-  name=String(name).replace(/^@/,"").trim();
-  return nkOf(name).then(function(nk){return getJ(aUrl(nk))}).then(function(ex){
+function doLogin(name,pw){
+  name=cleanName(name);
+  return nkOf(name).then(function(nk){return getJ(aUrl(nk)).then(function(ex){
     if(!ex)throw new Error("bad");
-    return acctKeys(ex.o||name,pin,ex.v||1).then(function(k){
-      if(ex.id!==k.id)throw new Error("bad");
-      k.name=cn(name)||k.name;
-      return getJ(dbUrl(k.id)).then(function(rec){
-        var r=rec||{};
-        S.acct={name:k.name,id:k.id};
-        S.me={i:k.id,n:cn(r.n)||k.name,d:toMap(r.d),u:Number(r.u)||Date.now()};
-        S.f={};S.h={};S.cg="";UG={};GM={};save(false);
-        if(!fbMode()&&isAdminName(k.name)){ADM_UNTIL=Date.now()+30*60*1000;fbSignIn(pin).catch(function(){})}
+    if(!ex.u&&ex.rs){var e0=new Error("migrate");e0.legacy={name:name,pin:"",rs:true};throw e0}
+    if(!ex.u){
+      return acctKeys(ex.o||name,pw,ex.v||1).then(function(k){
+        if(k.id!==ex.id)throw new Error("bad");
+        var e=new Error("migrate");e.legacy={name:name,pin:pw};throw e;
       });
+    }
+    return u2call("signInWithPassword",{email:ex.e,password:pw,returnSecureToken:true}).then(function(o){
+      u2set(o);
+      return getJ(memUrl(o.localId)).then(function(pid){
+        if(!pid||pid!==ex.id){u2out();throw new Error("bad")}
+        return getJ(dbUrl(pid)).then(function(rec){startSession(name,pid,rec)});
+      });
+    });
+  })});
+}
+function doMigrate(name,pin,pw){
+  name=cleanName(name);
+  if(pw.length<8||pw.length>64)return Promise.reject(new Error("weakpw"));
+  return nkOf(name).then(function(nk){return getJ(aUrl(nk)).then(function(ex){
+    if(!ex)throw new Error("bad");
+    if(ex.u)throw new Error("claimed");
+    return(ex.rs?Promise.resolve({id:ex.id}):acctKeys(ex.o||name,pin,ex.v||1)).then(function(k){
+      if(k.id!==ex.id)throw new Error("bad");
+      var em=u2email(),id=ex.id;
+      return u2call("signUp",{email:em,password:pw,returnSecureToken:true}).then(function(o){
+        u2set(o);var uid=o.localId;
+        var rec={id:id,v:3,e:em,u:uid};if(ex.o)rec.o=ex.o;
+        return putJ(claimUrl(id),uid).then(function(){return putJ(memUrl(uid),id)}).then(function(){return putJ(aUrl(nk),rec)})
+          .then(function(){return getJ(dbUrl(id))}).then(function(r){startSession(name,id,r)})
+          .catch(function(e){u2out();throw new Error(e&&e.message==="HTTP 401"?"claimed":(e&&e.message)||"net")});
+      });
+    });
+  })});
+}
+function openMigrate(name,pin,rs){
+  if($("mdl"))$("mdl").remove();
+  var ov=h("div","mdl");ov.id="mdl";ov.setAttribute("role","dialog");ov.setAttribute("aria-modal","true");ov.setAttribute("aria-labelledby","mdlT");
+  var bx=h("div","mbox");
+  var t=h("p","k","Abbiamo aggiornato la sicurezza del sito");t.id="mdlT";bx.appendChild(t);
+  bx.appendChild(h("p","m","Per proteggere i tuoi dati abbiamo cambiato alcune regole del server: ora si entra con una password al posto del PIN. Scegli una nuova password (da 8 caratteri) e scrivi ancora il tuo PIN di sempre. Progressi, gruppi e amici restano com’erano."));
+  var ni=h("input");ni.type="text";ni.maxLength=24;ni.placeholder="Il tuo username";ni.value=name||"";ni.autocomplete="username";ni.setAttribute("aria-label","Username");
+  var oi=h("input");oi.type="password";oi.maxLength=64;oi.placeholder="Il tuo vecchio PIN";oi.value=pin||"";oi.autocomplete="off";oi.setAttribute("aria-label","Vecchio PIN");
+  var p1=h("input");p1.type="password";p1.maxLength=64;p1.placeholder="Nuova password (da 8 caratteri)";p1.autocomplete="new-password";p1.setAttribute("aria-label","Nuova password");
+  var p2=h("input");p2.type="password";p2.maxLength=64;p2.placeholder="Ripeti la nuova password";p2.autocomplete="new-password";p2.setAttribute("aria-label","Ripeti la nuova password");
+  var er=h("p","m");er.setAttribute("role","alert");
+  var ok=h("button","pri","Continua");ok.type="button";
+  if(rs){oi.hidden=true;bx.firstChild.nextSibling.textContent="Alessandro ha sbloccato il tuo account. Scegli una nuova password (da 8 caratteri): progressi, gruppi e amici restano com’erano."}
+  [ni,oi,p1,p2,er,ok].forEach(function(x){bx.appendChild(x)});
+  ov.appendChild(bx);document.body.appendChild(ov);(name?(pin?p1:oi):ni).focus();
+  ok.addEventListener("click",function(){
+    if(!ni.value.trim()||(!rs&&!oi.value)){er.textContent="Scrivi username e vecchio PIN.";return}
+    if(p1.value.length<8){er.textContent="La nuova password deve avere almeno 8 caratteri.";return}
+    if(p1.value!==p2.value){er.textContent="Le due password non coincidono.";return}
+    ok.disabled=true;er.textContent="Un attimo…";
+    doMigrate(ni.value,rs?"":oi.value,p1.value).then(function(){ov.remove();render();msg("Fatto! Da ora entri con la nuova password.");pull();loadUcnt()}).catch(function(e){
+      ok.disabled=false;var m=e&&e.message;
+      er.textContent=m==="bad"?"Username o vecchio PIN non corretti.":m==="claimed"?"Questo account è già passato alla nuova password. Se non sei stato tu, scrivi ad Alessandro.":m==="weakpw"?"La nuova password deve avere da 8 a 64 caratteri.":m==="noauth"?"Il login con password non è ancora attivo sul server.":"Non riesco a collegarmi. Riprova tra poco.";
     });
   });
 }
@@ -1635,7 +1776,7 @@ function renderFriends(){
     var ex=h("button",null,"Esci");ex.type="button";var arm=false;
     ex.addEventListener("click",function(){
       if(!arm){arm=true;ex.textContent="Tocca ancora per uscire";setTimeout(function(){arm=false;ex.textContent="Esci"},4000);return}
-      viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};S.cg="";UG={};GM={};save(false);msg("Sei uscito. Con nome e PIN rientri quando vuoi.");renderFriends();
+      u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};S.cg="";UG={};GM={};save(false);msg("Sei uscito. Con username e password rientri quando vuoi.");renderFriends();
     });
     if(fbMode()){if(adminOk())b.appendChild(admBox())}
     else if(isAdminAcct()){
@@ -1673,7 +1814,7 @@ function renderFriends(){
       if(isAdminAcct()){msg("Sei l’amministratore: se hai dimenticato il PIN dovrò cambiarlo io nel codice.");return}
       putJ(reqUrl(S.acct.id),{n:S.acct.name,t:Date.now()}).then(function(){msg("Richiesta inviata ad Alessandro: ti darà un nuovo PIN. Poi accedi con quello.")}).catch(function(e){msg("Richiesta non riuscita ("+(e&&e.message||"errore")+").")});
     });
-    var ar=h("div","row ar");ar.appendChild(ch2);ar.appendChild(fg);ar.appendChild(ex);
+    var ar=h("div","row ar");ar.appendChild(ch2);ar.appendChild(ex);
     b.appendChild(ar);b.appendChild(cwrap);
     el.appendChild(b);
     if(isAdmin()){
@@ -1695,21 +1836,22 @@ function renderFriends(){
     return;
   }
   b.appendChild(h("p","k","Il tuo account"));
-  b.appendChild(h("p","m","Scegli uno username (come su Instagram: lettere minuscole, numeri, punto e _, per esempio mario.rossi) e un PIN di 4–8 cifre (o una password più lunga, anche con simboli). Con lo stesso username e PIN entri da qualsiasi telefono e ritrovi i tuoi progressi. Il PIN protegge poco: non usarne uno che usi altrove."));
+  b.appendChild(h("p","m","Scegli uno username (come su Instagram: lettere minuscole, numeri, punto e _, per esempio mario.rossi) e una password di almeno 8 caratteri. Con lo stesso username e la stessa password entri da qualsiasi telefono e ritrovi i tuoi progressi. Il PIN protegge poco: non usarne uno che usi altrove."));
   var ni=h("input");ni.type="text";ni.maxLength=24;ni.placeholder="Username (es. mario.rossi)";ni.setAttribute("aria-label","Username");ni.autocomplete="off";
-  var pi=h("input");pi.type="password";pi.maxLength=64;pi.placeholder="PIN o password";pi.setAttribute("aria-label","PIN o password");pi.autocomplete="off";
+  var pi=h("input");pi.type="password";pi.maxLength=64;pi.placeholder="Password (da 8 caratteri)";pi.setAttribute("aria-label","Password");pi.autocomplete="off";
   b.appendChild(ni);b.appendChild(pi);
   var row=h("div","row"),bc=h("button","pri","Crea account"),bl=h("button",null,"Accedi");bc.type="button";bl.type="button";
-  row.appendChild(bc);row.appendChild(bl);b.appendChild(row);el.appendChild(b);
+  row.appendChild(bc);row.appendChild(bl);b.appendChild(row);b.appendChild(h("p","m","Hai dimenticato la password? Scrivi ad Alessandro: ti sblocca l’account e ne scegli una nuova."));el.appendChild(b);
   function go(fn,okMsg){
     var nm=ni.value.replace(/\s+/g," ").trim(),pin=pi.value.trim();
     if(!nm){msg("Scrivi un nome.");return}
-    if(fn===doCreate&&!validCred(pin)){msg("Il PIN ha 4–8 cifre, oppure usa una password da 8 a 64 caratteri.");return}
-    if(fn!==doCreate&&!pin){msg("Scrivi il PIN o la password.");return}
+    if(fn===doCreate&&(pin.length<8||pin.length>64)){msg("La password deve avere da 8 a 64 caratteri.");return}
+    if(fn!==doCreate&&!pin){msg("Scrivi la password.");return}
     bc.disabled=bl.disabled=true;msg("Un attimo…");
     fn(nm,pin).then(function(){render();msg(okMsg);pull();loadUcnt()}).catch(function(e){
       bc.disabled=bl.disabled=false;
       var m=e&&e.message;
+      if(m==="migrate"){msg("");openMigrate(e.legacy.name,e.legacy.pin,e.legacy.rs);return}
       msg(m==="baduser"?"Username non valido: da 3 a 20 caratteri, solo lettere minuscole, numeri, punto e trattino basso (es. mario.rossi).":m==="taken"?"Questo username è già in uso. Se è tuo, tocca Accedi.":m==="reserved"?"Questo nome è riservato.":m==="badname"?"Nome non valido: usa lettere, numeri, spazi e . ' _ -":m==="bad"?"Nome o PIN non corretti.":"Connessione non riuscita ("+(m||"errore")+"). Riprova.");
     });
   }
@@ -1785,6 +1927,8 @@ $("app").addEventListener("change",function(e){
 $("app").addEventListener("click",function(e){
   var t=e.target;if(!t||!t.closest)return;
   if(t.closest("button[data-unview]")){viewing=null;prevD=null;render();return}
+  var rtb=t.closest("button[data-rt]");
+  if(rtb){var pr=rtb.getAttribute("data-rt").split(":");rate(pr[0],Number(pr[1]));return}
   var nb=t.closest("button[data-next]");
   if(nb){tear(nb.getAttribute("data-next"));return}
   var sm=t.closest("summary");
@@ -1810,8 +1954,10 @@ if(window.matchMedia&&matchMedia("(hover:hover) and (pointer:fine)").matches){
     if(tk&&!tk.contains(e.relatedTarget)){tk.style.setProperty("--rx","0deg");tk.style.setProperty("--ry","0deg")}
   });
 }
+var LEGACY=null;if(DB_URL&&S.acct&&!U2){LEGACY=S.acct.name;S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false)}
 setTimeout(function(){document.body.classList.remove("boot")},2800);
 render();
+if(LEGACY)setTimeout(function(){openMigrate(LEGACY,"")},300);
 if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}setInterval(pull,5000);loadGcnt();setInterval(loadGcnt,30000);loadUcnt();setInterval(loadUcnt,60000);setInterval(pullChat,5000)}
 admLoad();if(fbMode())$("admFoot").hidden=false;if(adminOk()){render();renderSponsors();loadReports()}
 $("admBtn").addEventListener("click",function(){if(adminOk()){admExit();return}location.href="admin.html"});

@@ -194,10 +194,10 @@ function chatView(gid,gname){
 function gKeys(code){var gid;return sha("gc:"+code).then(function(x){gid=x.slice(0,20);return sha("gp:"+gid+":"+code)}).then(function(p){return{gid:gid,ph:p.slice(0,32)}})}
 function approve(k){
   var q=ST.greq[k];if(!q)return Promise.reject(new Error("none"));
-  return GET("groups/"+k).then(function(ex){if(ex)throw new Error("taken");
-    return PUT("groups/"+k,{n:q.gn,ph:q.ph,o:q.by,a:q.an,max:q.p,t:Date.now()})})
+  return Promise.all([GET("groupIndex/"+k),GET("groupReqSec/"+ROOM+"/"+k)]).then(function(r){if(r[0])throw new Error("taken");var ph=r[1]&&r[1].ph;if(!ph)throw new Error("none");
+    return PUT("groups/"+k,{n:q.gn,o:q.by,a:q.an,max:q.p,t:Date.now()}).then(function(){return PUT("groupSec/"+k,{ph:ph})}).then(function(){return PUT("groupIndex/"+k,true)})})
    .then(function(){return PUT("groupMembers/"+k+"/"+q.by,{n:q.bn,r:"owner"})}).then(function(){return PUT("userGroups/"+q.by+"/"+k,q.gn)})
-   .then(function(){return DEL("groupRequests/"+ROOM+"/"+k)}).then(function(){LOG("Approvata la squadra «"+q.gn+"»")});
+   .then(function(){return DEL("groupRequests/"+ROOM+"/"+k)}).then(function(){return DEL("groupReqSec/"+ROOM+"/"+k)}).then(function(){LOG("Approvata la squadra «"+q.gn+"»")});
 }
 function reject(k){var q=ST.greq[k];q.s="no";return PUT("groupRequests/"+ROOM+"/"+k,q).then(function(){LOG("Rifiutata la squadra «"+q.gn+"»")})}
 function kick(gid,id){return Promise.all([DEL("groupMembers/"+gid+"/"+id),DEL("userGroups/"+id+"/"+gid)])}
@@ -210,16 +210,23 @@ function rename(gid,name){var g=ST.groups[gid],q=[];g.n=name;q.push(PUT("groups/
 function changeCode(gid,code){
   var g=ST.groups[gid],ms=obj(ST.members[gid]);
   return gKeys(code).then(function(k){
-    return Promise.all([GET("groups/"+k.gid),GET("chats/"+gid)]).then(function(r){
+    return Promise.all([GET("groupIndex/"+k.gid),GET("chats/"+gid)]).then(function(r){
       if(r[0])throw new Error("taken");
-      var ng=Object.assign({},g,{ph:k.ph}),q=[PUT("groups/"+k.gid,ng),PUT("groupMembers/"+k.gid,ms)];
+      var ng=Object.assign({},g);delete ng.ph;var q=[PUT("groups/"+k.gid,ng),PUT("groupSec/"+k.gid,{ph:k.ph}),PUT("groupIndex/"+k.gid,true),PUT("groupMembers/"+k.gid,ms)];
       if(r[1])q.push(PUT("chats/"+k.gid,r[1]));
       Object.keys(ms).forEach(function(id){q.push(PUT("userGroups/"+id+"/"+k.gid,g.n))});
-      return Promise.all(q).then(function(){var d=[DEL("groups/"+gid),DEL("groupMembers/"+gid),DEL("chats/"+gid),DEL("mutes/"+gid)];Object.keys(ms).forEach(function(id){d.push(DEL("userGroups/"+id+"/"+gid))});return Promise.all(d)}).then(function(){return k.gid});
+      return Promise.all(q).then(function(){var d=[DEL("groups/"+gid),DEL("groupSec/"+gid),DEL("groupIndex/"+gid),DEL("groupMembers/"+gid),DEL("chats/"+gid),DEL("mutes/"+gid)];Object.keys(ms).forEach(function(id){d.push(DEL("userGroups/"+id+"/"+gid))});return Promise.all(d)}).then(function(){return k.gid});
     });
   });
 }
-function dropGroup(gid){var d=[DEL("groups/"+gid),DEL("groupMembers/"+gid),DEL("chats/"+gid),DEL("mutes/"+gid)];Object.keys(obj(ST.members[gid])).forEach(function(id){d.push(DEL("userGroups/"+id+"/"+gid))});return Promise.all(d)}
+function dropGroup(gid){var d=[DEL("groups/"+gid),DEL("groupSec/"+gid),DEL("groupIndex/"+gid),DEL("groupMembers/"+gid),DEL("chats/"+gid),DEL("mutes/"+gid)];Object.keys(obj(ST.members[gid])).forEach(function(id){d.push(DEL("userGroups/"+id+"/"+gid))});return Promise.all(d)}
+function unlockAccount(id,name){
+  return nkOf(name).then(function(nk){return GET("accounts/"+ROOM+"/"+nk).then(function(rec){
+    if(!rec||rec.id!==id)throw new Error("none");
+    var q=[DEL("claims/"+id)];if(rec.u)q.push(DEL("members/"+rec.u));
+    return Promise.all(q).then(function(){var n={id:id,v:rec.v||3,rs:1};if(rec.o)n.o=rec.o;return PUT("accounts/"+ROOM+"/"+nk,n)});
+  })});
+}
 function nkOf(n){return sha("nm:"+String(n).replace(/\s+/g," ").trim().slice(0,24).toLowerCase()).then(function(x){return x.slice(0,20)})}
 function renameUser(id,oldName,newName){
   var nn=String(newName).replace(/^\s*@+/,"").replace(/\s+/g," ").trim().slice(0,24);
@@ -227,7 +234,7 @@ function renameUser(id,oldName,newName){
   return Promise.all([nkOf(oldName),nkOf(nn)]).then(function(k){
     return Promise.all([GET("accounts/"+ROOM+"/"+k[0]),k[0]===k[1]?null:GET("accounts/"+ROOM+"/"+k[1])]).then(function(r){
       var rec=r[0];if(!rec||rec.id!==id)throw new Error("none");if(r[1])throw new Error("taken");
-      return PUT("accounts/"+ROOM+"/"+k[1],{id:id,v:rec.v||2,o:rec.o||oldName}).then(function(){return k[0]===k[1]?null:DEL("accounts/"+ROOM+"/"+k[0])});
+      return PUT("accounts/"+ROOM+"/"+k[1],Object.assign({},rec,{o:rec.o||oldName})).then(function(){return k[0]===k[1]?null:DEL("accounts/"+ROOM+"/"+k[0])});
     });
   }).then(function(){
     return PUT("rooms/"+ROOM+"/"+id+"/n",nn);
@@ -360,7 +367,9 @@ function pagePers(){
       var body=h("div");body.hidden=true;head.addEventListener("click",function(){body.hidden=!body.hidden});
       var gs=Object.keys(ST.members).filter(function(g){return obj(ST.members[g])[id]&&ST.groups[g]}).map(function(g){return ST.groups[g].n});
       var sq=h("p","m","Squadre: "+(gs.length?gs.join(", "):"nessuna"));sq.style.marginTop="10px";body.appendChild(sq);
-      var rnl=h("p","m","Cambia solo il nome (il PIN dell’amico resta lo stesso):");rnl.style.marginTop="14px";body.appendChild(rnl);
+      var ulk=btn("Sblocca account (password dimenticata)","sm");two(ulk,"Sblocca account (password dimenticata)",function(){ulk.disabled=true;unlockAccount(id,u.n).then(function(){LOG("Sbloccato l’account di "+u.n);toast("Account sbloccato: "+u.n+" scrive il suo username al login e sceglie una nuova password. Dillo solo a lui, finché non l’ha fatto chiunque può prendere quell’account.")}).catch(function(e){ulk.disabled=false;fail(e)})});
+      body.appendChild(ulk);
+      var rnl=h("p","m","Cambia solo il nome (la password dell’amico resta la stessa):");rnl.style.marginTop="14px";body.appendChild(rnl);
       var rrow=h("div","row"),rin=h("input");rin.type="text";rin.maxLength=24;rin.value=u.n;rin.setAttribute("aria-label","Nuovo nome");rin.autocapitalize="off";rin.style.marginBottom="0";
       var rsv=btn("Salva nome","sm pri");
       rsv.addEventListener("click",function(){
