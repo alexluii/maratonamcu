@@ -141,6 +141,19 @@ function GET(p,q){return authed(url(p,q)).then(function(u){return fetch(u)}).the
 function PUT(p,v){return authed(url(p)).then(function(u){return fetch(u,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(v)})}).then(ok).then(function(r){return r.json()})}
 function DEL(p){return authed(url(p)).then(function(u){return fetch(u,{method:"DELETE"})}).then(ok)}
 function LOG(t){authed(url("adminLog/"+ROOM)).then(function(u){return fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({t:Date.now(),a:String(t).slice(0,200)})})}).catch(function(){})}
+function NOTIFY(uid,title,text){
+  if(!uid)return Promise.resolve();
+  return authed(url("notifs/"+ROOM+"/"+uid)).then(function(u){return fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({t:Date.now(),h:String(title).slice(0,60),m:String(text||"").slice(0,300)})})}).catch(function(){});
+}
+function msgBox(uid,name,ctx){
+  var w=h("div"),b=btn("Scrivi un messaggio","sm");w.appendChild(b);var box=h("div");box.hidden=true;box.style.marginTop="8px";w.appendChild(box);
+  var ta=h("textarea");ta.maxLength=300;ta.rows=3;ta.placeholder="Il messaggio arriva a "+(name||"questa persona")+" nelle sue notifiche";ta.setAttribute("aria-label","Messaggio");box.appendChild(ta);
+  var go=btn("Invia messaggio","sm pri");go.style.marginTop="8px";box.appendChild(go);
+  b.addEventListener("click",function(){box.hidden=!box.hidden;if(!box.hidden)ta.focus()});
+  go.addEventListener("click",function(){var t=ta.value.replace(/\s+/g," ").trim();if(t.length<2){toast("Scrivi il messaggio.");return}go.disabled=true;
+    NOTIFY(uid,"Messaggio dall’amministratore",t).then(function(){LOG("Messaggio a "+(name||"?")+(ctx?" ("+ctx+")":""));ta.value="";box.hidden=true;go.disabled=false;toast("Messaggio inviato a "+(name||"?")+".")}).catch(function(e){go.disabled=false;fail(e)})});
+  return w;
+}
 function obj(x){return x&&typeof x==="object"?x:{}}
 
 /* ---------- elenco titoli (preso da index.html) ---------- */
@@ -211,9 +224,9 @@ function approve(k){
   return Promise.all([GET("groupIndex/"+k),GET("groupReqSec/"+ROOM+"/"+k)]).then(function(r){if(r[0])throw new Error("taken");var ph=r[1]&&r[1].ph;if(!ph)throw new Error("none");
     return PUT("groups/"+k,{n:q.gn,o:q.by,a:q.an,max:q.p,t:Date.now()}).then(function(){return PUT("groupSec/"+k,{ph:ph})}).then(function(){return PUT("groupIndex/"+k,true)})})
    .then(function(){return PUT("groupMembers/"+k+"/"+q.by,{n:q.bn,r:"owner"})}).then(function(){return PUT("userGroups/"+q.by+"/"+k,q.gn)})
-   .then(function(){return DEL("groupRequests/"+ROOM+"/"+k)}).then(function(){return DEL("groupReqSec/"+ROOM+"/"+k)}).then(function(){LOG("Approvata la squadra «"+q.gn+"»")});
+   .then(function(){return DEL("groupRequests/"+ROOM+"/"+k)}).then(function(){return DEL("groupReqSec/"+ROOM+"/"+k)}).then(function(){LOG("Approvata la squadra «"+q.gn+"»");return NOTIFY(q.by,"Gruppo creato","La tua richiesta è stata accettata: il gruppo «"+q.gn+"» è pronto.")});
 }
-function reject(k){var q=ST.greq[k];q.s="no";return PUT("groupRequests/"+ROOM+"/"+k,q).then(function(){LOG("Rifiutata la squadra «"+q.gn+"»")})}
+function reject(k){var q=ST.greq[k];q.s="no";return PUT("groupRequests/"+ROOM+"/"+k,q).then(function(){LOG("Rifiutata la squadra «"+q.gn+"»");return NOTIFY(q.by,"Richiesta rifiutata","La tua richiesta per il gruppo «"+q.gn+"» non è stata accettata.")})}
 function kick(gid,id){return Promise.all([DEL("groupMembers/"+gid+"/"+id),DEL("userGroups/"+id+"/"+gid)])}
 function makeOwner(gid,id){
   var ms=obj(ST.members[gid]),g=ST.groups[gid],q=[];
@@ -343,38 +356,37 @@ function pageRich(){
   main.appendChild(h("h2",null,"Segnalazioni"+(rk.length?" ("+rk.length+")":"")));
   if(!rk.length)main.appendChild(h("div","card m","Nessuna segnalazione."));
   rk.sort(function(a,c){return(ST.reports[c].t||0)-(ST.reports[a].t||0)}).forEach(function(k){
-    var r=ST.reports[k],c=h("div","card"),t0=h("p",null,(r.k==="size"?"Richiesta posti · ":r.k==="owner"?"Richiesta capogruppo · ":"")+"Squadra «"+(r.gn||"?")+"»");t0.style.fontWeight="700";
+    var r=ST.reports[k],c=h("div","card"),t0=h("p",null,(r.k==="size"?"Richiesta posti · ":r.k==="owner"?"Richiesta capogruppo · ":r.k==="other"?"Messaggio · ":"")+"Squadra «"+(r.gn||"?")+"»");t0.style.fontWeight="700";
     c.appendChild(t0);
+    if(r.k==="other"){
+      c.firstChild.textContent="Messaggio da "+(r.bn||"?");
+      c.appendChild(h("p","m",when(r.t)));c.appendChild(h("p",null,"“"+(r.m||"")+"”"));
+      var xr=h("div","row"),xb=btn("Fatto","sm pri");xb.addEventListener("click",function(){DEL("reports/"+ROOM+"/"+k).then(function(){LOG("Chiuso il messaggio di "+(r.bn||"?"));delete ST.reports[k];return NOTIFY(r.by,"Richiesta completata","Alessandro ha letto il tuo messaggio e lo ha segnato come completato.")}).then(render).catch(fail)});xr.appendChild(xb);c.appendChild(xr);c.appendChild(msgBox(r.by,r.bn,"messaggio"));main.appendChild(c);return;
+    }
     if(r.k==="owner"){
       var go=ST.groups[r.gid],mo=obj(ST.members[r.gid]);
       c.appendChild(h("p","m","Da "+(r.bn||"?")+" · "+when(r.t)));
       c.appendChild(h("p",null,!go?"La squadra non esiste più.":!mo[r.n]?(r.nn||"?")+" non è più nel gruppo.":"Vuole che "+(r.nn||"?")+" diventi capogruppo."));
       var orow=h("div","row");
-      if(go&&mo[r.n]){var oka=btn("Approva","sm pri");oka.addEventListener("click",function(){oka.disabled=true;makeOwner(r.gid,r.n).then(function(){return DEL("reports/"+ROOM+"/"+k)}).then(function(){LOG("Nuovo capogruppo di «"+r.gn+"»: "+r.nn);delete ST.reports[k];return load()}).then(render).catch(function(e){oka.disabled=false;fail(e)})});orow.appendChild(oka)}
-      var nob2=btn("Rifiuta","sm");nob2.addEventListener("click",function(){DEL("reports/"+ROOM+"/"+k).then(function(){LOG("Rifiutata la richiesta capogruppo di «"+r.gn+"»");delete ST.reports[k];render()}).catch(fail)});orow.appendChild(nob2);
-      c.appendChild(orow);main.appendChild(c);return;
+      if(go&&mo[r.n]){var oka=btn("Approva","sm pri");oka.addEventListener("click",function(){oka.disabled=true;makeOwner(r.gid,r.n).then(function(){return DEL("reports/"+ROOM+"/"+k)}).then(function(){LOG("Nuovo capogruppo di «"+r.gn+"»: "+r.nn);delete ST.reports[k];return NOTIFY(r.by,"Richiesta accettata","Il nuovo capogruppo di «"+r.gn+"» è "+r.nn+".")}).then(function(){return NOTIFY(r.n,"Sei capogruppo","Ora sei il capogruppo del gruppo «"+r.gn+"».")}).then(load).then(render).catch(function(e){oka.disabled=false;fail(e)})});orow.appendChild(oka)}
+      var nob2=btn("Rifiuta","sm");nob2.addEventListener("click",function(){DEL("reports/"+ROOM+"/"+k).then(function(){LOG("Rifiutata la richiesta capogruppo di «"+r.gn+"»");delete ST.reports[k];return NOTIFY(r.by,"Richiesta rifiutata","La tua richiesta di cambiare il capogruppo di «"+r.gn+"» non è stata accettata.")}).then(render).catch(fail)});orow.appendChild(nob2);
+      c.appendChild(orow);c.appendChild(msgBox(r.by,r.bn,"capogruppo"));main.appendChild(c);return;
     }
     if(r.k==="size"){
       var gg=ST.groups[r.gid];
       c.appendChild(h("p","m","Da "+(r.bn||"?")+" · "+when(r.t)));
       c.appendChild(h("p",null,gg?"Vuole portare i posti da "+(gg.max||"?")+" a "+r.n+".":"La squadra non esiste più."));
       var sr=h("div","row");
-      if(gg){var okb=btn("Approva","sm pri");okb.addEventListener("click",function(){okb.disabled=true;PUT("groups/"+r.gid+"/max",Number(r.n)).then(function(){return DEL("reports/"+ROOM+"/"+k)}).then(function(){LOG("Posti di «"+r.gn+"» portati a "+r.n);gg.max=Number(r.n);delete ST.reports[k];render()}).catch(function(e){okb.disabled=false;fail(e)})});sr.appendChild(okb)}
-      var nob=btn("Rifiuta","sm");nob.addEventListener("click",function(){DEL("reports/"+ROOM+"/"+k).then(function(){LOG("Rifiutata la richiesta posti di «"+r.gn+"»");delete ST.reports[k];render()}).catch(fail)});sr.appendChild(nob);
-      c.appendChild(sr);main.appendChild(c);return;
+      if(gg){var okb=btn("Approva","sm pri");okb.addEventListener("click",function(){okb.disabled=true;PUT("groups/"+r.gid+"/max",Number(r.n)).then(function(){return DEL("reports/"+ROOM+"/"+k)}).then(function(){LOG("Posti di «"+r.gn+"» portati a "+r.n);gg.max=Number(r.n);delete ST.reports[k];return NOTIFY(r.by,"Richiesta accettata","I posti del gruppo «"+r.gn+"» ora sono "+r.n+".")}).then(render).catch(function(e){okb.disabled=false;fail(e)})});sr.appendChild(okb)}
+      var nob=btn("Rifiuta","sm");nob.addEventListener("click",function(){DEL("reports/"+ROOM+"/"+k).then(function(){LOG("Rifiutata la richiesta posti di «"+r.gn+"»");delete ST.reports[k];return NOTIFY(r.by,"Richiesta rifiutata","La tua richiesta di cambiare i posti di «"+r.gn+"» non è stata accettata.")}).then(render).catch(fail)});sr.appendChild(nob);
+      c.appendChild(sr);c.appendChild(msgBox(r.by,r.bn,"posti"));main.appendChild(c);return;
     }
     c.appendChild(h("p","m","Da "+(r.bn||"?")+(r.wn?" · contro "+r.wn:"")+" · "+when(r.t)));
     c.appendChild(h("p",null,"“"+(r.m||"")+"”"));
     var row=h("div","row"),slot=h("div");
     row.appendChild(btn("Leggi la chat","sm",function(){if(slot.firstChild){slot.textContent="";return}slot.appendChild(chatView(r.gid,r.gn||"?"))}));
-    row.appendChild(btn("Chi c’è dentro","sm",function(){
-      if(slot.firstChild){slot.textContent="";return}
-      var ms=obj(ST.members[r.gid]),ids=Object.keys(ms),w=h("div");if(!ids.length)w.appendChild(h("p","m","La squadra non ha più membri."));
-      ids.forEach(function(id){var m=h("div","mem");m.appendChild(h("span",null,(ms[id].n||"?")+(id===r.w?" ⚠":"")));var kb=btn("Rimuovi","sm bad");two(kb,"Rimuovi",function(){kick(r.gid,id).then(function(){LOG("Rimosso "+ms[id].n+" dalla squadra «"+r.gn+"» (segnalazione)");delete ms[id];m.remove();toast("Persona rimossa dalla squadra.")}).catch(fail)});m.appendChild(kb);w.appendChild(m)});
-      slot.appendChild(w);
-    }));
-    var cl=btn("Chiudi segnalazione","sm pri");cl.addEventListener("click",function(){DEL("reports/"+ROOM+"/"+k).then(function(){LOG("Chiusa la segnalazione su «"+r.gn+"»");delete ST.reports[k];render()}).catch(fail)});row.appendChild(cl);
-    c.appendChild(row);c.appendChild(slot);main.appendChild(c);
+    var cl=btn("Chiudi segnalazione","sm pri");cl.addEventListener("click",function(){DEL("reports/"+ROOM+"/"+k).then(function(){LOG("Chiusa la segnalazione su «"+r.gn+"»");delete ST.reports[k];return NOTIFY(r.by,"Segnalazione completata","Abbiamo controllato la tua segnalazione su «"+r.gn+"». Grazie.")}).then(render).catch(fail)});row.appendChild(cl);
+    c.appendChild(row);c.appendChild(slot);c.appendChild(msgBox(r.by,r.bn,"segnalazione"));main.appendChild(c);
   });
   main.appendChild(h("h2",null,"Nuove squadre"+(gk.length?" ("+gk.length+")":"")));
   if(!gk.length)main.appendChild(h("div","card m","Nessuna richiesta."));
@@ -385,7 +397,7 @@ function pageRich(){
     var row=h("div","row"),ap=btn("Approva","pri"),rj=btn("Rifiuta","bad");
     ap.addEventListener("click",function(){ap.disabled=rj.disabled=true;approve(k).then(function(){toast("Squadra «"+q.gn+"» creata.");return load()}).then(render).catch(function(e){ap.disabled=rj.disabled=false;fail(e)})});
     rj.addEventListener("click",function(){ap.disabled=rj.disabled=true;reject(k).then(function(){return load()}).then(render).catch(function(e){ap.disabled=rj.disabled=false;fail(e)})});
-    row.appendChild(ap);row.appendChild(rj);c.appendChild(row);main.appendChild(c);
+    row.appendChild(ap);row.appendChild(rj);c.appendChild(row);c.appendChild(msgBox(q.by,q.bn,"nuovo gruppo"));main.appendChild(c);
   });
   if(pk.length){
     main.appendChild(h("h2",null,"Nuovi PIN ("+pk.length+")"));
@@ -417,6 +429,7 @@ function pagePers(){
       body.appendChild(ulk);
       var lgp=h("p","m","Lingua del sito (l’utente non può cambiarla da solo; la vede al prossimo accesso):");lgp.style.marginTop="14px";body.appendChild(lgp);
       var lgr=h("div","row");[["it","Italiano"],["en","English"]].forEach(function(o){var lb=btn(o[1],"sm");lb.addEventListener("click",function(){lb.disabled=true;setUserLang(id,u.n,o[0]).then(function(){LOG("Lingua di "+u.n+": "+o[1]);toast("Lingua di "+u.n+": "+o[1]+".");lb.disabled=false}).catch(function(e){lb.disabled=false;fail(e)})});lgr.appendChild(lb)});body.appendChild(lgr);
+      var mgp=h("p","m","Invia un messaggio a "+u.n+" (lo vede nelle sue notifiche):");mgp.style.marginTop="14px";body.appendChild(mgp);body.appendChild(msgBox(id,u.n,"persona"));
       var rnl=h("p","m","Cambia solo il nome (la password dell’amico resta la stessa):");rnl.style.marginTop="14px";body.appendChild(rnl);
       var rrow=h("div","row"),rin=h("input");rin.type="text";rin.maxLength=24;rin.value=u.n;rin.setAttribute("aria-label","Nuovo nome");rin.autocapitalize="off";rin.style.marginBottom="0";
       var rsv=btn("Salva nome","sm pri");
