@@ -500,6 +500,8 @@ function isAdminAcct(){return fbMode()?adminOk():!!(S.acct&&isAdminName(S.acct.n
 function adminOk(){return Date.now()<ADM_UNTIL}
 function isAdmin(){return fbMode()?adminOk():(isAdminAcct()&&adminOk())}
 function validCred(pw,strong){if(strong)return pw.length>=10&&pw.length<=64&&!/^\d+$/.test(pw);return /^\d{4,8}$/.test(pw)||(pw.length>=8&&pw.length<=64)}
+function validUser(n){return /^[a-z0-9._]{3,20}$/.test(n)&&!/^\.|\.$|\.\./.test(n)}
+function dn(n){n=String(n||"");return validUser(n)?"@"+n:n}
 function validName(n){return /^[\p{Script=Latin}\p{N} .'_-]{1,24}$/u.test(n)}
 function reservedName(n){
   var t=String(n).toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/0/g,"o").replace(/1|!/g,"i").replace(/3/g,"e").replace(/4|@/g,"a").replace(/5|\$/g,"s").replace(/7/g,"t").replace(/[^a-z]/g,"");
@@ -623,7 +625,7 @@ function setRemoved(id,on){
   var q=on?aPut(remUrl(id),true):aDel(remUrl(id));admLog((on?"Tolto dall’elenco: ":"Rimesso nell’elenco: ")+((lastAll[id]&&lastAll[id].n)||id));
   return q.then(function(){if(on)REM[id]=true;else delete REM[id];delete S.f[id];pull(true);drawList()}).catch(function(e){msg("Operazione non riuscita ("+(e&&e.message||e)+")")});
 }
-function canView(id){return isAdmin()||isGAdmin()||!!(S.cg&&GM&&GM[S.me.i]&&GM[id])}
+function canView(id){return isAdmin()||isGAdmin()||!!(S.cg&&GM&&GM[S.me.i]&&GM[id])||(!S.cg&&isFr(id))}
 function viewUser(id){
   if(!canView(id))return;var v=lastAll[id]||S.f[id];if(!v)return;
   viewing={id:id,n:v.n,d:toMap(Array.isArray(v.d)?v.d:[])};prevD=null;tab="io";msg("");render();window.scrollTo(0,0);
@@ -727,6 +729,7 @@ function push(){
 function pull(force){
   var cg0=S.cg;
   if(!DB_URL||!S.acct||(pulling&&!force)||document.hidden||moving)return;
+  frLoad();
   pulling=true;
   Promise.all([getJ(dbUrl()),getJ(remUrl()).catch(function(){return null}),isAdminAcct()?getJ(reqUrl()).catch(function(){return null}):Promise.resolve(null),getJ(ugUrl(S.me.i)).catch(function(){return null}),S.cg?getJ(gmUrl(S.cg)).catch(function(){return null}):Promise.resolve(null),S.cg?getJ(gUrl(S.cg)).catch(function(){return null}):Promise.resolve(null),getJ(grUrl()).catch(function(){return null})]).then(function(res){
     if(S.cg!==cg0){setTimeout(function(){pull(true)},80);return}
@@ -739,7 +742,7 @@ function pull(force){
       else if(S.me.u&&!pushT&&canPush()&&!mine){var me0=S.acct;nkOf(me0.name).then(function(nk){return getJ(aUrl(nk))}).then(function(a){if(S.acct&&S.acct.id===me0.id){if(a&&a.id===me0.id)push();else forceLogout()}}).catch(function(){})}
       else if(S.me.u&&!pushT&&canPush()&&mine&&Number(mine.u)<S.me.u)push();
       if(S.cg&&!GM[S.me.i]){S.cg="";S.f={};GM={};save(false);msg("Non fai più parte di quel gruppo.")}
-      function inScope(k){return S.cg?!!GM[k]:!REM[k]}
+      function inScope(k){return S.cg?!!GM[k]:(!REM[k]&&(FRO!==S.me.i||!FR||isFr(k)))}
       if(REM[S.me.i]&&!S.cg)msg("L'amministratore ti ha rimosso dall'elenco: i tuoi progressi non vengono più condivisi.");
       Object.keys(S.f).forEach(function(k){if(!(k in all)||!inScope(k)){delete S.f[k];ch=true}});
       Object.keys(all).forEach(function(k){
@@ -757,6 +760,70 @@ function pull(force){
   }).catch(function(e){online=false;lastErr=String(e&&e.message||e);setSync()}).then(function(){pulling=false});
 }
 
+var FR=null,FRQ={},FRO="",frSig=null,frBusy=false,FRLEG=false;
+function frUrl(id,f){return DB_URL.replace(/\/+$/,"")+"/friends/"+(id||"")+(f?"/"+f:"")+".json"}
+function fqUrl(id,f){return DB_URL.replace(/\/+$/,"")+"/friendReq/"+(id||"")+(f?"/"+f:"")+".json"}
+function isFr(id){return FRLEG||isAdmin()||(FRO===S.me.i&&!!FR&&!!FR[id])}
+function frCount(){return Object.keys(FRQ||{}).length}
+function frErr(e){var m=e&&e.message;return m==="fnone"?"Non trovo nessuno con questo username. Controlla di averlo scritto giusto.":m==="fself"?"Quello sei tu!":m==="fhave"?"È già tra i tuoi amici.":m==="freq"?"Hai già mandato la richiesta a questa persona.":"Operazione non riuscita ("+(m||"errore")+")."}
+function frInit(me){
+  return Promise.all([getJ(dbUrl()),getJ(remUrl()).catch(function(){return null})]).then(function(r){
+    var all=r[0]||{},rem=r[1]||{},o={_i:1};
+    Object.keys(all).forEach(function(k){if(k===me||rem[k])return;var n=cn((all[k]||{}).n);if(n)o[k]=n});
+    return putJ(frUrl(me),o).then(function(){return o});
+  });
+}
+function frLoad(){
+  if(!DB_URL||!S.acct||frBusy)return;frBusy=true;var me=S.me.i;
+  Promise.all([getJ(frUrl(me)),getJ(fqUrl(me)).catch(function(){return null})]).then(function(r){
+    var f=r[0];if(f&&f._i)return[f,r[1]];
+    return frInit(me).then(function(o){return[o,r[1]]},function(){FRLEG=true;return[null,r[1]]});
+  }).then(function(r){
+    frBusy=false;if(S.me.i!==me)return;
+    var f=r[0],nf={};if(f){Object.keys(f).forEach(function(k){if(k!=="_i")nf[k]=f[k]});FRLEG=false}
+    var q=(r[1]&&typeof r[1]==="object")?r[1]:{};
+    var sig=JSON.stringify([FRLEG,Object.keys(nf).sort(),Object.keys(q).sort()]),chg=sig!==frSig||FRO!==me;
+    FR=nf;FRQ=q;FRO=me;frSig=sig;
+    if(chg){
+      if(!FRLEG)getJ(DB_URL.replace(/\/+$/,"")+"/friends.json").then(function(all){
+        all=all||{};Object.keys(nf).forEach(function(k){if(!(all[k]&&all[k][me]!==undefined))putJ(frUrl(k,me),S.me.n).catch(function(){})});
+      }).catch(function(){});
+      updBadge();if(tab==="am")renderFriends();else if(!S.cg)drawList();pull(true)
+    }
+  }).catch(function(){frBusy=false});
+}
+function frSend(name){
+  var me=S.me.i,nm=String(name).replace(/^@/,"").replace(/\s+/g," ").trim();
+  return nkOf(nm).then(function(nk){return getJ(aUrl(nk))}).then(function(a){
+    if(!a||!a.id||REM[a.id])throw new Error("fnone");
+    var id=a.id;if(id===me)throw new Error("fself");
+    if(FR&&FR[id])throw new Error("fhave");
+    if(FRQ[id])return frAccept(id).then(function(){return"acc"});
+    return getJ(fqUrl(id,me)).then(function(ex){if(ex)throw new Error("freq");return putJ(fqUrl(id,me),{n:S.me.n,t:Date.now()})}).then(function(){return"sent"});
+  });
+}
+function frAccept(id){
+  var me=S.me.i,n=(FRQ[id]&&FRQ[id].n)||(lastAll[id]&&lastAll[id].n)||"?";
+  return Promise.all([putJ(frUrl(me,id),n),putJ(frUrl(id,me),S.me.n),delJ(fqUrl(me,id))]).then(function(){
+    FR=FR||{};FR[id]=n;delete FRQ[id];frSig=null;updBadge();renderFriends();pull(true);
+  });
+}
+function frReject(id){return delJ(fqUrl(S.me.i,id)).then(function(){delete FRQ[id];frSig=null;updBadge();renderFriends()})}
+function frRemove(id){
+  var me=S.me.i;
+  return Promise.all([delJ(frUrl(me,id)),delJ(frUrl(id,me))]).then(function(){if(FR)delete FR[id];delete S.f[id];frSig=null;save(false);drawList()});
+}
+function moveFriends(oid,nid,nname){
+  var base=DB_URL.replace(/\/+$/,"");
+  return Promise.all([getJ(base+"/friends.json"),getJ(base+"/friendReq.json")]).then(function(r){
+    var fa=r[0]||{},qa=r[1]||{},q=[];
+    if(fa[oid]){q.push(putJ(frUrl(nid),fa[oid]));q.push(delJ(frUrl(oid)))}
+    Object.keys(fa).forEach(function(x){if(x!==oid&&fa[x]&&fa[x][oid]!==undefined){q.push(putJ(frUrl(x,nid),nname));q.push(delJ(frUrl(x,oid)))}});
+    if(qa[oid]){q.push(putJ(fqUrl(nid),qa[oid]));q.push(delJ(fqUrl(oid)))}
+    Object.keys(qa).forEach(function(x){if(x!==oid&&qa[x]&&qa[x][oid]){var v=qa[x][oid];v.n=nname;q.push(putJ(fqUrl(x,nid),v));q.push(delJ(fqUrl(x,oid)))}});
+    return Promise.all(q);
+  }).catch(function(){});
+}
 function hue(t){var x=0;for(var i=0;i<t.length;i++)x=(x*31+t.charCodeAt(i))%360;return x}
 var WSEL="",HT=0;
 function wActions(f){
@@ -792,7 +859,7 @@ function drawStrip(el){
     if(!f){det.hidden=true;return}
     det.hidden=false;
     var r=GM[f.id]&&GM[f.id].r,top=h("div","wdt");
-    top.appendChild(h("b",null,f.me?f.n+" (tu)":f.n));top.appendChild(h("span",null,f.d.length+"/"+total));det.appendChild(top);
+    top.appendChild(h("b",null,f.me?dn(f.n)+" (tu)":dn(f.n)));top.appendChild(h("span",null,f.d.length+"/"+total));det.appendChild(top);
     var bar=h("div","bar"),fi=h("i");fi.style.setProperty("--w",(100*f.d.length/total)+"%");bar.appendChild(fi);det.appendChild(bar);
     var n=nextOf(f.d);
     det.appendChild(h("small",null,n?"Prossimo: "+n:"Maratona finita!"));
@@ -810,7 +877,7 @@ function drawStrip(el){
     if(list.length>1)av.appendChild(h("span","rk"+(ri===0?" first":""),String(ri+1)));
     ring.appendChild(av);b.appendChild(ring);
     var r=GM[f.id]&&GM[f.id].r;
-    b.appendChild(h("span","nm",(f.me?"Tu":f.n)+(r==="owner"||r==="admin"?" ★":"")));
+    b.appendChild(h("span","nm",(f.me?"Tu":dn(f.n))+(r==="owner"||r==="admin"?" ★":"")));
     b.addEventListener("click",function(){WSEL=WSEL===f.id?"":f.id;el._sig="";drawStrip(el)});
     b.addEventListener("pointerenter",function(e){if(e.pointerType!=="mouse")return;clearTimeout(HT);HT=setTimeout(function(){show(f)},1800)});b.addEventListener("pointerleave",function(e){if(e.pointerType==="mouse")clearTimeout(HT)});
     el.appendChild(b);
@@ -822,12 +889,12 @@ function drawList(){
   if(S.cg){drawStrip(el);return}
   el.textContent="";
   var list=[{id:S.me.i,me:1,n:S.me.n||"Tu",d:valid(myArr()),u:S.me.u}];
-  Object.keys(S.f).forEach(function(k){list.push({id:k,n:S.f[k].n,d:valid(S.f[k].d),u:S.f[k].u})});
+  Object.keys(S.f).forEach(function(k){if(!S.cg&&!isFr(k))return;list.push({id:k,n:S.f[k].n,d:valid(S.f[k].d),u:S.f[k].u})});
   list.sort(function(a,b){return b.d.length-a.d.length});
   list.forEach(function(f,ri){
     var d=h("div","fr"+(f.me?" me":"")),av=h("div","av",(f.n||"?").charAt(0).toUpperCase());av.style.background="hsl("+hue(f.id)+" 55% 36%)";d.style.setProperty("--n",ri);if(list.length>1)av.appendChild(h("span","rk"+(ri===0?" first":""),String(ri+1)));
     var body=h("div"),top=h("b");
-    top.appendChild(h("span",null,(f.me?f.n+" (tu)":f.n)+(S.cg&&GM[f.id]&&(GM[f.id].r==="owner"||GM[f.id].r==="admin")?" ★":"")));top.appendChild(h("span",null,f.d.length+"/"+total));
+    top.appendChild(h("span",null,(f.me?dn(f.n)+" (tu)":dn(f.n))+(S.cg&&GM[f.id]&&(GM[f.id].r==="owner"||GM[f.id].r==="admin")?" ★":"")));top.appendChild(h("span",null,f.d.length+"/"+total));
     var bar=h("div","bar"),fi=h("i");fi.style.width=(100*f.d.length/total)+"%";bar.appendChild(fi);
     var n=nextOf(f.d),when=f.u?"Aggiornato il "+new Date(f.u).toLocaleDateString("it-IT",{day:"numeric",month:"short"}):"";
     body.appendChild(top);body.appendChild(bar);
@@ -861,8 +928,17 @@ function drawList(){
       var mc=moveCtl(f.id,f.n),mv=mc.b,mw=mc.w;
       bx.appendChild(vw);bx.appendChild(ed);bx.appendChild(mv);bx.appendChild(rm);body.appendChild(bx);body.appendChild(mw);body.appendChild(ew);
     }
+    else if(!f.me&&!S.cg&&!isAdmin()&&isFr(f.id)){
+      var fx=h("div","adm"),fv=h("button",null,"Guarda i suoi film");fv.type="button";fv.addEventListener("click",function(){viewUser(f.id)});fx.appendChild(fv);
+      var fr2=h("button",null,"Rimuovi amico");fr2.type="button";var fa2=false;
+      fr2.addEventListener("click",function(){
+        if(!fa2){fa2=true;fr2.textContent="Tocca ancora";setTimeout(function(){fa2=false;fr2.textContent="Rimuovi amico"},4000);return}
+        frRemove(f.id).catch(function(e){msg(frErr(e))});
+      });fx.appendChild(fr2);body.appendChild(fx);
+    }
     d.appendChild(av);d.appendChild(body);el.appendChild(d);
   });
+  if(!S.cg&&!isAdmin()&&list.length===1&&FRO===S.me.i&&!FRLEG)el.appendChild(h("p","m","Non hai ancora amici in lista. Scrivi il nome di un amico qui sopra e mandagli la richiesta."));
   if(isAdmin()&&!S.cg){
     var rl=Object.keys(REM).filter(function(k){return lastAll[k]});
     if(rl.length){
@@ -1320,9 +1396,27 @@ function deleteGroupAdmin(gid){
 function groupsBox(){
   var b=h("section","box gbox"),gh=h("div","gh");gh.appendChild(h("p","k","Le tue squadre"));
   var gc=h("span","gcnt"),ld=h("span","led"+(GCNT===null?"":" on")),gt=h("span",null,gcntTxt());gc.id="gcnt";gc.appendChild(ld);gc.appendChild(gt);gc.title="Gruppi attivi in questo momento";gh.appendChild(gc);b.appendChild(gh);
-  var chips=h("div","chips"),all=h("button","chip","Tutti gli amici");all.type="button";all.setAttribute("aria-pressed",!S.cg);all.addEventListener("click",function(){enterGroup("")});chips.appendChild(all);
+  var chips=h("div","chips"),all=h("button","chip",isAdmin()?"Tutti gli amici":"I miei amici");all.type="button";all.setAttribute("aria-pressed",!S.cg);all.addEventListener("click",function(){enterGroup("")});chips.appendChild(all);
   Object.keys(UG||{}).forEach(function(g){var c=h("button","chip",UG[g]);c.type="button";c.setAttribute("aria-pressed",S.cg===g);c.addEventListener("click",function(){enterGroup(g)});chips.appendChild(c)});
   b.appendChild(chips);
+  if(!S.cg){
+    Object.keys(FRQ||{}).forEach(function(id){
+      var q=FRQ[id]||{},rw=h("div","rmr");rw.appendChild(h("span",null,dn(q.n||"?")+" vuole essere tuo amico"));
+      var ok=h("button","pri","Accetta"),no=h("button",null,"Rifiuta");ok.type=no.type="button";
+      ok.addEventListener("click",function(){ok.disabled=no.disabled=true;frAccept(id).catch(function(e){ok.disabled=no.disabled=false;msg(frErr(e))})});
+      no.addEventListener("click",function(){no.disabled=ok.disabled=true;frReject(id).catch(function(e){no.disabled=ok.disabled=false;msg(frErr(e))})});
+      rw.appendChild(ok);rw.appendChild(no);b.appendChild(rw);
+    });
+    var af=h("div","agn"),ai=h("input"),ab=h("button",null,"Aggiungi amico");
+    ai.type="text";ai.maxLength=24;ai.placeholder="@username di un amico";ai.setAttribute("aria-label","Username dell’amico da aggiungere");ai.autocomplete="off";ab.type="button";
+    function go(){
+      var nm=ai.value.replace(/\s+/g," ").trim();if(!nm){msg("Scrivi lo username dell’amico.");return}
+      ab.disabled=true;
+      frSend(nm).then(function(r){ai.value="";msg(r==="acc"?"Ora siete amici!":"Richiesta inviata a "+nm+". Quando accetta, vi vedete a vicenda.")}).catch(function(e){msg(frErr(e))}).then(function(){ab.disabled=false});
+    }
+    ab.addEventListener("click",go);ai.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();go()}});
+    af.appendChild(ai);af.appendChild(ab);b.appendChild(af);
+  }
   if(!S.cg&&Object.keys(UG||{}).length)b.appendChild(h("p","m","Tocca una squadra per vedere i suoi membri e aprire la sua chat."));
   if(S.cg){
     var role=myRole(),nm=(GR&&GR.n)||UG[S.cg]||"",cnt=Object.keys(GM||{}).length;
@@ -1361,7 +1455,7 @@ function delJ(u){return fetch(u,{method:"DELETE"}).then(function(r){if(!r.ok)thr
 function nkOf(name){return sha("nm:"+String(name).replace(/\s+/g," ").trim().slice(0,24).toLowerCase()).then(function(x){return x.slice(0,20)})}
 var RP={};
 function admCount(){return isAdminAcct()?Object.keys(REQ).length+Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].s==="p"}).length+Object.keys(RP||{}).filter(function(k){return RP[k]&&RP[k].s==="p"}).length:0}
-function updBadge(){var n=admCount(),b=$("tAm");if(b){if(n)b.setAttribute("data-n",n);else b.removeAttribute("data-n")}var p=$("admPill");if(p&&!p.hidden)p.textContent=n?"Admin · "+n+" · Esci":"Admin · Esci"}
+function updBadge(){var a=admCount(),n=a+frCount(),b=$("tAm");if(b){if(n)b.setAttribute("data-n",n);else b.removeAttribute("data-n")}var p=$("admPill");if(p&&!p.hidden)p.textContent=a?"Admin · "+a+" · Esci":"Admin · Esci"}
 function forceLogout(){viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("Nome o PIN sono stati cambiati. Accedi con le nuove credenziali.");render()}
 function moveAccount(old,newName,newPin){
   moving=true;
@@ -1384,7 +1478,7 @@ function moveAccount(old,newName,newPin){
           })).then(function(){return delJ(ugUrl(old.id))});
         });
       }).then(function(){
-        var q=[delJ(dbUrl(old.id)),delJ(reqUrl(old.id))];
+        var q=[delJ(dbUrl(old.id)),delJ(reqUrl(old.id)),moveFriends(old.id,k.id,k.name)];
         if(k.nk!==onk)q.push(delJ(aUrl(onk)));
         if(REM[old.id]){q.push(putJ(remUrl(k.id),true));q.push(delJ(remUrl(old.id)))}
         return Promise.all(q);
@@ -1392,7 +1486,7 @@ function moveAccount(old,newName,newPin){
     });
   }).then(function(x){moving=false;return x},function(e){moving=false;throw e});
 }
-function credErr(e){var m=e&&e.message;return m==="taken"?"Questo nome è già in uso.":m==="badpin"?"Il PIN attuale non è corretto.":m==="same"?"Non è cambiato niente.":m==="reserved"?"Questo nome è riservato.":m==="badname"?"Nome non valido: usa lettere, numeri, spazi e . ' _ -":m==="adminname"?"Il nome dell’amministratore non si può cambiare.":"Operazione non riuscita ("+(m||"errore")+")."}
+function credErr(e){var m=e&&e.message;return m==="baduser"?"Username non valido: da 3 a 20 caratteri, solo lettere minuscole, numeri, punto e trattino basso (es. mario.rossi).":m==="taken"?"Questo nome è già in uso.":m==="badpin"?"Il PIN attuale non è corretto.":m==="same"?"Non è cambiato niente.":m==="reserved"?"Questo nome è riservato.":m==="badname"?"Nome non valido: usa lettere, numeri, spazi e . ' _ -":m==="adminname"?"Il nome dell’amministratore non si può cambiare.":"Operazione non riuscita ("+(m||"errore")+")."}
 function credForm(o){
   var f=h("div","box cred");f.appendChild(h("p","k",o.title));
   var ni=h("input");ni.type="text";ni.maxLength=24;ni.value=o.name;ni.setAttribute("aria-label","Nome");ni.autocomplete="off";if(o.lockName)ni.readOnly=true;
@@ -1405,6 +1499,7 @@ function credForm(o){
   ok.addEventListener("click",function(){
     var nm=ni.value.replace(/\s+/g," ").trim(),np=pi.value.trim(),cur=ci?ci.value.trim():"";
     if(!nm){msg("Scrivi un nome.");return}
+    if(o.user&&nm!==o.name){nm=nm.replace(/^@/,"").toLowerCase();if(!validUser(nm)){msg(credErr(new Error("baduser")));return}}
     if(nm!==o.name&&!o.lockName){if(!validName(nm)){msg(credErr(new Error("badname")));return}if(reservedName(nm)){msg(credErr(new Error("reserved")));return}}
     if(ci&&!cur){msg("Scrivi il PIN o la password attuale.");return}
     if((!ci||np)&&!validCred(np,o.strong)){msg(o.strong?"La password dell’amministratore deve avere almeno 10 caratteri e non essere solo numeri.":"Il PIN ha 4–8 cifre, oppure usa una password da 8 a 64 caratteri.");return}
@@ -1415,7 +1510,7 @@ function credForm(o){
   return f;
 }
 function selfCred(){
-  return credForm({title:"Cambia nome o PIN",name:S.acct.name,lockName:!fbMode()&&isAdminAcct(),strong:!fbMode()&&isAdminAcct(),needCur:true,okMsg:function(){return"Fatto. Nome e PIN aggiornati."},
+  return credForm({title:"Cambia username o PIN",user:true,name:S.acct.name,lockName:!fbMode()&&isAdminAcct(),strong:!fbMode()&&isAdminAcct(),needCur:true,okMsg:function(){return"Fatto. Nome e PIN aggiornati."},
     onSave:function(nm,np,cur){
       return verifyPw(S.acct.name,cur).then(function(k0){
         if(k0.id!==S.acct.id)throw new Error("badpin");
@@ -1429,6 +1524,8 @@ function adminCred(id,name){
     onSave:function(nm,np){return moveAccount({id:id,name:name},nm,np).then(function(){delete REQ[id];delete S.f[id];updBadge();pull(true)})}});
 }
 function doCreate(name,pin){
+  name=String(name).replace(/^@/,"").trim().toLowerCase();
+  if(!validUser(name))return Promise.reject(new Error("baduser"));
   if(!validName(name))return Promise.reject(new Error("badname"));
   if(reservedName(name))return Promise.reject(new Error("reserved"));
   return acctKeys(name,pin).then(function(k){
@@ -1436,12 +1533,13 @@ function doCreate(name,pin){
       if(ex)throw new Error("taken");
       return putJ(aUrl(k.nk),{id:k.id,v:2}).then(function(){
         S.acct={name:k.name,id:k.id};S.me.i=k.id;S.me.n=k.name;S.me.u=Date.now();S.f={};S.h={};S.cg="";UG={};GM={};save(false);
-        return putJ(dbUrl(k.id),{n:S.me.n,d:myArr(),u:S.me.u});
+        return Promise.all([putJ(dbUrl(k.id),{n:S.me.n,d:myArr(),u:S.me.u}),putJ(frUrl(k.id),{_i:1}).catch(function(){})]);
       });
     });
   });
 }
 function doLogin(name,pin){
+  name=String(name).replace(/^@/,"").trim();
   return nkOf(name).then(function(nk){return getJ(aUrl(nk))}).then(function(ex){
     if(!ex)throw new Error("bad");
     return acctKeys(name,pin,ex.v||1).then(function(k){
@@ -1498,7 +1596,7 @@ function renderFriends(){
       }
       b.appendChild(ub);
     }
-    var ch2=h("button",null,"Cambia nome o PIN");ch2.type="button";
+    var ch2=h("button",null,"Cambia username o PIN");ch2.type="button";
     var cwrap=h("div");
     ch2.addEventListener("click",function(){if(cwrap.firstChild){cwrap.textContent="";return}cwrap.appendChild(selfCred())});
     var fg=h("button",null,"Non ricordo il PIN");fg.type="button";
@@ -1528,8 +1626,8 @@ function renderFriends(){
     return;
   }
   b.appendChild(h("p","k","Il tuo account"));
-  b.appendChild(h("p","m","Scegli un nome e un PIN di 4–8 cifre (o una password più lunga, anche con simboli). Con lo stesso nome e PIN entri da qualsiasi telefono e ritrovi i tuoi progressi. Il PIN protegge poco: non usarne uno che usi altrove."));
-  var ni=h("input");ni.type="text";ni.maxLength=24;ni.placeholder="Nome";ni.setAttribute("aria-label","Nome");ni.autocomplete="off";
+  b.appendChild(h("p","m","Scegli uno username (come su Instagram: lettere minuscole, numeri, punto e _, per esempio mario.rossi) e un PIN di 4–8 cifre (o una password più lunga, anche con simboli). Con lo stesso username e PIN entri da qualsiasi telefono e ritrovi i tuoi progressi. Il PIN protegge poco: non usarne uno che usi altrove."));
+  var ni=h("input");ni.type="text";ni.maxLength=24;ni.placeholder="Username (es. mario.rossi)";ni.setAttribute("aria-label","Username");ni.autocomplete="off";
   var pi=h("input");pi.type="password";pi.maxLength=64;pi.placeholder="PIN o password";pi.setAttribute("aria-label","PIN o password");pi.autocomplete="off";
   b.appendChild(ni);b.appendChild(pi);
   var row=h("div","row"),bc=h("button","pri","Crea account"),bl=h("button",null,"Accedi");bc.type="button";bl.type="button";
@@ -1543,7 +1641,7 @@ function renderFriends(){
     fn(nm,pin).then(function(){render();msg(okMsg);pull()}).catch(function(e){
       bc.disabled=bl.disabled=false;
       var m=e&&e.message;
-      msg(m==="taken"?"Questo nome è già in uso. Se è tuo, tocca Accedi.":m==="reserved"?"Questo nome è riservato.":m==="badname"?"Nome non valido: usa lettere, numeri, spazi e . ' _ -":m==="bad"?"Nome o PIN non corretti.":"Connessione non riuscita ("+(m||"errore")+"). Riprova.");
+      msg(m==="baduser"?"Username non valido: da 3 a 20 caratteri, solo lettere minuscole, numeri, punto e trattino basso (es. mario.rossi).":m==="taken"?"Questo username è già in uso. Se è tuo, tocca Accedi.":m==="reserved"?"Questo nome è riservato.":m==="badname"?"Nome non valido: usa lettere, numeri, spazi e . ' _ -":m==="bad"?"Nome o PIN non corretti.":"Connessione non riuscita ("+(m||"errore")+"). Riprova.");
     });
   }
   bc.addEventListener("click",function(){go(doCreate,"Account creato. I tuoi progressi ora sono condivisi.")});
