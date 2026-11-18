@@ -399,6 +399,18 @@ function squadPage(gid){
   main.appendChild(gc);
 }
 
+function planRestore(b){
+  var rd=function(p){return GET(p).catch(function(){return null})};
+  return Promise.all([rd("rooms/"+ROOM),rd("removed/"+ROOM),rd("groups"),rd("groupMembers"),rd("userGroups"),rd("sponsors/"+ROOM)]).then(function(c){
+    var w=[],pl={persone:0,squadre:0,legami:0,altri:0};
+    var cur=obj(c[0]);Object.keys(obj(b.progressi)).forEach(function(k){var x=b.progressi[k];if(!x||typeof x!=="object")return;var y=cur[k];if(!y||Number(x.u)>Number(y.u||0)){w.push(["rooms/"+ROOM+"/"+k,x]);pl.persone++}});
+    function flat(bk,cu,base,counter){Object.keys(obj(bk)).forEach(function(k){if(bk[k]!=null&&!(k in obj(cu))){w.push([base+"/"+k,bk[k]]);pl[counter]++}})}
+    flat(b.rimossi,c[1],"removed/"+ROOM,"altri");flat(b.gruppi,c[2],"groups","squadre");flat(b.sponsor,c[5],"sponsors/"+ROOM,"altri");
+    function nested(bk,cu,base){Object.keys(obj(bk)).forEach(function(a){Object.keys(obj(bk[a])).forEach(function(k2){if(bk[a][k2]!=null&&!(k2 in obj(obj(cu)[a]))){w.push([base+"/"+a+"/"+k2,bk[a][k2]]);pl.legami++}})})}
+    nested(b.membri,c[3],"groupMembers");nested(b.gruppiUtente,c[4],"userGroups");
+    pl.writes=w;return pl;
+  });
+}
 function pageAltro(){
   setTitle("Altro");
   main.appendChild(h("h2",null,"Backup"));
@@ -411,6 +423,26 @@ function pageAltro(){
       setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000);LOG("Scaricato il backup dei dati");bb.disabled=false;toast("Backup scaricato.");
     }).catch(function(){bb.disabled=false;toast("Backup non riuscito.")});
   });b.appendChild(bb);main.appendChild(b);
+  main.appendChild(h("h2",null,"Ripristina da backup"));
+  var rc=h("div","card");rc.appendChild(h("p","m","Scegli il file scaricato in precedenza. Non cancella niente: rimette solo ciò che manca e, per i progressi, tiene la versione più recente."));
+  var fi=h("input");fi.type="file";fi.accept=".json,application/json";fi.setAttribute("aria-label","File di backup");rc.appendChild(fi);
+  var out=h("div");out.style.marginTop="10px";rc.appendChild(out);main.appendChild(rc);
+  fi.addEventListener("change",function(){
+    out.textContent="";var f=fi.files&&fi.files[0];if(!f)return;
+    f.text().then(function(t){
+      var b;try{b=JSON.parse(t)}catch(e){throw new Error("bad")}
+      if(!b||typeof b!=="object"||!("progressi" in b||"gruppi" in b||"membri" in b))throw new Error("bad");
+      return planRestore(b).then(function(pl){
+        out.appendChild(h("p",null,"Backup del "+(b.creato?when(Date.parse(b.creato)):"?")));out.lastChild.style.fontWeight="700";
+        out.appendChild(h("p","m","Da rimettere: "+pl.persone+" progressi di persone, "+pl.squadre+" squadre, "+pl.legami+" appartenenze a squadre, "+pl.altri+" altri elementi."));
+        if(!pl.writes.length){out.appendChild(h("p","m","Non manca niente: il database è già aggiornato."));return}
+        var go=btn("Ripristina ora","pri");two(go,"Ripristina ora",function(){
+          go.disabled=true;out.appendChild(h("p","m","Ripristino in corso…"));
+          Promise.all(pl.writes.map(function(w){return PUT(w[0],w[1])})).then(function(){LOG("Ripristinato un backup ("+pl.writes.length+" elementi)");toast("Ripristino completato.");return load()}).then(render).catch(function(){go.disabled=false;toast("Ripristino non riuscito del tutto. Riprova.")});
+        });out.appendChild(go);
+      });
+    }).catch(function(){out.appendChild(h("p","m","Questo file non sembra un backup della Maratona."))});
+  });
   main.appendChild(h("h2",null,"Registro delle azioni"));
   var lc=h("div","card"),list=h("div");lc.appendChild(list);main.appendChild(lc);
   list.appendChild(h("p","m","Caricamento…"));
