@@ -319,7 +319,7 @@ a.sp-tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)
 @keyframes tkr{to{transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){.tkr .trk{animation:none}.tkr{overflow-x:auto}}
 @media (min-width:1080px){.tkr{position:absolute;top:0;left:0;right:0}body:has(.tkr:not([hidden])){padding-top:36px}}
-.gfoot{display:flex;margin:0 0 14px;font-size:13px}
+.gfoot{display:flex;margin:0 0 6px;font-size:13px}
 .gfoot[hidden]{display:none}
 .admgo{display:block;padding:12px 16px;border-radius:999px;background:#5b2a96;color:#fff;font:700 15px "Instrument Sans",system-ui,sans-serif;text-align:center;text-decoration:none}.admgo:hover{background:#6c37ae}.admgo:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 body:has(.tkr:not([hidden])) .adm-pill{top:46px}
@@ -344,7 +344,8 @@ body:has(.tkr:not([hidden])) .adm-pill{top:46px}
 <div id="toast" role="status" aria-live="polite"></div>
 <main class="wrap" id="app"></main>
 <footer>
-<p class="gcnt gfoot" id="gcnt" title="Gruppi attivi in questo momento" hidden><span class="led"></span><span>gruppi: —</span></p>
+<p class="gcnt gfoot" id="gcnt" title="Gruppi aperti in questo momento" hidden><span class="led"></span><span>gruppi: —</span></p>
+<p class="gcnt gfoot" id="ucnt" title="Persone iscritte al sito" hidden><span class="led"></span><span>iscritti: —</span></p>
 <button id="reset" type="button">Azzera i miei progressi</button>
 <div class="adm-foot" id="admFoot" hidden><button type="button" id="admBtn" class="lnk">Accesso amministratore</button><div id="admSlot"></div></div>
 </footer>
@@ -1013,7 +1014,14 @@ function gUrl(gid){return DB_URL.replace(/\/+$/,"")+"/groups/"+gid+".json"}
 function gmUrl(gid,id){return DB_URL.replace(/\/+$/,"")+"/groupMembers/"+gid+(id?"/"+id:"")+".json"}
 function ugUrl(id,gid){return DB_URL.replace(/\/+$/,"")+"/userGroups/"+id+(gid?"/"+gid:"")+".json"}
 var GCNT=null,CH={gid:"",m:[]},chOpen=true,chLast=0;
-function gcntTxt(){return GCNT===null?"gruppi: —":GCNT+(GCNT===1?" gruppo attivo":" gruppi attivi")}
+function gcntTxt(){return GCNT===null?"gruppi: —":GCNT+(GCNT===1?" gruppo aperto":" gruppi aperti")}
+var UCNT=null;
+function loadUcnt(){
+  if(!DB_URL||document.hidden)return;
+  getJ(DB_URL.replace(/\/+$/,"")+"/accounts/"+ROOM+".json?shallow=true").then(function(o){UCNT=o&&typeof o==="object"?Object.keys(o).length:0}).catch(function(){UCNT=null}).then(function(){
+    var g=$("ucnt");if(g&&g.lastChild){g.hidden=UCNT===null;g.firstChild.className="led"+(UCNT===null?"":" on");g.lastChild.textContent=UCNT===null?"iscritti: —":UCNT+(UCNT===1?" persona iscritta":" persone iscritte")}
+  });
+}
 function loadGcnt(){
   if(!DB_URL||document.hidden)return;
   getJ(DB_URL.replace(/\/+$/,"")+"/groups.json?shallow=true").then(function(o){GCNT=o&&typeof o==="object"?Object.keys(o).length:0}).catch(function(){GCNT=null}).then(function(){
@@ -1685,7 +1693,7 @@ function renderFriends(){
     if(fn===doCreate&&!validCred(pin)){msg("Il PIN ha 4–8 cifre, oppure usa una password da 8 a 64 caratteri.");return}
     if(fn!==doCreate&&!pin){msg("Scrivi il PIN o la password.");return}
     bc.disabled=bl.disabled=true;msg("Un attimo…");
-    fn(nm,pin).then(function(){render();msg(okMsg);pull()}).catch(function(e){
+    fn(nm,pin).then(function(){render();msg(okMsg);pull();loadUcnt()}).catch(function(e){
       bc.disabled=bl.disabled=false;
       var m=e&&e.message;
       msg(m==="baduser"?"Username non valido: da 3 a 20 caratteri, solo lettere minuscole, numeri, punto e trattino basso (es. mario.rossi).":m==="taken"?"Questo username è già in uso. Se è tuo, tocca Accedi.":m==="reserved"?"Questo nome è riservato.":m==="badname"?"Nome non valido: usa lettere, numeri, spazi e . ' _ -":m==="bad"?"Nome o PIN non corretti.":"Connessione non riuscita ("+(m||"errore")+"). Riprova.");
@@ -1789,7 +1797,7 @@ if(window.matchMedia&&matchMedia("(hover:hover) and (pointer:fine)").matches){
 }
 setTimeout(function(){document.body.classList.remove("boot")},2800);
 render();
-if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}setInterval(pull,5000);loadGcnt();setInterval(loadGcnt,30000);setInterval(pullChat,5000)}
+if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}setInterval(pull,5000);loadGcnt();setInterval(loadGcnt,30000);loadUcnt();setInterval(loadUcnt,60000);setInterval(pullChat,5000)}
 admLoad();if(fbMode())$("admFoot").hidden=false;if(adminOk()){render();renderSponsors();loadReports()}
 $("admBtn").addEventListener("click",function(){if(adminOk()){admExit();return}location.href="admin.html"});
 refreshUpcoming();setInterval(refreshUpcoming,3600000);loadSponsors();setInterval(loadSponsors,120000);setInterval(loadReports,15000);if(window.matchMedia)window.matchMedia("(min-width:1080px)").addEventListener("change",placeSp);setInterval(tick,1000);document.addEventListener("visibilitychange",function(){if(!document.hidden)pull()});
