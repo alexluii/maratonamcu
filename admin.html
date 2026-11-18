@@ -126,8 +126,8 @@ function when(t){return new Date(t).toLocaleString("it-IT",{day:"numeric",month:
 function ago(t){if(!t)return"mai";var d=Math.floor((Date.now()-t)/86400000);return d<1?"oggi":d===1?"ieri":d+" giorni fa"}
 
 /* ---------- sessione e rete ---------- */
-function loadSes(){try{var o=JSON.parse(localStorage.getItem(SK)||"null");if(o&&o.uid===UID&&o.r&&o.u>Date.now()){SES=o;return true}localStorage.removeItem(SK)}catch(e){}SES=null;return false}
-function saveSes(){try{localStorage.setItem(SK,JSON.stringify(SES))}catch(e){}}
+function loadSes(){try{var o=JSON.parse(sessionStorage.getItem(SK)||"null");if(o&&o.uid===UID&&o.r&&o.u>Date.now()){SES=o;return true}sessionStorage.removeItem(SK);localStorage.removeItem(SK)}catch(e){}SES=null;return false}
+function saveSes(){try{sessionStorage.setItem(SK,JSON.stringify(SES));localStorage.removeItem(SK)}catch(e){}}
 function token(){
   if(!SES)return Promise.resolve(null);
   if(SES.x-Date.now()>120000)return Promise.resolve(SES.t);
@@ -588,7 +588,10 @@ function start(){
   $("login").hidden=true;$("app").hidden=false;document.body.classList.add("in");
   Promise.all([loadTitles(),load()]).then(render).catch(function(){toast("Non riesco a leggere i dati.");render()});
 }
-function exit(){try{localStorage.removeItem(SK)}catch(e){}SES=null;$("app").hidden=true;$("login").hidden=false;document.body.classList.remove("in");$("p").value=""}
+function exit(){try{sessionStorage.removeItem(SK);localStorage.removeItem(SK)}catch(e){}SES=null;$("app").hidden=true;$("login").hidden=false;document.body.classList.remove("in");$("p").value=""}
+/* uscita automatica: chi torna al sito deve rifare l'accesso; 30 minuti senza attivita' = esci */
+document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest('a[href="./"]');if(a){try{sessionStorage.removeItem(SK);localStorage.removeItem(SK)}catch(x){}SES=null}},true);
+["pointerdown","keydown","touchstart"].forEach(function(ev){window.addEventListener(ev,function(){if(SES){SES.u=Date.now()+30*60*1000;saveSes()}},{passive:true,capture:true})});
 $("out").addEventListener("click",exit);
 $("rf").addEventListener("click",function(){load().then(function(){render();toast("Aggiornato.")}).catch(function(){toast("Non riesco ad aggiornare.")})});
 $("lf").addEventListener("submit",function(ev){
@@ -597,7 +600,7 @@ $("lf").addEventListener("submit",function(ev){
   .then(function(r){return r.json()}).then(function(o){
     if(!o.idToken)throw new Error(o.error&&o.error.message||"x");
     if(o.localId!==UID)throw new Error("NOTADMIN");
-    SES={t:o.idToken,r:o.refreshToken,x:Date.now()+Number(o.expiresIn||3600)*1000,uid:o.localId,u:Date.now()+2*3600*1000};saveSes();
+    SES={t:o.idToken,r:o.refreshToken,x:Date.now()+Number(o.expiresIn||3600)*1000,uid:o.localId,u:Date.now()+30*60*1000};saveSes();
     b.disabled=false;m.textContent="";$("p").value="";start();
   }).catch(function(e){
     b.disabled=false;var t=String(e.message);
