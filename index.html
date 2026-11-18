@@ -592,8 +592,9 @@ function setRemoved(id,on){
   var q=on?aPut(remUrl(id),true):aDel(remUrl(id));admLog((on?"Tolto dall’elenco: ":"Rimesso nell’elenco: ")+((lastAll[id]&&lastAll[id].n)||id));
   return q.then(function(){if(on)REM[id]=true;else delete REM[id];delete S.f[id];pull(true);drawList()}).catch(function(e){msg("Operazione non riuscita ("+(e&&e.message||e)+")")});
 }
+function canView(id){return isAdmin()||isGAdmin()||!!(S.cg&&GM&&GM[S.me.i]&&GM[id])}
 function viewUser(id){
-  if(!(isAdmin()||isGAdmin()))return;var v=lastAll[id]||S.f[id];if(!v)return;
+  if(!canView(id))return;var v=lastAll[id]||S.f[id];if(!v)return;
   viewing={id:id,n:v.n,d:toMap(Array.isArray(v.d)?v.d:[])};prevD=null;tab="io";msg("");render();window.scrollTo(0,0);
 }
 function mineStats(){var seen=0,left=0,c=0,nx=null;items.forEach(function(x){if(x.u)return;if(D()[x.id]){seen+=x.h;c++}else{left+=x.h;if(!nx)nx=x}});return{seen:seen,left:left,c:c,nx:nx}}
@@ -728,8 +729,9 @@ function pull(force){
 function hue(t){var x=0;for(var i=0;i<t.length;i++)x=(x*31+t.charCodeAt(i))%360;return x}
 var WSEL="",HT=0;
 function wActions(f){
-  if(f.me||!S.cg||!isGAdmin()||!GM[f.id])return null;
-  var gx=h("div","adm"),gv=h("button",null,"Guarda");gv.type="button";gv.addEventListener("click",function(){viewUser(f.id)});gx.appendChild(gv);
+  if(f.me||!S.cg||!GM[f.id]||!GM[S.me.i])return null;
+  var gx=h("div","adm"),gv=h("button",null,"Guarda i suoi film");gv.type="button";gv.addEventListener("click",function(){viewUser(f.id)});gx.appendChild(gv);
+  if(!isGAdmin())return gx;
   var tr=GM[f.id].r;
   if(myRole()==="owner"&&tr!=="owner"){
     var pr=h("button",null,tr==="admin"?"Togli capogruppo":"Rendi capogruppo");pr.type="button";
@@ -1566,7 +1568,7 @@ function admUi(){
 }
 function render(){admUi();
   renderSponsors();
-  if(viewing&&!(isAdmin()||isGAdmin()))viewing=null;
+  if(viewing&&!canView(viewing.id))viewing=null;
   $("dock").setAttribute("data-tab",tab);
   $("tIo").setAttribute("aria-pressed",tab==="io");
   $("tAm").setAttribute("aria-pressed",tab==="am");
