@@ -1017,6 +1017,8 @@ var FR=null,FRQ={},FRO="",frSig=null,frBusy=false,FRLEG=false,FRN={},PUB=false,a
 function pubUrl(id){return DB_URL.replace(/\/+$/,"")+"/pub/"+id+".json"}
 function fsUrl(from,to){return DB_URL.replace(/\/+$/,"")+"/friendSent/"+from+(to?"/"+to:"")+".json"}
 var FSENT={};
+function snGet(){try{return JSON.parse(localStorage.getItem("mcu-sent2-"+(S.me&&S.me.i))||"{}")||{}}catch(e){return{}}}
+function snSet(o){try{localStorage.setItem("mcu-sent2-"+(S.me&&S.me.i),JSON.stringify(o))}catch(e){}}
 function fnUrl(to,from){return DB_URL.replace(/\/+$/,"")+"/friendNote/"+to+(from?"/"+from:"")+".json"}
 function frUrl(id,f){return DB_URL.replace(/\/+$/,"")+"/friends/"+(id||"")+(f?"/"+f:"")+".json"}
 function fqUrl(id,f){return DB_URL.replace(/\/+$/,"")+"/friendReq/"+(id||"")+(f?"/"+f:"")+".json"}
@@ -1030,10 +1032,12 @@ function frInit(me){
 }
 function frAux(me){
   if(auxSig===null){try{PUB=localStorage.getItem("mcu-pub-"+me)==="1"}catch(e){}}
-  Promise.all([getJ(fnUrl(me)).catch(function(){return null}),getJ(pubUrl(me)).catch(function(){return null}),getJ(fsUrl(me)).catch(function(){return null})]).then(function(r){
+  Promise.all([getJ(fnUrl(me)).catch(function(){return null}),getJ(pubUrl(me)).catch(function(){return null}),getJ(fsUrl(me)).catch(function(){return false})]).then(function(r){
     if(S.me.i!==me)return;
-    var n=(r[0]&&typeof r[0]==="object")?r[0]:{},pb=r[1]===true,fsn=(r[2]&&typeof r[2]==="object")?r[2]:{};
+    var n=(r[0]&&typeof r[0]==="object")?r[0]:{},pb=r[1]===true,fsn=(r[2]&&typeof r[2]==="object")?r[2]:{},loc=snGet();
+    if(r[2]===false){Object.keys(loc).forEach(function(k){if(!fsn[k])fsn[k]=loc[k]})}else{var keep={};Object.keys(fsn).forEach(function(k){keep[k]=fsn[k]});snSet(keep)}
     Object.keys(fsn).forEach(function(k){if(FR&&FR[k]){delete fsn[k];delJ(fsUrl(me,k)).catch(function(){})}});
+    if(r[2]===false)snSet(fsn);
     var sig=JSON.stringify([Object.keys(n).sort(),pb,Object.keys(fsn).sort()]);FSENT=fsn;
     FRN=n;PUB=pb;try{localStorage.setItem("mcu-pub-"+me,pb?"1":"0")}catch(e){}
     if(sig!==auxSig){var first=auxSig===null;auxSig=sig;updBadge();if(!first&&tab!=="io"&&!S.cg)renderFriends()}
@@ -1069,7 +1073,7 @@ function frSend(name){
       }
       if(FSENT[id])throw new Error("freq");
       return putJ(fqUrl(id,me),{n:S.me.n,t:Date.now()}).then(function(){
-        var tn=(lastAll[id]&&lastAll[id].n)||nm;FSENT[id]={n:tn,t:Date.now()};
+        var tn=(lastAll[id]&&lastAll[id].n)||nm;FSENT[id]={n:tn,t:Date.now()};var lc=snGet();lc[id]=FSENT[id];snSet(lc);
         return putJ(fsUrl(me,id),{n:tn,t:Date.now()}).catch(function(){}).then(function(){return"sent"});
       },function(e){throw new Error("fdeny")});
     });
@@ -2319,7 +2323,7 @@ function friendsBox(){
       sk.forEach(function(k){
         var q=FSENT[k]||{},rw=h("div","rmr min"),tx=h("span",null,ct("In attesa che "+dn(q.n||"?")+" accetti","Waiting for "+dn(q.n||"?")+" to accept"));tx.setAttribute("data-nt","1");rw.appendChild(tx);
         var cx=h("button","rb");cx.type="button";cx.appendChild(ico(IC_NO));cx.setAttribute("aria-label",ct("Annulla la richiesta","Cancel the request"));cx.title=ct("Annulla la richiesta","Cancel the request");
-        cx.addEventListener("click",function(){cx.disabled=true;Promise.all([delJ(fqUrl(k,S.me.i)).catch(function(){}),delJ(fsUrl(S.me.i,k)).catch(function(){})]).then(function(){delete FSENT[k];auxSig=null;renderFriends()})});
+        cx.addEventListener("click",function(){cx.disabled=true;Promise.all([delJ(fqUrl(k,S.me.i)).catch(function(){}),delJ(fsUrl(S.me.i,k)).catch(function(){})]).then(function(){delete FSENT[k];var lc=snGet();delete lc[k];snSet(lc);auxSig=null;renderFriends()})});
         rw.appendChild(cx);b.appendChild(rw);
       });
     }
