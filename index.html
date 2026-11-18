@@ -332,7 +332,10 @@ body:has(.tkr:not([hidden])) .adm-pill{top:46px}
 @media(hover:hover){.rt .st:hover{color:var(--amber);transform:scale(1.12)}}
 .rt .sth{font-size:16px;letter-spacing:1px;color:var(--cell)}.rt .sth .on{color:var(--amber)}
 .rt .ra{font-size:13px;color:var(--mute)}
-.mdl{position:fixed;inset:0;z-index:99;background:rgba(5,8,28,.72);display:flex;align-items:center;justify-content:center;padding:16px}.mbox{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:10px}.mbox input{width:100%}
+.mdl{position:fixed;inset:0;z-index:99;background:rgba(5,8,28,.72);display:flex;align-items:center;justify-content:center;padding:16px}.mbox{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:10px}.mbox input{display:block;width:100%;box-sizing:border-box;margin:0;padding:13px 14px;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:12px}.mbox input:focus-visible{outline:3px solid var(--focus);outline-offset:1px}.mbox .k{margin:0}.mbox .m{margin:0}.mbox .gerr:empty{display:none}.mbox,.mbox *{font-family:inherit}.mbox button{min-height:44px;font:inherit;font-weight:700}
+.mbox.warn{border:3px solid var(--red);box-shadow:0 0 0 0 rgba(214,36,58,.0);animation:warnblink 1.3s ease-in-out infinite}
+@keyframes warnblink{0%,100%{border-color:var(--red);box-shadow:0 0 0 0 rgba(214,36,58,.55)}50%{border-color:rgba(214,36,58,.25);box-shadow:0 0 18px 4px rgba(214,36,58,.45)}}
+@media (prefers-reduced-motion:reduce){.mbox.warn{animation:none;box-shadow:0 0 14px 2px rgba(214,36,58,.4)}}
 .pubsw{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:4px 12px;border-radius:999px;border:2px solid var(--line);background:var(--panel);color:var(--mute);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .pubsw::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--mute)}
 .pubsw.on{border-color:var(--amber);color:var(--ink)}.pubsw.on::before{background:#1f9d55}
@@ -346,6 +349,16 @@ body:has(.tkr:not([hidden])) .adm-pill{top:46px}
 .sqlist{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 12px}
 .row.mini button{min-height:36px;padding:6px 12px;font-size:13px;display:inline-flex;align-items:center;gap:6px;flex:0 1 auto}
 @media (prefers-reduced-motion:reduce){.sqd summary::after{transition:none}}
+.gate{background:rgba(236,238,249,.55);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .gate{background:rgba(8,12,38,.6)}}
+:root[data-theme="dark"] .gate{background:rgba(8,12,38,.6)}
+.gate{flex-direction:column;gap:14px}
+.gate h1.gtitle{font-size:clamp(46px,13vw,72px);text-align:left;align-self:center;width:max-content;max-width:100%;color:var(--ink)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.gate .mbox{width:100%;max-width:420px}
+.gtabs{display:flex;gap:8px}.gtabs button{flex:1;min-height:40px}.gtabs button[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:#0b1030}
+.gerr{color:var(--red);min-height:1.2em}
+body.gated{overflow:hidden}
 </style>
 </head>
 <body class="boot">
@@ -566,8 +579,9 @@ function aDel(u){return aUrlTok(u).then(function(x){return delJ(x)})}
 // ---- accesso con password (Firebase Authentication)
 var U2=null,U2K="mcu-u2",FB_AUTH="https://identitytoolkit.googleapis.com/v1/accounts:",RAWF=window.fetch.bind(window);
 function u2save(){try{if(U2)localStorage.setItem(U2K,JSON.stringify(U2));else localStorage.removeItem(U2K)}catch(e){}}
-function u2load(){try{var o=JSON.parse(localStorage.getItem(U2K)||"null");if(o&&o.r&&o.uid)U2=o}catch(e){}}
-function u2set(o){U2={t:o.idToken,r:o.refreshToken,x:Date.now()+Number(o.expiresIn||3600)*1000,uid:o.localId};u2save()}
+var EXP=false,SESS_MIN=60;
+function u2load(){try{var o=JSON.parse(localStorage.getItem(U2K)||"null");if(o&&o.r&&o.uid){if(o.a&&Date.now()-o.a>SESS_MIN*60000){EXP=true;localStorage.removeItem(U2K)}else{o.a=Date.now();U2=o;u2save()}}}catch(e){}}
+function u2set(o){U2={t:o.idToken,r:o.refreshToken,x:Date.now()+Number(o.expiresIn||3600)*1000,uid:o.localId,a:Date.now()};u2save()}
 function u2out(){U2=null;u2save()}
 function authErr(m){m=String(m||"");if(/EMAIL_EXISTS/.test(m))return"taken";if(/INVALID_PASSWORD|INVALID_LOGIN|EMAIL_NOT_FOUND|INVALID_EMAIL|USER_DISABLED/.test(m))return"bad";if(/WEAK_PASSWORD/.test(m))return"weakpw";if(/TOO_MANY/.test(m))return"many";if(/OPERATION_NOT_ALLOWED|CONFIGURATION/.test(m))return"noauth";return"net"}
 function u2call(m,body){return RAWF(FB_AUTH+m+"?key="+FB_API_KEY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(j){if(!r.ok||j.error)throw new Error(authErr(j.error&&j.error.message));return j})})}
@@ -576,7 +590,7 @@ function u2token(){
   if(!U2)return Promise.resolve(null);
   if(U2.x-Date.now()>120000)return Promise.resolve(U2.t);
   return RAWF("https://securetoken.googleapis.com/v1/token?key="+FB_API_KEY,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"grant_type=refresh_token&refresh_token="+encodeURIComponent(U2.r)})
-    .then(function(r){return r.json()}).then(function(o){if(!o.id_token)throw 0;U2={t:o.id_token,r:o.refresh_token,x:Date.now()+Number(o.expires_in||3600)*1000,uid:U2.uid};u2save();return U2.t}).catch(function(){return U2?U2.t:null});
+    .then(function(r){return r.json()}).then(function(o){if(!o.id_token)throw 0;U2={t:o.id_token,r:o.refresh_token,x:Date.now()+Number(o.expires_in||3600)*1000,uid:U2.uid,a:U2.a||Date.now()};u2save();return U2.t}).catch(function(){return U2?U2.t:null});
 }
 function curTok(){return(FBT&&adminOk())?fbToken():(U2?u2token():Promise.resolve(null))}
 u2load();
@@ -1799,7 +1813,7 @@ function doMigrate(name,pin,pw){
 function openMigrate(name,pin,rs){
   if($("mdl"))$("mdl").remove();
   var ov=h("div","mdl");ov.id="mdl";ov.setAttribute("role","dialog");ov.setAttribute("aria-modal","true");ov.setAttribute("aria-labelledby","mdlT");
-  var bx=h("div","mbox");
+  var bx=h("div","mbox warn");
   var t=h("p","k","Abbiamo aggiornato la sicurezza del sito");t.id="mdlT";bx.appendChild(t);
   bx.appendChild(h("p","m","Per proteggere i tuoi dati abbiamo cambiato alcune regole del server: ora si entra con una password al posto del PIN. Scegli una nuova password (da 8 caratteri) e scrivi ancora il tuo PIN di sempre. Progressi, gruppi e amici restano com’erano."));
   var ni=h("input");ni.type="text";ni.maxLength=24;ni.placeholder="Il tuo username";ni.value=name||"";ni.autocomplete="username";ni.setAttribute("aria-label","Username");
@@ -1966,6 +1980,68 @@ function admUi(){
   var fa=$("admFoot");if(fa&&fbMode())fa.hidden=on;
   var rs=$("reset");if(rs)rs.hidden=!!S.acct;
 }
+function flyTitle(ov,ttl){
+  function done(){if(ttl.parentNode)ttl.remove();if(ov.parentNode)ov.remove();document.body.classList.remove("gated");var hh=document.querySelector("h1");if(hh)hh.style.visibility=""}
+  var hero=null;Array.prototype.forEach.call(document.querySelectorAll("h1"),function(x){if(!ov.contains(x)&&x!==ttl)hero=x});
+  if(!hero||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)||!hero.animate){done();return}
+  document.body.classList.remove("gated");window.scrollTo(0,0);
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    function box(el){var r=document.createRange();r.selectNodeContents(el);return r.getBoundingClientRect()}
+    var a=box(ttl),b=box(hero);
+    if(!a.width||!b.width){done();return}
+    var fs=getComputedStyle(ttl).fontSize;
+    document.body.appendChild(ttl);
+    ttl.style.cssText="position:fixed;left:"+a.left+"px;top:"+a.top+"px;margin:0;z-index:120;pointer-events:none;transform-origin:0 0;width:max-content;text-align:left;color:var(--ink);font-size:"+fs;
+    hero.style.visibility="hidden";
+    ov.style.transition="opacity .45s ease";ov.style.opacity="0";
+    var he=hero.getBoundingClientRect(),te=ttl.getBoundingClientRect(),k=b.width/a.width,dx=he.left-te.left,dy=he.top-te.top;
+    var an=ttl.animate([{transform:"translate(0,0) scale(1)"},{transform:"translate("+dx+"px,"+dy+"px) scale("+k+")"}],{duration:950,easing:"cubic-bezier(.2,.8,.2,1)",fill:"forwards"});
+    an.onfinish=done;an.oncancel=done;setTimeout(done,2500);
+  })});
+}
+function ensureGate(){
+  var g=$("gate");if(g&&g.getAttribute("data-fly"))return;
+  if(!DB_URL||S.acct||$("mdl")||(typeof LEGACY!=="undefined"&&LEGACY&&!GATE_OK)){if(g)g.remove();document.body.classList.remove("gated");return}
+  if(g)return;
+  document.body.classList.add("gated");
+  var ov=h("div","mdl gate");ov.id="gate";ov.setAttribute("role","dialog");ov.setAttribute("aria-modal","true");ov.setAttribute("aria-labelledby","gateT");
+  var src=document.querySelector("h1"),ttl=src?src.cloneNode(true):h("h1",null,"Maratona MCU");ttl.removeAttribute("aria-label");ttl.setAttribute("aria-hidden","true");ttl.classList.add("gtitle");
+  var bx=h("div","mbox"),t=h("p","k","Accedi alla maratona");t.id="gateT";t.className="sr";bx.appendChild(t);
+  var info=h("p","m",EXP?"Per sicurezza l’accesso scade dopo un’ora di inattività. Accedi di nuovo.":"Per vedere la maratona e i tuoi amici crea un account, oppure accedi se ce l’hai già.");bx.appendChild(info);
+  var mode="new",tabs=h("div","gtabs"),tn=h("button",null,"Crea account"),tl=h("button",null,"Accedi");tn.type=tl.type="button";tabs.appendChild(tn);tabs.appendChild(tl);bx.appendChild(tabs);
+  var ni=h("input");ni.type="text";ni.maxLength=24;ni.placeholder="Username (es. mario.rossi)";ni.autocomplete="username";ni.autocapitalize="off";ni.spellcheck=false;ni.setAttribute("aria-label","Username");
+  var pi=h("input");pi.type="password";pi.maxLength=64;pi.placeholder="Password (da 8 caratteri)";pi.setAttribute("aria-label","Password");
+  var er=h("p","m gerr");er.setAttribute("role","alert");
+  var ok=h("button","pri","Crea account");ok.type="button";
+  var hint=h("p","m","Hai dimenticato la password? Scrivi ad Alessandro: ti sblocca l’account.");hint.hidden=true;
+  [ni,pi,er,ok,hint].forEach(function(x){bx.appendChild(x)});
+  function setMode(m){mode=m;tn.setAttribute("aria-pressed",String(m==="new"));tl.setAttribute("aria-pressed",String(m==="in"));ok.textContent=m==="new"?"Crea account":"Accedi";pi.autocomplete=m==="new"?"new-password":"current-password";hint.hidden=m==="new";er.textContent=""}
+  tn.addEventListener("click",function(){setMode("new")});tl.addEventListener("click",function(){setMode("in")});setMode(EXP?"in":"new");
+  function go(){
+    var nm=ni.value.replace(/\s+/g," ").trim(),pw=pi.value.trim();
+    if(!nm){er.textContent="Scrivi il tuo username.";ni.focus();return}
+    if(mode==="new"&&(pw.length<8||pw.length>64)){er.textContent="La password deve avere da 8 a 64 caratteri.";pi.focus();return}
+    if(mode==="in"&&!pw){er.textContent="Scrivi la password.";pi.focus();return}
+    ok.disabled=true;er.textContent="Un attimo…";
+    (mode==="new"?doCreate:doLogin)(nm,pw).then(function(){EXP=false;ov.setAttribute("data-fly","1");render();msg(mode==="new"?"Account creato. I tuoi progressi ora sono condivisi.":"Bentornato! Progressi ripristinati.");pull();loadUcnt();loadGcnt();flyTitle(ov,ttl)}).catch(function(e){
+      ok.disabled=false;var m=e&&e.message;
+      if(m==="migrate"){er.textContent="";GATE_OK=true;openMigrate(e.legacy.name,e.legacy.pin,e.legacy.rs);return}
+      er.textContent=m==="baduser"?"Username non valido: da 3 a 20 caratteri, solo lettere minuscole, numeri, punto e trattino basso.":m==="taken"?"Questo username è già in uso. Se è tuo, tocca Accedi.":m==="reserved"?"Questo nome è riservato.":m==="badname"?"Nome non valido.":m==="weakpw"?"La password deve avere da 8 a 64 caratteri.":m==="bad"?"Username o password non corretti.":m==="many"?"Troppi tentativi. Aspetta qualche minuto e riprova.":m==="noauth"?"Il login con password non è ancora attivo sul server.":"Non riesco a collegarmi. Riprova tra poco.";
+    });
+  }
+  ok.addEventListener("click",go);[ni,pi].forEach(function(x){x.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();go()}})});
+  ov.appendChild(ttl);ov.appendChild(bx);document.body.appendChild(ov);ni.focus();
+}
+var GATE_OK=false;
+function touch(){if(U2&&Date.now()-(U2.a||0)>15000){U2.a=Date.now();u2save()}}
+function expireCheck(){
+  if(!DB_URL||!S.acct||!U2)return;
+  var last=U2.a||0;try{var o=JSON.parse(localStorage.getItem(U2K)||"null");if(o&&o.a>last)last=o.a}catch(e){}
+  if(Date.now()-last>SESS_MIN*60000){EXP=true;u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("");render()}
+}
+["pointerdown","keydown","touchstart","wheel"].forEach(function(ev){window.addEventListener(ev,touch,{passive:true,capture:true})});
+document.addEventListener("visibilitychange",function(){if(!document.hidden)expireCheck()});
+setInterval(expireCheck,30000);
 function render(){admUi();renderTicker();
   renderSponsors();
   if(viewing&&!canView(viewing.id))viewing=null;
@@ -1974,6 +2050,7 @@ function render(){admUi();renderTicker();
   $("tAm").setAttribute("aria-pressed",tab==="am");
   updBadge();
   if(tab==="io")renderMine();else renderFriends();
+  ensureGate();
 }
 $("app").addEventListener("change",function(e){
   var id=e.target.getAttribute("data-i");if(id===null||viewing)return;
@@ -2012,7 +2089,8 @@ if(window.matchMedia&&matchMedia("(hover:hover) and (pointer:fine)").matches){
     if(tk&&!tk.contains(e.relatedTarget)){tk.style.setProperty("--rx","0deg");tk.style.setProperty("--ry","0deg")}
   });
 }
-var LEGACY=null;if(DB_URL&&S.acct&&!U2){LEGACY=S.acct.name;S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false)}
+var LEGACY=null;if(DB_URL&&S.acct&&!U2&&EXP){S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false)}
+if(DB_URL&&S.acct&&!U2){LEGACY=S.acct.name;S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false)}
 setTimeout(function(){document.body.classList.remove("boot")},2800);
 render();
 if(LEGACY)setTimeout(function(){openMigrate(LEGACY,"")},300);
