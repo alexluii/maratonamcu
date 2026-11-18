@@ -221,11 +221,18 @@ function changeCode(gid,code){
 }
 function dropGroup(gid){var d=[DEL("groups/"+gid),DEL("groupSec/"+gid),DEL("groupIndex/"+gid),DEL("groupMembers/"+gid),DEL("chats/"+gid),DEL("mutes/"+gid)];Object.keys(obj(ST.members[gid])).forEach(function(id){d.push(DEL("userGroups/"+id+"/"+gid))});return Promise.all(d)}
 function unlockAccount(id,name){
-  return nkOf(name).then(function(nk){return GET("accounts/"+ROOM+"/"+nk).then(function(rec){
-    if(!rec||rec.id!==id)throw new Error("none");
+  return Promise.all([nkOf(name),GET("accounts/"+ROOM)]).then(function(r){
+    var all=obj(r[1]),found=Object.keys(all).filter(function(k){return all[k]&&all[k].id===id});
+    var nk=found.length?found[0]:r[0],rec=found.length?all[nk]:{id:id,v:3};
     var q=[DEL("claims/"+id)];if(rec.u)q.push(DEL("members/"+rec.u));
-    return Promise.all(q).then(function(){var n={id:id,v:rec.v||3,rs:1};if(rec.o)n.o=rec.o;return PUT("accounts/"+ROOM+"/"+nk,n)});
-  })});
+    return Promise.all(q).then(function(){
+      var n={id:id,v:rec.v||3,rs:1};if(rec.o)n.o=rec.o;
+      var w=[PUT("accounts/"+ROOM+"/"+nk,n)];
+      if(nk!==r[0]&&!all[r[0]])w.push(PUT("accounts/"+ROOM+"/"+r[0],n));
+      if(nk!==r[0]&&all[r[0]]&&all[r[0]].id!==id)throw new Error("taken");
+      return Promise.all(w).then(function(){if(nk!==r[0])return DEL("accounts/"+ROOM+"/"+nk)});
+    });
+  });
 }
 function nkOf(n){return sha("nm:"+String(n).replace(/\s+/g," ").trim().slice(0,24).toLowerCase()).then(function(x){return x.slice(0,20)})}
 function renameUser(id,oldName,newName){

@@ -1723,7 +1723,7 @@ function doMigrate(name,pin,pw){
   name=cleanName(name);
   if(pw.length<8||pw.length>64)return Promise.reject(new Error("weakpw"));
   return nkOf(name).then(function(nk){return getJ(aUrl(nk)).then(function(ex){
-    if(!ex)throw new Error("bad");
+    if(!ex)throw new Error("nouser");
     if(ex.u)throw new Error("claimed");
     return(ex.rs?Promise.resolve({id:ex.id}):acctKeys(ex.o||name,pin,ex.v||1)).then(function(k){
       if(k.id!==ex.id)throw new Error("bad");
@@ -1760,7 +1760,7 @@ function openMigrate(name,pin,rs){
     ok.disabled=true;er.textContent="Un attimo…";
     doMigrate(ni.value,rs?"":oi.value,p1.value).then(function(){ov.remove();render();msg("Fatto! Da ora entri con la nuova password.");pull();loadUcnt()}).catch(function(e){
       ok.disabled=false;var m=e&&e.message;
-      er.textContent=m==="bad"?"Username o vecchio PIN non corretti.":m==="claimed"?"Questo account è già passato alla nuova password. Se non sei stato tu, scrivi ad Alessandro.":m==="weakpw"?"La nuova password deve avere da 8 a 64 caratteri.":m==="noauth"?"Il login con password non è ancora attivo sul server.":"Non riesco a collegarmi. Riprova tra poco.";
+      er.textContent=m==="nouser"?"Non trovo nessun account con questo username. Scrivilo come lo avevi quando hai creato l’account (se Alessandro ha cambiato il tuo nome, chiedigli di sbloccarti l’account).":m==="bad"?"L’account esiste, ma il vecchio PIN non è quello giusto.":m==="claimed"?"Questo account è già passato alla nuova password. Se non sei stato tu, scrivi ad Alessandro.":m==="weakpw"?"La nuova password deve avere da 8 a 64 caratteri.":m==="noauth"?"Il login con password non è ancora attivo sul server.":"Non riesco a collegarmi. Riprova tra poco.";
     });
   });
 }
