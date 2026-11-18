@@ -261,7 +261,7 @@ body{grid-template-columns:minmax(440px,520px) minmax(0,720px);column-gap:96px}
 .greq p{margin:0 0 4px}
 #spons{max-width:640px;margin:0 auto;padding:0 16px}
 #spons[hidden]{display:none}
-#spons.sp-top{max-width:none;margin:16px 0 0;padding:0!important}#spons.sp-top .sp-box{margin:0}#spons.sp-top .sp-grid{justify-content:flex-start;gap:12px 14px}
+#spons.sp-top{max-width:none;margin:22px 0 0;padding:0!important}#spons.sp-top .sp-box{margin:0}#spons.sp-top .sp-grid{justify-content:flex-start;gap:12px 14px}
 #spons{padding-bottom:96px}.sp-box{width:fit-content;max-width:100%;margin:0 auto}
 .sp-grid{display:grid;grid-template-columns:repeat(var(--c,3),60px);gap:16px 18px;justify-content:center}.sp-side .sp-box{margin:0}.sp-side .sp-grid{justify-content:flex-start}#spons.sp-side{padding-bottom:0!important;margin-top:48px}
 .sp-tile{position:relative;display:grid;place-items:center;width:60px;height:40px;padding:3px;border-radius:6px;background:#fff;border:0;box-shadow:0 0 0 1px rgba(11,16,36,.14);overflow:hidden;transition:transform .2s,box-shadow .2s}
@@ -754,8 +754,8 @@ function spForm(){
   return f;
 }
 function placeSp(){
-  var el=$("spons"),rl=$("reel");if(!el||!rl||!rl.parentNode)return;
-  if(el.previousElementSibling!==rl||el.parentNode!==rl.parentNode)rl.parentNode.insertBefore(el,rl.nextSibling);
+  var el=$("spons"),lg=document.querySelector(".legend");if(!el||!lg||!lg.parentNode)return;
+  if(lg.nextElementSibling!==el)lg.parentNode.insertBefore(el,lg.nextSibling);
   el.classList.add("sp-top");el.classList.remove("sp-side");
 }
 var IGU="";
