@@ -400,7 +400,7 @@ function refreshUpcoming(){
 
 function renderTicker(){
   var el=$("tkr");if(!el)return;
-  var a=items.filter(function(x){return x.u&&x.r}).sort(function(x,y){return x.r-y.r}).slice(0,8);
+  var lim=Date.now()+60*864e5,a=items.filter(function(x){return x.u&&x.r&&x.r<=lim}).sort(function(x,y){return x.r-y.r}).slice(0,8);
   if(!a.length){el.hidden=true;el.textContent="";el._s="";return}
   var rows=a.map(function(x){return[x.t,new Date(x.r).toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"}),dayTxt(x.r)]});
   var sig=JSON.stringify(rows);if(el._s===sig)return;el._s=sig;el.textContent="";el.hidden=false;
