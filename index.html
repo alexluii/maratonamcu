@@ -790,14 +790,14 @@ function myRole(){return S.cg&&GM&&GM[S.me.i]?GM[S.me.i].r:null}
 function isGAdmin(){var r=myRole();return r==="owner"||r==="admin"}
 function canPush(){return !REM[S.me.i]||Object.keys(UG||{}).length>0}
 function gKeys(name,pass){
-  var nm=String(name).replace(/\s+/g," ").trim().slice(0,24),gid;
-  return sha("g:"+nm.toLowerCase()).then(function(x){gid=x.slice(0,20);return sha("gp:"+gid+":"+pass)}).then(function(ph){return{gid:gid,n:nm,ph:ph.slice(0,32)}});
+  var nm=String(name||"").replace(/\s+/g," ").trim().slice(0,24),code=String(pass).trim(),gid;
+  return sha("gc:"+code).then(function(x){gid=x.slice(0,20);return sha("gp:"+gid+":"+code)}).then(function(ph){return{gid:gid,n:nm,ph:ph.slice(0,32)}});
 }
 function enterGroup(gid){S.cg=gid;S.f={};GM={};GR=null;save(false);viewing=null;render()}
 function joinGroup(name,pass){
-  return gKeys(name,pass).then(function(k){
+  return gKeys("",pass).then(function(k){
     return getJ(gUrl(k.gid)).then(function(g){
-      if(!g||g.ph!==k.ph)throw new Error("gbad");
+      if(!g||g.ph!==k.ph)throw new Error("gbad");k.n=g.n||k.n;
       return getJ(gmUrl(k.gid)).then(function(ms){
         ms=ms||{};var cnt=Object.keys(ms).length;
         if(!ms[S.me.i]&&g.max&&cnt>=g.max)throw new Error("gfull");
@@ -832,52 +832,60 @@ function approveGroup(gid){
 }
 function rejectGroup(gid){var q=GRQ[gid];if(!q||!isAdmin())return Promise.resolve();q.s="no";return putJ(grUrl(gid),q).then(function(){updBadge();renderFriends()})}
 function dropGroupReq(gid){return delJ(grUrl(gid)).then(function(){delete GRQ[gid];renderFriends()})}
+function createGroupNow(o){
+  return gKeys(o.gn,o.pw).then(function(k){
+    return getJ(gUrl(k.gid)).then(function(ex){
+      if(ex)throw new Error("gtaken");
+      return putJ(gUrl(k.gid),{n:k.n,ph:k.ph,o:S.me.i,a:o.an,max:o.p,t:Date.now()});
+    }).then(function(){return putJ(gmUrl(k.gid,S.me.i),{n:S.me.n,r:"owner"})}).then(function(){return putJ(ugUrl(S.me.i,k.gid),k.n)}).then(function(){UG[k.gid]=k.n;loadGcnt();enterGroup(k.gid)});
+  });
+}
 function requestForm(){
-  var f=h("div","box cred");f.appendChild(h("p","k","Richiedi un gruppo"));
-  f.appendChild(h("p","m","La richiesta arriva ad Alessandro. Quando la approva, il gruppo è tuo e puoi invitare gli amici con nome e password."));
+  var adm=isAdmin();
+  var f=h("div","box cred");f.appendChild(h("p","k",adm?"Crea un gruppo":"Richiedi un gruppo"));
+  f.appendChild(h("p","m",adm?"Da amministratore il gruppo si crea subito, senza richiesta.":"La richiesta arriva ad Alessandro. Quando la approva, il gruppo è tuo e puoi invitare gli amici con il codice."));
   function inp(ph,max,type){var i=h("input");i.type=type||"text";i.maxLength=max;i.placeholder=ph;i.setAttribute("aria-label",ph);i.autocomplete="off";return i}
   var gn=inp("Nome del gruppo",24),an=inp("Nome dell’admin del gruppo",24);an.value=S.me.n||"";
-  var pw=inp("Password del gruppo (6+ caratteri)",40,"password");
+  var pw=inp("Codice del gruppo (8+ caratteri)",40);pw.autocapitalize="off";pw.spellcheck=false;
   var mo=h("textarea");mo.maxLength=200;mo.rows=3;mo.placeholder="Perché vuoi creare il gruppo?";mo.setAttribute("aria-label","Motivo della richiesta");
-  f.appendChild(gn);f.appendChild(an);f.appendChild(pw);f.appendChild(mo);
+  f.appendChild(gn);f.appendChild(an);f.appendChild(pw);if(!adm)f.appendChild(mo);
   f.appendChild(h("p","m","Quante persone? (da 1 a 10)"));
   var sq=h("div","sqs"),pick=0,btns=[];
   for(var i=1;i<=10;i++){(function(n){var b=h("button","sq",String(n));b.type="button";b.setAttribute("aria-pressed","false");b.addEventListener("click",function(){pick=n;btns.forEach(function(x,j){x.setAttribute("aria-pressed",String(j+1===n))})});btns.push(b);sq.appendChild(b)})(i)}
   f.appendChild(sq);
-  var row=h("div","row"),ok=h("button","pri","Invia la richiesta ad Alessandro"),no=h("button",null,"Annulla");ok.type=no.type="button";row.appendChild(ok);row.appendChild(no);f.appendChild(row);
+  var row=h("div","row"),ok=h("button","pri",adm?"Crea il gruppo":"Invia la richiesta ad Alessandro"),no=h("button",null,"Annulla");ok.type=no.type="button";row.appendChild(ok);row.appendChild(no);f.appendChild(row);
   no.addEventListener("click",function(){f.remove()});
   ok.addEventListener("click",function(){
-    var g=gn.value.replace(/\s+/g," ").trim(),a=an.value.replace(/\s+/g," ").trim(),m=mo.value.trim();
+    var g=gn.value.replace(/\s+/g," ").trim(),a=an.value.replace(/\s+/g," ").trim(),m=mo.value.trim(),code=pw.value.trim();
     if(!g||!validName(g)){msg("Scrivi un nome del gruppo valido (lettere, numeri, spazi).");return}
     if(!a){msg("Scrivi il nome dell’admin del gruppo.");return}
-    if(pw.value.length<6){msg("La password deve avere almeno 6 caratteri.");return}
-    if(m.length<5){msg("Scrivi il motivo della richiesta.");return}
+    if(code.length<8){msg("Il codice deve avere almeno 8 caratteri.");return}
+    if(!adm&&m.length<5){msg("Scrivi il motivo della richiesta.");return}
     if(!pick){msg("Scegli quante persone sarete (da 1 a 10).");return}
     ok.disabled=no.disabled=true;msg("Un attimo…");
-    sendGroupReq({gn:g,an:a,pw:pw.value,m:m,p:pick}).then(function(){msg("Richiesta inviata ad Alessandro. Ti avviserà qui quando risponde.");renderFriends()}).catch(function(e){ok.disabled=no.disabled=false;msg(gErr(e))});
+    if(adm){createGroupNow({gn:g,an:a,pw:code,p:pick}).then(function(){msg("Gruppo creato. Dai il codice agli amici.");renderFriends()}).catch(function(e){ok.disabled=no.disabled=false;msg(gErr(e))});return}
+    sendGroupReq({gn:g,an:a,pw:code,m:m,p:pick}).then(function(){msg("Richiesta inviata ad Alessandro. Ti avviserà qui quando risponde.");renderFriends()}).catch(function(e){ok.disabled=no.disabled=false;msg(gErr(e))});
   });
   return f;
 }
-function gErr(e){var m=e&&e.message;return m==="gtaken"?"Esiste già un gruppo con questo nome.":m==="gbad"?"Nome del gruppo o password non corretti.":m==="gfull"?"Il gruppo è pieno.":m==="greq"?"Hai già inviato una richiesta con questo nome.":"Operazione non riuscita ("+(m||"errore")+")."}
-function groupForm(mode){
-  var f=h("div","box cred");f.appendChild(h("p","k",mode==="new"?"Crea un gruppo privato":"Entra con il codice del gruppo"));
-  f.appendChild(h("p","m",mode==="new"?"Scegli il nome e una password di almeno 6 caratteri. Chi la conosce può entrare. Tu diventi capogruppo.":"Scrivi il nome del gruppo e il codice che ti ha dato il capogruppo."));
-  var ni=h("input");ni.type="text";ni.maxLength=24;ni.placeholder="Nome del gruppo";ni.setAttribute("aria-label","Nome del gruppo");ni.autocomplete="off";
-  var pi=h("input");pi.type="password";pi.maxLength=40;pi.placeholder="Codice del gruppo";pi.setAttribute("aria-label","Codice del gruppo");pi.autocomplete="off";
-  f.appendChild(ni);f.appendChild(pi);
-  var row=h("div","row"),ok=h("button","pri",mode==="new"?"Crea gruppo":"Entra"),no=h("button",null,"Annulla");ok.type=no.type="button";row.appendChild(ok);row.appendChild(no);f.appendChild(row);
+function gErr(e){var m=e&&e.message;return m==="gtaken"?"Questo codice è già usato da un altro gruppo: scegline un altro.":m==="gbad"?"Codice non valido.":m==="gfull"?"Il gruppo è pieno.":m==="greq"?"Esiste già una richiesta con questo codice: scegline un altro.":"Operazione non riuscita ("+(m||"errore")+")."}
+function groupForm(){
+  var f=h("div","box cred");f.appendChild(h("p","k","Entra con il codice"));
+  f.appendChild(h("p","m","Scrivi il codice che ti ha dato il capogruppo."));
+  var pi=h("input");pi.type="text";pi.maxLength=40;pi.placeholder="Codice del gruppo";pi.setAttribute("aria-label","Codice del gruppo");pi.autocomplete="off";pi.autocapitalize="off";pi.spellcheck=false;
+  f.appendChild(pi);
+  var row=h("div","row"),ok=h("button","pri","Entra"),no=h("button",null,"Annulla");ok.type=no.type="button";row.appendChild(ok);row.appendChild(no);f.appendChild(row);
   no.addEventListener("click",function(){f.remove()});
   ok.addEventListener("click",function(){
-    var nm=ni.value.replace(/\s+/g," ").trim(),pw=pi.value;
-    if(!nm){msg("Scrivi il nome del gruppo.");return}
-    if(pw.length<6){msg("La password deve avere almeno 6 caratteri.");return}
+    var pw=pi.value.trim();
+    if(pw.length<8){msg("Il codice ha almeno 8 caratteri.");return}
     ok.disabled=no.disabled=true;msg("Un attimo…");
-    (mode==="new"?createGroup:joinGroup)(nm,pw).then(function(){msg(mode==="new"?"Gruppo creato. Dai nome e password agli amici.":"Sei dentro al gruppo.")}).catch(function(e){ok.disabled=no.disabled=false;msg(gErr(e))});
+    joinGroup("",pw).then(function(){msg("Sei dentro al gruppo.")}).catch(function(e){ok.disabled=no.disabled=false;msg(gErr(e))});
   });
   return f;
 }
 function groupsBox(){
-  var b=h("section","box gbox"),gh=h("div","gh");gh.appendChild(h("p","k","Gruppi"));
+  var b=h("section","box gbox"),gh=h("div","gh");gh.appendChild(h("p","k","Le tue squadre"));
   var gc=h("span","gcnt"),ld=h("span","led"+(GCNT===null?"":" on")),gt=h("span",null,gcntTxt());gc.id="gcnt";gc.appendChild(ld);gc.appendChild(gt);gc.title="Gruppi attivi in questo momento";gh.appendChild(gc);b.appendChild(gh);
   var chips=h("div","chips"),all=h("button","chip","Tutti gli amici");all.type="button";all.setAttribute("aria-pressed",!S.cg);all.addEventListener("click",function(){enterGroup("")});chips.appendChild(all);
   Object.keys(UG||{}).forEach(function(g){var c=h("button","chip",UG[g]);c.type="button";c.setAttribute("aria-pressed",S.cg===g);c.addEventListener("click",function(){enterGroup(g)});chips.appendChild(c)});
@@ -893,9 +901,9 @@ function groupsBox(){
     ar.appendChild(lv);b.appendChild(ar);
     b.appendChild(chatBox(S.cg));
   }
-  var wrap=h("div"),row=h("div","row ar"),bn=h("button","gnew","Richiedi un gruppo"),bj=h("button",null,"Entra con il codice");bn.type=bj.type="button";
+  var wrap=h("div"),row=h("div","row ar"),bn=h("button","gnew",isAdmin()?"Crea un gruppo":"Richiedi un gruppo"),bj=h("button",null,"Entra con il codice");bn.type=bj.type="button";
   bn.addEventListener("click",function(){wrap.textContent="";wrap.appendChild(requestForm())});
-  bj.addEventListener("click",function(){wrap.textContent="";wrap.appendChild(groupForm("join"))});
+  bj.addEventListener("click",function(){wrap.textContent="";wrap.appendChild(groupForm())});
   row.appendChild(bn);row.appendChild(bj);b.appendChild(row);b.appendChild(wrap);
   Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].by===S.me.i}).forEach(function(k){
     var q=GRQ[k],rw=h("div","rmr"),st=h("span",null,"Richiesta «"+q.gn+"»: "+(q.s==="no"?"rifiutata":"in attesa di Alessandro"));rw.appendChild(st);
