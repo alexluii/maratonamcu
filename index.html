@@ -272,6 +272,17 @@ body{grid-template-columns:minmax(440px,520px) minmax(0,720px);column-gap:96px}
 .cbc.spk .av{box-shadow:0 0 0 3px #2fd36b}.cbc.mut .av{opacity:.5}.cbn{font-size:12px;font-weight:600;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cbc small{font-size:10px;opacity:.6}
 .cbar .row{margin:0}.cbx{background:#d92d3f!important;border-color:#d92d3f!important;color:#fff!important}.cbar .m{margin:0;font-size:12px}
 #callPill{position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:0;background:#2fd36b;color:#04210f;font:700 14px "Instrument Sans",sans-serif;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.3)}#callPill svg{width:16px;height:16px}
+.nwbox{max-width:480px}.nwsub{margin:2px 0 12px}.nwl{display:flex;flex-direction:column;gap:10px}
+.nw{display:flex;gap:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+.nwi{flex:none;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;background:var(--panel)}
+.nwb{min-width:0;flex:1}.nwt{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.nwt b{font-size:15px}
+.nwx{margin:4px 0 0;font-size:13.5px;line-height:1.4;opacity:.8}.nwd{display:block;margin-top:6px;font-size:11px;opacity:.55}
+.nwp{font:800 10px "Instrument Sans",sans-serif;letter-spacing:.4px;text-transform:uppercase;color:#fff;background:#d92d3f;border-radius:999px;padding:2px 8px}
+.nw.nwnew{border-color:#d92d3f;background:rgba(217,45,63,.07);box-shadow:inset 4px 0 0 #d92d3f}.nw.nwnew .nwt b{color:#d92d3f}.nw.nwnew .nwi{background:rgba(217,45,63,.14)}
+.nw.nwhero{flex-direction:column;gap:10px;padding:16px;background:linear-gradient(135deg,rgba(47,211,107,.18),rgba(255,182,39,.14));border-color:#2fd36b}
+.nw.nwhero .nwi{width:52px;height:52px;font-size:28px;border-radius:16px;background:#2fd36b}.nw.nwhero .nwt b{font-size:19px}.nw.nwhero .nwx{font-size:14px;opacity:.9}
+.nw.nwhero.nwnew{border-color:#d92d3f;box-shadow:inset 0 4px 0 #d92d3f}
+.nwc{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.nwc span{padding:4px 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font:700 12px "Instrument Sans",sans-serif}
 .wm .wcnt{font-weight:700;opacity:.75;font-size:11px;margin-top:-4px}
 .avbox{display:flex;gap:14px;align-items:center;margin-top:14px}.avbox .av{flex:none}.avc{flex:1;min-width:0}.avc .m{margin:0 0 8px}.avc .row{margin:0}.avc button{padding:8px 12px;font-size:14px}
 body:not([data-tab="io"]) .legend,body:not([data-tab="io"]) #stat,body:not([data-tab="io"]) .reel,body:not([data-tab="io"]) #spons{display:none!important}
@@ -1548,11 +1559,27 @@ function avBox(){
 
 /* ===== NOVITA' DEL SITO (popup) ===== */
 /* Ad ogni modifica visibile agli utenti: aumenta NEWS_V e aggiungi una voce in NEWS (it + en). Mai cose che riguardano l'amministratore. */
-var NEWS_V=12,NEWS=[
- {v:12,it:["Striscia dei titoli e legenda ora compaiono solo nella Lista, sia da telefono che da computer.","Amici: puoi cercare un amico per nome e vedere tutti gli amici dal menu; il tuo nome non compare più nella lista.","Chiamata vocale: nei gruppi puoi avviare o entrare in una chiamata con il microfono (fino a 6 persone), con timer.","Gruppi: la scheda mostra «I miei gruppi» come su WhatsApp, con immagine e ultimo messaggio. In chat scrivi @ per taggare un membro: il nome è evidenziato in giallo.","Notifiche: le richieste e gli avvisi già gestiti restano nello storico, che puoi cancellare.","Novità: niente più popup all’ingresso. Tocca l’icona ⓘ (sopra la campanella) per leggere le novità, sempre aggiornate.","Notifiche: nella campanella trovi anche le richieste di amicizia e chi ti ha aggiunto.","Amici online: un pallino verde segna chi è connesso in questo momento.","Gli avanzamenti dei nuovi iscritti ora si vedono dappertutto (Amici e Gruppi).","Se sei in più gruppi, gli avanzamenti degli amici e dei gruppi ora si vedono correttamente.","Gruppi: sotto ogni persona ora si vede quanti film ha visto (es. 3/142).","Amici: ora ogni account parte senza amici e vede solo chi ha accettato la sua richiesta.","Amici: nuovo menu a tendina per scegliere uno dei tuoi amici e vedere solo lui.","Le foto profilo si aggiornano da sole, senza ricaricare la pagina.","Gruppi: il capogruppo può scegliere l’immagine del gruppo.","Le novità e le notifiche già viste non ricompaiono più.","Chi crea un account deve mantenere un atteggiamento rispettoso e consono."],
-  en:["The titles strip and legend now only show in the List tab, on both phone and computer.","Friends: you can search a friend by name and see all friends from the menu; your own name no longer shows in the list.","Voice call: in groups you can start or join a call with your microphone (up to 6 people), with a timer.","Groups: the tab shows “My groups” like WhatsApp, with picture and last message. In chat type @ to tag a member: the name is highlighted in yellow.","Notifications: handled requests and notices stay in the history, which you can delete.","What’s new: no more popup when you open the site. Tap the ⓘ icon (above the bell) to read what’s new, always up to date.","Notifications: the bell now also shows friend requests and who added you.","Online friends: a green dot shows who is online right now.","New members’ progress now shows everywhere (Friends and Groups).","If you’re in several groups, friends’ and groups’ progress now shows correctly.","Groups: under each person you now see how many films they’ve watched (e.g. 3/142).","Friends: every account now starts with no friends and only sees people who accepted their request.","Friends: new drop-down menu to pick one of your friends and see only them.","Profile photos now update by themselves, no need to reload the page.","Groups: the group leader can choose the group image.","News and notifications you’ve already seen no longer come back.","Anyone creating an account must behave respectfully and appropriately."]},
- {v:1,it:["Nuove schede in basso: Lista, Amici, Profilo e Gruppo.","Foto profilo: caricala dalla scheda Profilo, si adatta da sola e la vedono i tuoi amici.","La legenda ora compare solo nella Lista.","Notifiche: la campanella in basso a destra raccoglie le novità per te.","Gruppi: il capogruppo può cambiare il nome, aggiungere i suoi amici e chiedere più posti. Se esce, il gruppo passa a un altro membro scelto a caso.","Segnalare è più facile: tocca ⋯ accanto a un messaggio.","Il sito ora c’è anche in inglese, con gli orari delle uscite in ora italiana (UTC+1/+2).","Timbro e strappo del biglietto sempre animati."],
-  en:["New tabs at the bottom: List, Friends, Profile and Group.","Profile photo: upload it from the Profile tab, it fits automatically and your friends can see it.","The legend now only shows in the List tab.","Notifications: the bell at the bottom right collects news for you.","Groups: the group leader can change the name, add their friends and ask for more seats. If they leave, the group passes to another member chosen at random.","Reporting is easier: tap ⋯ next to a message.","The site is now also in English, with release times in Italian time (UTC+1/+2).","The ticket stamp and tear are always animated."]}
+var NEWS_V=13,NEWS=[
+ {v:13,d:"2026-11-18",ic:"✨",ti:{it:"Novità più chiare",en:"What’s new, made clearer"},tx:{it:"Qui trovi tutte le novità in ordine, con le più recenti in rosso.",en:"Everything new is listed in order here, with the latest ones in red."}},
+ {v:12,d:"2026-11-18",ic:"🎙",ti:{it:"Chiamata vocale",en:"Voice call"},tx:{it:"Nei gruppi puoi avviare o entrare in una chiamata con il microfono: vedi chi c’è, chi sta parlando e da quanto dura. Puoi mettere il muto e uscire quando vuoi.",en:"In groups you can start or join a call with your microphone: see who’s in, who’s talking and how long it’s been. Mute or leave whenever you like."},hero:1,chips:{it:["Fino a 6 persone","Timer","Muto"],en:["Up to 6 people","Timer","Mute"]}},
+ {v:11,d:"2026-11-18",ic:"💬",ti:{it:"I miei gruppi e i tag",en:"My groups and tags"},tx:{it:"La scheda Gruppo ora è come WhatsApp: immagine, nome e ultimo messaggio. In chat scrivi @ per taggare un membro: il suo nome si evidenzia in giallo.",en:"The Group tab now works like WhatsApp: picture, name and last message. In chat type @ to tag a member: their name is highlighted in yellow."}},
+ {v:11,d:"2026-11-18",ic:"🗂",ti:{it:"Storico delle notifiche",en:"Notification history"},tx:{it:"Le richieste e gli avvisi già gestiti restano nello storico, che puoi cancellare quando vuoi.",en:"Handled requests and notices stay in the history, which you can delete whenever you like."}},
+ {v:10,d:"2026-11-18",ic:"ℹ️",ti:{it:"Novità sempre a portata",en:"What’s new, always at hand"},tx:{it:"Niente più popup all’ingresso: tocca l’icona ⓘ sopra la campanella per leggere le novità.",en:"No more popup when you open the site: tap the ⓘ icon above the bell to read what’s new."}},
+ {v:9,d:"2026-11-18",ic:"🟢",ti:{it:"Amici online",en:"Online friends"},tx:{it:"Un pallino verde segna chi è connesso in questo momento.",en:"A green dot shows who is online right now."}},
+ {v:9,d:"2026-11-18",ic:"🔔",ti:{it:"Richieste nella campanella",en:"Requests in the bell"},tx:{it:"Nella campanella trovi anche le richieste di amicizia e chi ti ha aggiunto agli amici.",en:"The bell also shows friend requests and who added you as a friend."}},
+ {v:8,d:"2026-11-18",ic:"🖼",ti:{it:"Immagine del gruppo",en:"Group image"},tx:{it:"Il capogruppo può scegliere l’immagine del gruppo, e tutti i membri la vedono subito.",en:"The group leader can choose the group image, and every member sees it right away."}},
+ {v:7,d:"2026-11-18",ic:"📊",ti:{it:"Avanzamenti ovunque",en:"Progress everywhere"},tx:{it:"Gli avanzamenti si vedono in Amici e nei Gruppi, anche se sei in più gruppi e anche per i nuovi iscritti. Nei gruppi, sotto ogni persona c’è il numero di film visti (es. 3/142).",en:"Progress shows in Friends and in Groups, even if you’re in several groups and for new members too. In groups, each person has their number of watched films underneath (e.g. 3/142)."}},
+ {v:6,d:"2026-11-18",ic:"🔎",ti:{it:"Cerca tra gli amici",en:"Search your friends"},tx:{it:"Nella scheda Amici c’è la ricerca: scrivi un nome, oppure apri l’elenco e scegli. Il tuo nome non compare più nella lista.",en:"The Friends tab has a search: type a name, or open the list and pick one. Your own name no longer shows in the list."}},
+ {v:5,d:"2026-11-18",ic:"🤝",ti:{it:"Amici solo su richiesta",en:"Friends only by request"},tx:{it:"Ogni account parte senza amici e vede solo chi ha accettato la sua richiesta.",en:"Every account starts with no friends and only sees people who accepted their request."}},
+ {v:4,d:"2026-11-18",ic:"🤗",ti:{it:"Buon comportamento",en:"Good behaviour"},tx:{it:"Chi crea un account si impegna a mantenere un atteggiamento rispettoso e consono con gli altri.",en:"Anyone creating an account agrees to behave respectfully and appropriately towards others."}},
+ {v:3,d:"2026-11-18",ic:"🔄",ti:{it:"Foto sempre aggiornate",en:"Photos always up to date"},tx:{it:"Le foto profilo si aggiornano da sole, senza ricaricare la pagina. Novità e notifiche già viste non tornano più.",en:"Profile photos update by themselves, no need to reload the page. News and notifications you’ve already seen don’t come back."}},
+ {v:2,d:"2026-11-18",ic:"🎞",ti:{it:"Striscia e legenda solo in Lista",en:"Strip and legend only in List"},tx:{it:"La striscia dei titoli e la legenda compaiono solo nella Lista, da telefono e da computer.",en:"The titles strip and legend only show in the List tab, on phone and computer."}},
+ {v:1,d:"2026-11-18",ic:"🧭",ti:{it:"Nuove schede",en:"New tabs"},tx:{it:"In basso trovi Lista, Amici, Profilo e Gruppo.",en:"At the bottom you’ll find List, Friends, Profile and Group."}},
+ {v:1,d:"2026-11-18",ic:"📷",ti:{it:"Foto profilo",en:"Profile photo"},tx:{it:"Caricala dalla scheda Profilo: si adatta da sola e la vedono i tuoi amici.",en:"Upload it from the Profile tab: it fits automatically and your friends can see it."}},
+ {v:1,d:"2026-11-18",ic:"👥",ti:{it:"Gruppi più completi",en:"Better groups"},tx:{it:"Il capogruppo può cambiare il nome, aggiungere i suoi amici e chiedere più posti. Se esce, il gruppo passa a un altro membro scelto a caso.",en:"The group leader can change the name, add their friends and ask for more seats. If they leave, the group passes to another member chosen at random."}},
+ {v:1,d:"2026-11-18",ic:"🚩",ti:{it:"Segnalare è più facile",en:"Reporting is easier"},tx:{it:"Tocca ⋯ accanto a un messaggio per segnalarlo.",en:"Tap ⋯ next to a message to report it."}},
+ {v:1,d:"2026-11-18",ic:"🌍",ti:{it:"Il sito è anche in inglese",en:"The site is now in English too"},tx:{it:"Gli orari delle uscite sono in ora italiana (UTC+1/+2).",en:"Release times are in Italian time (UTC+1/+2)."}},
+ {v:1,d:"2026-11-18",ic:"🎟",ti:{it:"Timbro e strappo",en:"Stamp and tear"},tx:{it:"L’animazione del biglietto c’è sempre.",en:"The ticket animation always plays."}}
 ];
 var newsOpen=false;
 function newsKey(){return"mcu-news-"+(S.acct&&S.acct.id)}
@@ -1562,17 +1589,23 @@ function newsPanel(){
   var old=document.getElementById("newsov");if(old){old.remove();newsOpen=false;return}
   var seen=newsSeen();newsOpen=true;
   var ov=h("div","mdl");ov.id="newsov";ov.setAttribute("role","dialog");ov.setAttribute("aria-modal","true");ov.setAttribute("data-nt","1");
-  var bx=h("div","mbox nfbox"),hd=h("div","nfh");hd.appendChild(h("p","k",EN?"What’s new":"Novità del sito"));
-  var x=h("button","nfx","×");x.type="button";x.setAttribute("aria-label",EN?"Close":"Chiudi");hd.appendChild(x);bx.appendChild(hd);
+  var bx=h("div","mbox nfbox nwbox"),hd=h("div","nfh");hd.appendChild(h("p","k",ct("Novità del sito","What’s new")));
+  var x=h("button","nfx","×");x.type="button";x.setAttribute("aria-label",ct("Chiudi","Close"));hd.appendChild(x);bx.appendChild(hd);
+  bx.appendChild(h("p","m nwsub",ct("Le più recenti sono in rosso.","The latest ones are in red.")));
   function close(){newsMark();ov.remove();newsOpen=false;newsCheck()}
   x.addEventListener("click",close);ov.addEventListener("click",function(e){if(e.target===ov)close()});
-  NEWS.slice().sort(function(a,c){return c.v-a.v}).forEach(function(n){
-    var isNew=n.v>seen,ul=h("ul","newsl"),seenIt=[];
-    (EN?n.en:n.it).forEach(function(t){var li=h("li",null,t);if(isNew)li.classList.add("newi");ul.appendChild(li)});
-    if(isNew){var tg=h("p","m",EN?"New":"Nuovo");tg.style.cssText="margin:10px 0 0;font-weight:800;color:var(--amber)";bx.appendChild(tg)}
-    bx.appendChild(ul);
+  var list=h("div","nwl");
+  NEWS.map(function(n,i){return{n:n,i:i}}).sort(function(a,c){return c.n.v-a.n.v||a.i-c.i}).forEach(function(o){
+    var n=o.n,isNew=n.v>seen,card=h("div","nw"+(isNew?" nwnew":"")+(n.hero?" nwhero":""));
+    var ic=h("span","nwi",n.ic||"•");card.appendChild(ic);
+    var body=h("div","nwb"),tp=h("div","nwt");tp.appendChild(h("b",null,EN?n.ti.en:n.ti.it));
+    if(isNew)tp.appendChild(h("span","nwp",ct("Nuovo","New")));body.appendChild(tp);
+    body.appendChild(h("p","nwx",EN?n.tx.en:n.tx.it));
+    if(n.chips){var cs=h("div","nwc");(EN?n.chips.en:n.chips.it).forEach(function(c){cs.appendChild(h("span",null,c))});body.appendChild(cs)}
+    if(n.d){var dt=new Date(n.d+"T12:00:00");body.appendChild(h("small","nwd",dt.toLocaleDateString(LOC,{day:"numeric",month:"long"})))}
+    card.appendChild(body);list.appendChild(card);
   });
-  ov.appendChild(bx);document.body.appendChild(ov);
+  bx.appendChild(list);ov.appendChild(bx);document.body.appendChild(ov);
 }
 function newsCheck(){
   var b=document.getElementById("infoBtn");
