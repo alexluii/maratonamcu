@@ -323,6 +323,7 @@ a.sp-tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)
 .gfoot[hidden]{display:none}
 .admgo{display:block;padding:12px 16px;border-radius:999px;background:#5b2a96;color:#fff;font:700 15px "Instrument Sans",system-ui,sans-serif;text-align:center;text-decoration:none}.admgo:hover{background:#6c37ae}.admgo:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 body:has(.tkr:not([hidden])) .adm-pill{top:46px}
+#reset[hidden]{display:none}
 </style>
 </head>
 <body class="boot">
@@ -1750,6 +1751,7 @@ function admUi(){
   if(!p){p=h("button","adm-pill","Admin · Esci");p.id="admPill";p.type="button";p.addEventListener("click",admExit);document.body.appendChild(p)}
   p.hidden=!on;if(on)updBadge();
   var fa=$("admFoot");if(fa&&fbMode())fa.hidden=on;
+  var rs=$("reset");if(rs)rs.hidden=!!S.acct;
 }
 function render(){admUi();renderTicker();
   renderSponsors();
