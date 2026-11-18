@@ -818,7 +818,7 @@ function frRemove(id){
   return Promise.all([delJ(frUrl(me,id)),delJ(frUrl(id,me))]).then(function(){if(FR)delete FR[id];delete S.f[id];frSig=null;save(false);drawList()});
 }
 function adminRenameUser(id,old,nn){
-  nn=cn(nn);if(!nn||!validName(nn))return Promise.reject(new Error("badname"));
+  nn=cn(String(nn).replace(/^@+/,""));if(!nn||!validName(nn))return Promise.reject(new Error("badname"));
   return Promise.all([nkOf(old),nkOf(nn)]).then(function(k){
     return Promise.all([getJ(aUrl(k[0])),k[0]===k[1]?null:getJ(aUrl(k[1]))]).then(function(r){
       var rec=r[0];if(!rec||rec.id!==id)throw new Error("none");if(r[1])throw new Error("taken");
@@ -838,17 +838,23 @@ function adminRenameUser(id,old,nn){
   });
 }
 function renameCtl(id,name){
-  var rn=h("button",null,"Cambia nome");rn.type="button";var rw=h("div","mvw");
+  var rn=h("button",null,"Cambia nome");rn.type="button";var rw=h("div");
   rn.addEventListener("click",function(){
     if(rw.firstChild){rw.textContent="";return}
-    var i=h("input");i.type="text";i.maxLength=24;i.value=name;i.autocapitalize="off";i.setAttribute("aria-label","Nuovo nome");
-    var ok=h("button","pri","Salva");ok.type="button";
-    ok.addEventListener("click",function(){
-      var nn=cn(i.value);if(!nn||nn===name){msg("Scrivi un nome diverso.");return}
-      ok.disabled=true;
-      adminRenameUser(id,name,nn).then(function(n2){msg("Nome cambiato: ora è "+n2+".");rw.textContent="";drawList()}).catch(function(e){ok.disabled=false;var m=e&&e.message;msg(m==="taken"?"Questo nome è già preso da un altro.":m==="badname"?"Nome non valido: lettere, numeri, spazi e . ' _ -":"Operazione non riuscita ("+(m||"errore")+").")});
-    });
-    rw.appendChild(i);rw.appendChild(ok);
+    var row=h("div","mvw"),i=h("input");i.type="text";i.maxLength=25;i.value=name;i.autocapitalize="off";i.setAttribute("aria-label","Nuovo nome");
+    var ok=h("button","pri","Salva"),st=h("p","m");ok.type="button";st.setAttribute("role","status");
+    function go(){
+      var nn=cn(i.value.replace(/^@+/,""));
+      if(!nn){st.textContent="Scrivi un nome.";return}
+      if(nn===name){st.textContent="È già questo il nome attuale.";return}
+      ok.disabled=true;st.textContent="Un attimo…";
+      adminRenameUser(id,name,nn).then(function(n2){msg("Nome cambiato: ora è "+n2+".");rw.textContent="";drawList()}).catch(function(e){
+        ok.disabled=false;var m=e&&e.message;
+        st.textContent=m==="taken"?"Questo nome è già usato da un’altra persona: scegline un altro.":m==="badname"?"Nome non valido: usa lettere, numeri, spazi e . ' _ - (massimo 24).":m==="none"?"Non trovo l’account di questa persona.":"Non riuscito ("+(m||"errore")+"). Riprova.";
+      });
+    }
+    ok.addEventListener("click",go);i.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();go()}});
+    row.appendChild(i);row.appendChild(ok);rw.appendChild(row);rw.appendChild(st);i.focus();
   });
   return{b:rn,w:rw};
 }
