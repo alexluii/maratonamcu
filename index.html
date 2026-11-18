@@ -131,6 +131,9 @@ li.u label{cursor:default;border-left-style:dashed}
 .cr-b{display:flex;align-items:center;gap:7px;margin-top:2px;font:400 13px "Instrument Sans",system-ui,sans-serif;color:var(--mute)}
 .cr-b::before{content:"";width:22px;height:1px;background:var(--amber)}
 .cr-b b{font:900 17px/1 "Big Shoulders Display",Impact,sans-serif;letter-spacing:.2em;color:var(--ink)}
+.cr-ig{display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:5px 11px 5px 9px;border:1px solid var(--line);border-radius:999px;color:var(--ink);text-decoration:none;font:700 13px/1 "Instrument Sans",system-ui,sans-serif;transition:border-color .15s,color .15s}.cr-ig:hover,.cr-ig:focus-visible{border-color:var(--amber);color:var(--amber)}
+#igslot{display:block}.igw{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.cr-ig.add{border:2px dashed var(--cell);background:transparent;color:var(--mute);cursor:pointer}.igx{min-width:22px;height:22px;padding:0 6px;border:0;border-radius:11px;background:rgba(11,16,36,.75);color:#fff;font:700 12px/22px "Instrument Sans",sans-serif;cursor:pointer;margin-top:8px}.igx.on{background:#d6243a}
+.igf{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap}.igf input{width:170px;padding:8px 10px;border:2px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font:inherit;font-size:14px}.igf button{padding:7px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:600 13px "Instrument Sans",sans-serif;cursor:pointer}.igf .pri{background:var(--amber);border-color:var(--amber);color:#0b1030}
 .cr-b i{display:inline-block;font-style:normal;color:#ff4b5c;animation:lub 1.6s ease-in-out infinite}
 @keyframes lub{0%,60%,100%{transform:scale(1)}20%{transform:scale(1.35)}40%{transform:scale(1.1)}}
 @media (prefers-reduced-motion:reduce){.cr-b i{animation:none}}
@@ -258,6 +261,7 @@ body{grid-template-columns:minmax(440px,520px) minmax(0,720px);column-gap:96px}
 .greq p{margin:0 0 4px}
 #spons{max-width:640px;margin:0 auto;padding:0 16px}
 #spons[hidden]{display:none}
+#spons.sp-top{max-width:none;margin:16px 0 0;padding:0!important}#spons.sp-top .sp-box{margin:0}#spons.sp-top .sp-grid{justify-content:flex-start;gap:12px 14px}
 #spons{padding-bottom:96px}.sp-box{width:fit-content;max-width:100%;margin:0 auto}
 .sp-grid{display:grid;grid-template-columns:repeat(var(--c,3),60px);gap:16px 18px;justify-content:center}.sp-side .sp-box{margin:0}.sp-side .sp-grid{justify-content:flex-start}#spons.sp-side{padding-bottom:0!important;margin-top:48px}
 .sp-tile{position:relative;display:grid;place-items:center;width:60px;height:40px;padding:3px;border-radius:6px;background:#fff;border:0;box-shadow:0 0 0 1px rgba(11,16,36,.14);overflow:hidden;transition:transform .2s,box-shadow .2s}
@@ -398,7 +402,7 @@ body.gated{overflow:hidden}
 <body class="boot">
 <div class="tkr" id="tkr" hidden role="region" aria-label="Prossime uscite"></div>
 <header class="hero"><div class="wrap">
-<p class="credit"><span class="cr-a">Sito creato da <b>Alessandro</b> per gli amici</span><span class="cr-b">creato con il <b>LOCU</b> <i aria-label="amore">♥</i></span></p>
+<p class="credit"><span class="cr-a">Sito creato da <b>Alessandro</b> per gli amici</span><span class="cr-b">creato con il <b>LOCU</b> <i aria-label="amore">♥</i></span><span id="igslot"></span></p>
 <h1 aria-label="Maratona MCU"><span class="ln"><span>Maratona</span></span><span class="ln"><span>MCU</span></span></h1>
 <p id="stat"></p>
 <div class="reel" id="reel" role="img"><div class="cells" id="cells"></div></div>
@@ -453,7 +457,7 @@ TXF.push.apply(TXF,["Capogruppo di «", "Group leader of «", "Squadra «", "Tea
 TXR.push([/^Dai (\d+) stell[ae]$/g,"Rate $1 star(s)"],[/^Dai 1 stella$/g,"Rate 1 star"]);
 (function(a){for(var i=0;i<a.length;i+=2)TXD[a[i]]=a[i+1]})(["ore", "hours", "per vedere tutto l’MCU uscito finora.", "to watch all the MCU released so far.", "Hai appena iniziato la maratona.", "You’ve just started the marathon."]);
 TXR.push([/^Sei al (\d+)% della maratona\.$/g,"You’re at $1% of the marathon."],[/^ore e (\d+) min$/g,"hours and $1 min"]);
-TXD["Sposta indietro"]="Move back";TXD["Sposta avanti"]="Move forward";
+TXD["Rimuovi Instagram"]="Remove Instagram";TXD["Aggiungi Instagram"]="Add Instagram";TXD["Scrivi un nome Instagram valido."]="Enter a valid Instagram name.";TXD["Sposta indietro"]="Move back";TXD["Sposta avanti"]="Move forward";
 var TXN=typeof WeakMap!=="undefined"?new WeakMap():null,TXA=["placeholder","aria-label","title","alt"];
 function trSkip(n,at){var p=n.nodeType===1?n:n.parentNode;if(!p)return true;if(p.closest&&p.closest("[data-nt]"))return true;if(at)return false;if(p.nodeName==="SCRIPT"||p.nodeName==="STYLE"||p.nodeName==="TEXTAREA")return true;var c=p.classList,pp=p.parentNode;return !!((c&&c.contains("cm"))||(p.nodeName==="B"&&pp&&pp.classList&&pp.classList.contains("cm")))}
 function trText(n){
@@ -530,6 +534,7 @@ function addUpcoming(list){
   if(ch){ph.sort(function(a,b){return relOf(a[4])-relOf(b[4])});buildItems();render()}
 }
 function refreshUpcoming(){
+  igLoad();
   if(DB_URL)fetch(DB_URL.replace(/\/+$/,"")+"/upcoming.json").then(function(r){return r.ok?r.json():null}).then(function(o){
     if(o&&typeof o==="object")addUpcoming(Object.keys(o).map(function(k){var v=o[k]||{};return{id:Number(v.id)||0,t:v.t,r:v.r,h:v.h,s:v.s}}));
   }).catch(function(){});
@@ -749,10 +754,36 @@ function spForm(){
   return f;
 }
 function placeSp(){
-  var el=$("spons");if(!el)return;
-  var side=window.matchMedia&&window.matchMedia("(min-width:1080px)").matches,lg=document.querySelector(".legend");
-  if(side&&lg&&lg.parentNode){if(el.previousElementSibling!==lg){lg.parentNode.insertBefore(el,lg.nextSibling)}el.classList.add("sp-side")}
-  else{if(el.parentNode!==document.body||el.nextElementSibling){document.body.appendChild(el)}el.classList.remove("sp-side")}
+  var el=$("spons"),rl=$("reel");if(!el||!rl||!rl.parentNode)return;
+  if(el.previousElementSibling!==rl||el.parentNode!==rl.parentNode)rl.parentNode.insertBefore(el,rl.nextSibling);
+  el.classList.add("sp-top");el.classList.remove("sp-side");
+}
+var IGU="";
+var IG_SVG='<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".9" fill="currentColor" stroke="none"/></svg>';
+function igUrl(){return DB_URL.replace(/\/+$/,"")+"/meta/ig.json"}
+function igClean(v){v=String(v||"").trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i,"").replace(/[\/?#].*$/,"").replace(/^@/,"");return/^[A-Za-z0-9._]{1,30}$/.test(v)?v:""}
+function igLoad(){if(!DB_URL)return;fetch(igUrl()).then(function(r){return r.ok?r.json():null}).then(function(v){var c=typeof v==="string"?igClean(v):"";if(c!==IGU){IGU=c;renderIg()}}).catch(function(){})}
+function renderIg(){
+  var el=$("igslot");if(!el)return;el.textContent="";var adm=isAdmin();
+  if(IGU){
+    var w=h("div","igw"),a=h("a","cr-ig");a.href="https://www.instagram.com/"+IGU+"/";a.target="_blank";a.rel="noopener noreferrer";a.setAttribute("aria-label","Instagram @"+IGU);
+    a.insertAdjacentHTML("afterbegin",IG_SVG);a.appendChild(h("span",null,"@"+IGU));w.appendChild(a);
+    if(adm){var x=h("button","igx","×");x.type="button";x.setAttribute("aria-label","Rimuovi Instagram");var arm=false;
+      x.addEventListener("click",function(){if(!arm){arm=true;x.textContent="Sicuro?";x.classList.add("on");setTimeout(function(){arm=false;x.textContent="×";x.classList.remove("on")},3500);return}
+        aDel(igUrl()).then(function(){IGU="";renderIg()}).catch(function(er){msg("Non riuscito ("+(er&&er.message||"errore")+").")})});w.appendChild(x)}
+    el.appendChild(w);return;
+  }
+  if(!adm)return;
+  var ad=h("button","cr-ig add");ad.type="button";ad.insertAdjacentHTML("afterbegin",IG_SVG);ad.appendChild(h("span",null,"+"));ad.setAttribute("aria-label","Aggiungi Instagram");
+  ad.addEventListener("click",function(){
+    if(el.querySelector(".igf")){el.querySelector(".igf").remove();return}
+    var f=h("div","igf"),i=h("input");i.type="text";i.maxLength=60;i.placeholder="@nomeutente";i.setAttribute("aria-label","Instagram");i.autocapitalize="off";i.autocomplete="off";
+    var ok=h("button","pri","Salva"),no=h("button",null,"Annulla");ok.type=no.type="button";f.appendChild(i);f.appendChild(ok);f.appendChild(no);el.appendChild(f);i.focus();
+    no.addEventListener("click",function(){f.remove()});
+    var go=function(){var c=igClean(i.value);if(!c){msg("Scrivi un nome Instagram valido.");return}ok.disabled=true;aPut(igUrl(),c).then(function(){IGU=c;msg("");renderIg()}).catch(function(er){ok.disabled=false;msg("Non riuscito ("+(er&&er.message||"errore")+").")})};
+    ok.addEventListener("click",go);i.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();go()}});
+  });
+  el.appendChild(ad);
 }
 function spKey(k){var v=SP[k]||{};return v.o!=null&&isFinite(v.o)?Number(v.o):1e7+(v.t||0)}
 function spMove(ids,i,d){
@@ -794,7 +825,7 @@ function renderSponsors(){placeSp();
     pb.addEventListener("click",function(){if(wrap.firstChild){wrap.textContent="";return}wrap.appendChild(spForm())});
     g.appendChild(pb);
   }
-  box.appendChild(g);box.appendChild(wrap);el.appendChild(box);
+  box.appendChild(g);box.appendChild(wrap);el.appendChild(box);renderIg();
 }
 function setRemoved(id,on){
   if(!isAdmin())return Promise.resolve();
