@@ -148,7 +148,7 @@ button.pri{color:#0b1030;background:var(--amber);border-color:var(--amber)}
 .dock button[aria-pressed="true"]{color:#0b1030}
 .dock svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){*:not(.ticket):not(.ticket *),*:not(.ticket *)::before,*:not(.ticket *)::after{animation:none!important;transition:none!important}}
 .rd,.lb-c{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:6px;background:#d6232f;color:#fff;font:700 13px/1 "Instrument Sans",system-ui,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
 .lk{width:12px;height:12px;fill:currentColor;stroke:currentColor;flex:none}
 .lockbar{display:flex;align-items:center;gap:10px;margin:14px 2px 2px;padding:8px 10px 8px 14px;border-radius:12px;border:1px solid var(--cell);color:var(--mute);font:600 14px "Instrument Sans",system-ui,sans-serif}
@@ -918,8 +918,8 @@ function tear(id){
   if(tearing||viewing)return;tearing=true;
   S.me.d[id]=1;save();push();
   setTimeout(function(){milestone(+id)},2250);
-  var tk=$("tk"),rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if(!tk||rm){tearing=false;render();return}
+  var tk=$("tk");
+  if(!tk){tearing=false;render();return}
   tk.classList.add("tear");
   setTimeout(function(){tearing=false;enterNext=true;render()},2050);
 }
