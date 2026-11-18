@@ -307,9 +307,22 @@ a.sp-tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)
 .wa .chf input{margin:0;border-width:1px;border-radius:999px;background:var(--bg)}
 .wa .chf button{border-radius:999px;padding:10px 18px}
 .wa .wnote{margin:0;padding:0 12px 10px;background:var(--panel);font-size:12px}
+
+.tkr{position:relative;overflow:hidden;white-space:nowrap;background:#c4182d;color:#fff;font:700 13px/1 "Instrument Sans",system-ui,sans-serif}
+.tkr .tkl{position:absolute;left:0;top:0;bottom:0;z-index:1;display:flex;align-items:center;gap:8px;padding:0 14px 0 14px;background:#8f1020;box-shadow:6px 0 10px -2px rgba(0,0,0,.35)}
+.tkr .tkl i{width:8px;height:8px;border-radius:50%;background:#fff;animation:live 2s ease-in-out infinite}
+.tkr .trk{display:inline-flex;padding:10px 0;animation:tkr var(--d,60s) linear infinite}
+.tkr .trk>span{flex:none;padding-right:44px}
+.tkr .trk>span:first-child{padding-left:150px}
+.tkr .trk em{font-style:normal;font-weight:600;opacity:.85}
+.tkr:hover .trk{animation-play-state:paused}
+@keyframes tkr{to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.tkr .trk{animation:none}.tkr{overflow-x:auto}}
+@media (min-width:1080px){.tkr{position:absolute;top:0;left:0;right:0}body:has(.tkr:not([hidden])){padding-top:36px}}
 </style>
 </head>
 <body class="boot">
+<div class="tkr" id="tkr" hidden role="region" aria-label="Prossime uscite"></div>
 <header class="hero"><div class="wrap">
 <p class="credit"><span class="cr-a">Sito creato da <b>Alessandro</b> per gli amici</span><span class="cr-b">creato con il <b>LOCU</b> <i aria-label="amore">♥</i></span></p>
 <h1 aria-label="Maratona MCU"><span class="ln"><span>Maratona</span></span><span class="ln"><span>MCU</span></span></h1>
@@ -384,6 +397,24 @@ function refreshUpcoming(){
     addUpcoming((o.results||[]).map(function(m){return{id:5000000+m.id,t:m.title,r:m.release_date}}));
   }).catch(function(){});
 }
+
+function renderTicker(){
+  var el=$("tkr");if(!el)return;
+  var a=items.filter(function(x){return x.u&&x.r}).sort(function(x,y){return x.r-y.r}).slice(0,8);
+  if(!a.length){el.hidden=true;el.textContent="";el._s="";return}
+  var rows=a.map(function(x){return[x.t,new Date(x.r).toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"}),dayTxt(x.r)]});
+  var sig=JSON.stringify(rows);if(el._s===sig)return;el._s=sig;el.textContent="";el.hidden=false;
+  var l=h("div","tkl");l.appendChild(h("i"));l.appendChild(h("span",null,"Prossime uscite"));el.appendChild(l);
+  var trk=h("div","trk"),n=0;
+  rows.forEach(function(r){n+=r[0].length+r[1].length+r[2].length+8});
+  var one=n*7.5+rows.length*44,sets=Math.max(2,2*Math.ceil((window.innerWidth+200)/one));
+  for(var k=0;k<sets;k++){
+    rows.forEach(function(r){var sp=h("span",null,r[0]+" · "+r[1]+" ");sp.appendChild(h("em",null,"("+r[2]+")"));if(k)sp.setAttribute("aria-hidden","true");trk.appendChild(sp)});
+  }
+  trk.style.setProperty("--d",Math.max(20,Math.round(one*sets/2/55))+"s");
+  el.appendChild(trk);
+}
+setInterval(renderTicker,60000);
 function pad2(n){return(n<10?"0":"")+n}
 function parts(r){var ms=Math.max(0,r-Date.now()),s=Math.floor(ms/1000);return[Math.floor(s/86400),Math.floor(s%86400/3600),Math.floor(s%3600/60),s%60]}
 function dayTxt(r){var d=parts(r)[0];return d>1?"tra "+d+" giorni":d===1?"domani":"oggi"}
@@ -1566,7 +1597,7 @@ function admUi(){
   if(!p){p=h("button","adm-pill","Admin · Esci");p.id="admPill";p.type="button";p.addEventListener("click",admExit);document.body.appendChild(p)}
   p.hidden=!on;if(on)updBadge();
 }
-function render(){admUi();
+function render(){admUi();renderTicker();
   renderSponsors();
   if(viewing&&!canView(viewing.id))viewing=null;
   $("dock").setAttribute("data-tab",tab);
