@@ -346,7 +346,7 @@ function cdCard(){
   return'<div class="lockbar" role="timer">'+LOCK+'<span class="lb-t">'+x.t+'</span><span class="lb-c">'+LOCK+'<span data-cdt="'+x.r+'">'+cdTxt(x.r)+'</span></span></div>';
 }
 function tick(){
-  if(ADM_UNTIL&&Date.now()>=ADM_UNTIL){ADM_UNTIL=0;FBT=null;viewing=null;render()}
+  if(ADM_UNTIL&&Date.now()>=ADM_UNTIL){ADM_UNTIL=0;FBT=null;admClear();viewing=null;render()}
   var ch=refreshLock();
   if(ch.length){
     var n=ch.map(function(x){return x.t}).join(", ");
@@ -427,46 +427,25 @@ function reservedName(n){
 function D(){return viewing?viewing.d:S.me.d}
 function remUrl(id){return DB_URL.replace(/\/+$/,"")+"/removed/"+ROOM+(id?"/"+id:"")+".json"}
 var FB_API_KEY="AIzaSyCvYDHW-dleGjx9U0WT50PcayjGx2m3Iik",ADMIN_EMAIL="luinialessandro9@gmail.com",ADMIN_UID="lvhh3G1jVUfsmZDeGHoArysTVpr1",FBT=null; // accesso amministratore Firebase (vuoto = non attivo)
-function fbSignIn(pw,email){
-  if(!FB_API_KEY||!(email||ADMIN_EMAIL))return Promise.resolve(false);
-  return fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key="+FB_API_KEY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email||ADMIN_EMAIL,password:pw,returnSecureToken:true})})
-    .then(function(r){return r.json()}).then(function(o){
-      if(!o.idToken)throw new Error(o.error&&o.error.message||"fb");
-      FBT={t:o.idToken,r:o.refreshToken,x:Date.now()+Number(o.expiresIn||3600)*1000,uid:o.localId};return true;
-    });
-}
-function admLogin(email,pw){
-  return fbSignIn(pw,email).then(function(){
-    if(!FBT||FBT.uid!==ADMIN_UID){FBT=null;throw new Error("notadmin")}
-    ADM_UNTIL=Date.now()+30*60*1000;
-  });
-}
-function admErr(e){var m=String(e&&e.message||e);return m==="notadmin"?"Questo utente non è l’amministratore.":/TOO_MANY/.test(m)?"Troppi tentativi: riprova tra qualche minuto.":/INVALID|EMAIL_NOT_FOUND|PASSWORD/.test(m)?"Email o password non corrette.":"Accesso non riuscito ("+m+")."}
+function fbSignIn(){return Promise.resolve(false)}
 function admBox(){
-  var f=h("div","box cred");
-  if(adminOk()){
-    f.appendChild(h("p","k","Amministratore attivo"));
-    var lk=h("button",null,"Blocca ora");lk.type="button";lk.addEventListener("click",function(){ADM_UNTIL=0;FBT=null;viewing=null;render();msg("Amministratore bloccato.")});
-    f.appendChild(lk);return f;
-  }
-  f.appendChild(h("p","k","Accesso amministratore"));
-  var em=h("input");em.type="email";em.maxLength=80;em.placeholder="Email amministratore";em.setAttribute("aria-label","Email amministratore");em.autocomplete="off";
-  var pw=h("input");pw.type="password";pw.maxLength=64;pw.placeholder="Password";pw.setAttribute("aria-label","Password amministratore");pw.autocomplete="off";
-  var row=h("div","row"),ok=h("button","pri","Entra"),no=h("button",null,"Annulla");ok.type=no.type="button";row.appendChild(ok);row.appendChild(no);
-  f.appendChild(em);f.appendChild(pw);f.appendChild(row);
-  no.addEventListener("click",function(){f.remove()});
-  ok.addEventListener("click",function(){
-    if(!em.value.trim()||!pw.value){msg("Scrivi email e password.");return}
-    ok.disabled=no.disabled=true;msg("Un attimo…");
-    admLogin(em.value.trim(),pw.value).then(function(){msg("Amministratore attivo per 30 minuti.");f.remove();render();pull(true)}).catch(function(e){ok.disabled=no.disabled=false;msg(admErr(e))});
-  });
-  return f;
+  var f=h("div","box cred");f.appendChild(h("p","k","Amministratore attivo"));
+  var lk=h("button",null,"Esci dall’amministratore");lk.type="button";lk.addEventListener("click",admExit);f.appendChild(lk);return f;
+}
+var ADM_KEY="mcu-adm";
+function admStore(){try{if(FBT&&ADM_UNTIL)localStorage.setItem(ADM_KEY,JSON.stringify({t:FBT.t,r:FBT.r,x:FBT.x,uid:FBT.uid,u:ADM_UNTIL}))}catch(e){}}
+function admClear(){try{localStorage.removeItem(ADM_KEY)}catch(e){}}
+function admLoad(){
+  try{
+    var o=JSON.parse(localStorage.getItem(ADM_KEY)||"null");
+    if(o&&o.uid===ADMIN_UID&&o.r&&o.u>Date.now()){FBT={t:o.t,r:o.r,x:o.x,uid:o.uid};ADM_UNTIL=o.u}else if(o)admClear();
+  }catch(e){}
 }
 function fbToken(){
   if(!FB_API_KEY||!FBT)return Promise.resolve(null);
   if(FBT.x-Date.now()>120000)return Promise.resolve(FBT.t);
   return fetch("https://securetoken.googleapis.com/v1/token?key="+FB_API_KEY,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"grant_type=refresh_token&refresh_token="+encodeURIComponent(FBT.r)})
-    .then(function(r){return r.json()}).then(function(o){if(!o.id_token){FBT=null;return null}FBT={t:o.id_token,r:o.refresh_token,x:Date.now()+Number(o.expires_in||3600)*1000};return FBT.t}).catch(function(){FBT=null;return null});
+    .then(function(r){return r.json()}).then(function(o){if(!o.id_token){FBT=null;return null}FBT={t:o.id_token,r:o.refresh_token,x:Date.now()+Number(o.expires_in||3600)*1000,uid:ADMIN_UID};admStore();return FBT.t}).catch(function(){FBT=null;return null});
 }
 function aUrlTok(u){return fbToken().then(function(t){return t?u+"?auth="+encodeURIComponent(t):u})}
 function aPut(u,v){return aUrlTok(u).then(function(x){return putJ(x,v)})}
@@ -982,7 +961,6 @@ function selfCred(){
         if(k0.id!==S.acct.id)throw new Error("badpin");
         return moveAccount({id:S.acct.id,name:S.acct.name},nm,np||cur);
       }).then(function(x){S.acct={name:x.k.name,id:x.k.id};S.me.i=x.k.id;S.me.n=x.k.name;S.me.u=x.u;save(false);
-        if(!fbMode()&&isAdminAcct()&&FBT&&FB_API_KEY){fetch("https://identitytoolkit.googleapis.com/v1/accounts:update?key="+FB_API_KEY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({idToken:FBT.t,password:np||cur,returnSecureToken:true})}).then(function(r){return r.json()}).then(function(o){if(o.idToken)FBT={t:o.idToken,r:o.refreshToken,x:Date.now()+Number(o.expiresIn||3600)*1000};else msg("Password del sito cambiata, ma quella di Firebase no: cambiala anche dalla console.")}).catch(function(){})}
         renderFriends()});
     }});
 }
@@ -1168,7 +1146,7 @@ function renderFriendsCodes(){
   if(!DB_URL)el.appendChild(fl);
   drawList();
 }
-function admExit(){ADM_UNTIL=0;FBT=null;viewing=null;render();try{renderFriends();renderSponsors()}catch(e){}msg("Sei uscito dall’amministratore.")}
+function admExit(){ADM_UNTIL=0;FBT=null;admClear();viewing=null;render();try{renderFriends();renderSponsors()}catch(e){}msg("Sei uscito dall’amministratore.")}
 function admUi(){
   var b=$("admBtn"),p=$("admPill"),on=fbMode()&&adminOk();
   if(b)b.textContent=on?"Esci dall’amministratore":"Accesso amministratore";
@@ -1222,8 +1200,8 @@ if(window.matchMedia&&matchMedia("(hover:hover) and (pointer:fine)").matches){
 setTimeout(function(){document.body.classList.remove("boot")},2800);
 render();
 if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}setInterval(pull,5000);loadGcnt();setInterval(loadGcnt,30000);setInterval(pullChat,5000)}
-if(fbMode())$("admFoot").hidden=false;
-$("admBtn").addEventListener("click",function(){if(fbMode()&&adminOk()){admExit();return}var sl=$("admSlot");if(sl.firstChild){sl.textContent="";return}sl.appendChild(admBox())});
+admLoad();if(fbMode())$("admFoot").hidden=false;if(adminOk()){render();renderSponsors()}
+$("admBtn").addEventListener("click",function(){if(adminOk()){admExit();return}location.href="admin.html"});
 refreshUpcoming();setInterval(refreshUpcoming,3600000);loadSponsors();setInterval(loadSponsors,120000);setInterval(tick,1000);document.addEventListener("visibilitychange",function(){if(!document.hidden)pull()});
 </script>
 </body>
