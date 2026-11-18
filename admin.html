@@ -343,8 +343,26 @@ function pageRich(){
   main.appendChild(h("h2",null,"Segnalazioni"+(rk.length?" ("+rk.length+")":"")));
   if(!rk.length)main.appendChild(h("div","card m","Nessuna segnalazione."));
   rk.sort(function(a,c){return(ST.reports[c].t||0)-(ST.reports[a].t||0)}).forEach(function(k){
-    var r=ST.reports[k],c=h("div","card"),t0=h("p",null,"Squadra «"+(r.gn||"?")+"»");t0.style.fontWeight="700";
+    var r=ST.reports[k],c=h("div","card"),t0=h("p",null,(r.k==="size"?"Richiesta posti · ":r.k==="owner"?"Richiesta capogruppo · ":"")+"Squadra «"+(r.gn||"?")+"»");t0.style.fontWeight="700";
     c.appendChild(t0);
+    if(r.k==="owner"){
+      var go=ST.groups[r.gid],mo=obj(ST.members[r.gid]);
+      c.appendChild(h("p","m","Da "+(r.bn||"?")+" · "+when(r.t)));
+      c.appendChild(h("p",null,!go?"La squadra non esiste più.":!mo[r.n]?(r.nn||"?")+" non è più nel gruppo.":"Vuole che "+(r.nn||"?")+" diventi capogruppo."));
+      var orow=h("div","row");
+      if(go&&mo[r.n]){var oka=btn("Approva","sm pri");oka.addEventListener("click",function(){oka.disabled=true;makeOwner(r.gid,r.n).then(function(){return DEL("reports/"+ROOM+"/"+k)}).then(function(){LOG("Nuovo capogruppo di «"+r.gn+"»: "+r.nn);delete ST.reports[k];return load()}).then(render).catch(function(e){oka.disabled=false;fail(e)})});orow.appendChild(oka)}
+      var nob2=btn("Rifiuta","sm");nob2.addEventListener("click",function(){DEL("reports/"+ROOM+"/"+k).then(function(){LOG("Rifiutata la richiesta capogruppo di «"+r.gn+"»");delete ST.reports[k];render()}).catch(fail)});orow.appendChild(nob2);
+      c.appendChild(orow);main.appendChild(c);return;
+    }
+    if(r.k==="size"){
+      var gg=ST.groups[r.gid];
+      c.appendChild(h("p","m","Da "+(r.bn||"?")+" · "+when(r.t)));
+      c.appendChild(h("p",null,gg?"Vuole portare i posti da "+(gg.max||"?")+" a "+r.n+".":"La squadra non esiste più."));
+      var sr=h("div","row");
+      if(gg){var okb=btn("Approva","sm pri");okb.addEventListener("click",function(){okb.disabled=true;PUT("groups/"+r.gid+"/max",Number(r.n)).then(function(){return DEL("reports/"+ROOM+"/"+k)}).then(function(){LOG("Posti di «"+r.gn+"» portati a "+r.n);gg.max=Number(r.n);delete ST.reports[k];render()}).catch(function(e){okb.disabled=false;fail(e)})});sr.appendChild(okb)}
+      var nob=btn("Rifiuta","sm");nob.addEventListener("click",function(){DEL("reports/"+ROOM+"/"+k).then(function(){LOG("Rifiutata la richiesta posti di «"+r.gn+"»");delete ST.reports[k];render()}).catch(fail)});sr.appendChild(nob);
+      c.appendChild(sr);main.appendChild(c);return;
+    }
     c.appendChild(h("p","m","Da "+(r.bn||"?")+(r.wn?" · contro "+r.wn:"")+" · "+when(r.t)));
     c.appendChild(h("p",null,"“"+(r.m||"")+"”"));
     var row=h("div","row"),slot=h("div");
@@ -460,6 +478,20 @@ function squadPage(gid){
     r.appendChild(l);r.appendChild(act);c.appendChild(r);
   });
   main.appendChild(c);
+  var sc=h("div","card");sc.appendChild(h("p","m","Posti del gruppo: "+(g.max||"nessun limite")+". Da 2 a 10, oppure 10+ fino a 20."));
+  var srow=h("div","row"),ssel=h("select");ssel.style.marginBottom="0";ssel.setAttribute("aria-label","Posti");
+  [2,3,4,5,6,7,8,9,10,"10+"].forEach(function(v){var o=h("option",null,String(v));o.value=String(v);ssel.appendChild(o)});
+  var sin=h("input");sin.type="number";sin.min=11;sin.max=20;sin.placeholder="11–20 (max. 20)";sin.style.marginBottom="0";sin.hidden=true;
+  function syncS(){sin.hidden=ssel.value!=="10+"}ssel.addEventListener("change",syncS);
+  if(g.max>10){ssel.value="10+";sin.value=g.max}else if(g.max>=2)ssel.value=String(g.max);syncS();
+  var sbt=btn("Salva posti","sm pri");sbt.addEventListener("click",function(){
+    var n=ssel.value==="10+"?parseInt(sin.value,10):parseInt(ssel.value,10);
+    if(!(n>=2&&n<=20)||(ssel.value==="10+"&&n<11)){toast("Scegli un numero da 2 a 20.");return}
+    if(n<Object.keys(ms).length){toast("Nel gruppo ci sono già "+Object.keys(ms).length+" persone: rimuovine prima qualcuna.");return}
+    sbt.disabled=true;PUT("groups/"+gid+"/max",n).then(function(){LOG("Posti di «"+g.n+"» portati a "+n);g.max=n;toast("Posti aggiornati.");render()}).catch(function(e){sbt.disabled=false;fail(e)});
+  });
+  srow.appendChild(ssel);srow.appendChild(sin);srow.appendChild(sbt);sc.appendChild(srow);
+  main.appendChild(h("h2",null,"Posti"));main.appendChild(sc);
   main.appendChild(h("h2",null,"Chat"));
   var cc=h("div","card"),slot=h("div");cc.appendChild(btn("Leggi la chat","sm",function(){if(slot.firstChild){slot.textContent="";return}slot.appendChild(chatView(gid,g.n||"?"))}));cc.appendChild(slot);slot.style.marginTop="8px";main.appendChild(cc);
   main.appendChild(h("h2",null,"Gestione"));
