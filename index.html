@@ -319,6 +319,8 @@ a.sp-tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)
 @keyframes tkr{to{transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){.tkr .trk{animation:none}.tkr{overflow-x:auto}}
 @media (min-width:1080px){.tkr{position:absolute;top:0;left:0;right:0}body:has(.tkr:not([hidden])){padding-top:36px}}
+.gfoot{display:flex;margin:0 0 14px;font-size:13px}
+.gfoot[hidden]{display:none}
 </style>
 </head>
 <body class="boot">
@@ -340,6 +342,7 @@ a.sp-tile:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)
 <div id="toast" role="status" aria-live="polite"></div>
 <main class="wrap" id="app"></main>
 <footer>
+<p class="gcnt gfoot" id="gcnt" title="Gruppi attivi in questo momento" hidden><span class="led"></span><span>gruppi: —</span></p>
 <button id="reset" type="button">Azzera i miei progressi</button>
 <div class="adm-foot" id="admFoot" hidden><button type="button" id="admBtn" class="lnk">Accesso amministratore</button><div id="admSlot"></div></div>
 </footer>
@@ -971,7 +974,7 @@ function gcntTxt(){return GCNT===null?"gruppi: —":GCNT+(GCNT===1?" gruppo atti
 function loadGcnt(){
   if(!DB_URL||document.hidden)return;
   getJ(DB_URL.replace(/\/+$/,"")+"/groups.json?shallow=true").then(function(o){GCNT=o&&typeof o==="object"?Object.keys(o).length:0}).catch(function(){GCNT=null}).then(function(){
-    var g=$("gcnt");if(g&&g.lastChild){g.firstChild.className="led"+(GCNT===null?"":" on");g.lastChild.textContent=gcntTxt()}
+    var g=$("gcnt");if(g&&g.lastChild){g.hidden=GCNT===null;g.firstChild.className="led"+(GCNT===null?"":" on");g.lastChild.textContent=gcntTxt()}
   });
 }
 function chUrl(gid,k){return DB_URL.replace(/\/+$/,"")+"/chats/"+gid+(k?"/"+k:"")+".json"}
@@ -1395,7 +1398,7 @@ function deleteGroupAdmin(gid){
 }
 function groupsBox(){
   var b=h("section","box gbox"),gh=h("div","gh");gh.appendChild(h("p","k","Le tue squadre"));
-  var gc=h("span","gcnt"),ld=h("span","led"+(GCNT===null?"":" on")),gt=h("span",null,gcntTxt());gc.id="gcnt";gc.appendChild(ld);gc.appendChild(gt);gc.title="Gruppi attivi in questo momento";gh.appendChild(gc);b.appendChild(gh);
+  b.appendChild(gh);
   var chips=h("div","chips"),all=h("button","chip",isAdmin()?"Tutti gli amici":"I miei amici");all.type="button";all.setAttribute("aria-pressed",!S.cg);all.addEventListener("click",function(){enterGroup("")});chips.appendChild(all);
   Object.keys(UG||{}).forEach(function(g){var c=h("button","chip",UG[g]);c.type="button";c.setAttribute("aria-pressed",S.cg===g);c.addEventListener("click",function(){enterGroup(g)});chips.appendChild(c)});
   b.appendChild(chips);
