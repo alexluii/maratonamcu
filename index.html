@@ -345,6 +345,14 @@ body:has(.tkr:not([hidden])) .adm-pill{top:46px}
 .pubsw.on{border-color:var(--amber);color:var(--ink)}.pubsw.on svg{color:#1f9d55}
 .pubnote{margin:2px 0 8px;font-size:13px}
 .addf{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.sqs{margin:10px 0 8px;display:flex;flex-direction:column;gap:6px}
+.sqh{margin:0 0 2px}
+.sqrow{display:flex;align-items:center;gap:12px;width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font:600 15px "Instrument Sans",system-ui,sans-serif;text-align:left;cursor:pointer}
+.sqrow:hover{border-color:var(--mute)}
+.sqrow.on{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+.sqav{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--line);color:#fff;font:900 15px "Big Shoulders Display",Impact,sans-serif}
+.sqrow:first-of-type .sqav{background:var(--line);color:var(--ink)}
+.sqn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sqd{margin:8px 0;border:2px solid var(--line);border-radius:12px;padding:0 12px}
 .sqd summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:700;list-style:none}
 .sqd summary::-webkit-details-marker{display:none}
@@ -1724,7 +1732,7 @@ function ico(d){
   v.setAttribute("fill","none");v.setAttribute("stroke","currentColor");v.setAttribute("stroke-width","2");v.setAttribute("stroke-linecap","round");v.setAttribute("stroke-linejoin","round");
   d.split("|").forEach(function(x){var p=document.createElementNS(ns,"path");p.setAttribute("d",x);v.appendChild(p)});return v;
 }
-var IC_ADDP="M15 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1|M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7|M19 8v6|M16 11h6",IC_GNEW="M12 5v14|M5 12h14",IC_CODE="M4 12h12|M12 6l6 6-6 6|M20 4v16",IC_FLAG="M5 21V4|M5 4h12l-2.5 4L17 12H5",IC_LOCK="M6 11h12v9H6z|M8 11V8a4 4 0 0 1 8 0v3",IC_UNL="M6 11h12v9H6z|M8 11V8a4 4 0 0 1 7.5-1.5",IC_OK="M5 12.5l4.5 4.5L19 7",IC_NO="M6 6l12 12|M18 6L6 18";
+var IC_ADDP="M15 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1|M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7|M19 8v6|M16 11h6",IC_GNEW="M12 5v14|M5 12h14",IC_CODE="M4 12h12|M12 6l6 6-6 6|M20 4v16",IC_PPL="M15 20v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1|M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7",IC_FLAG="M5 21V4|M5 4h12l-2.5 4L17 12H5",IC_LOCK="M6 11h12v9H6z|M8 11V8a4 4 0 0 1 8 0v3",IC_UNL="M6 11h12v9H6z|M8 11V8a4 4 0 0 1 7.5-1.5",IC_OK="M5 12.5l4.5 4.5L19 7",IC_NO="M6 6l12 12|M18 6L6 18";
 function groupsBox(){
   var b=h("section","box gbox"),gh=h("div","gh");gh.appendChild(h("p","k","Amici"));
   if(!isAdmin()){
@@ -1766,12 +1774,17 @@ function groupsBox(){
     ab.addEventListener("click",go);ai.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();go()}});
     af.appendChild(ai);af.appendChild(ab);b.appendChild(af);
   }
-  var ng=Object.keys(UG||{}).length,dt=h("details","sqd"),sm=h("summary",null,"Squadre"+(ng?" ("+ng+")":"")+(S.cg&&UG[S.cg]?" · "+UG[S.cg]:""));
-  dt.appendChild(sm);
-  var lst=h("div","sqlist"),all=h("button","chip",isAdmin()?"Tutti gli amici":"I miei amici");all.type="button";all.setAttribute("aria-pressed",String(!S.cg));all.addEventListener("click",function(){enterGroup("")});lst.appendChild(all);
-  Object.keys(UG||{}).forEach(function(g){var c=h("button","chip",UG[g]);c.type="button";c.setAttribute("aria-pressed",String(S.cg===g));c.addEventListener("click",function(){enterGroup(g)});lst.appendChild(c)});
-  if(!ng)lst.appendChild(h("p","m","Non fai ancora parte di nessuna squadra."));
-  dt.appendChild(lst);if(ng&&!S.cg)dt.open=true;b.appendChild(dt);
+  var ng=Object.keys(UG||{}).length,sq=h("div","sqs");
+  sq.appendChild(h("p","k sqh","Squadre"));
+  function sqRow(label,gid){
+    var on=gid?S.cg===gid:!S.cg,r=h("button","sqrow"+(on?" on":""));r.type="button";r.setAttribute("aria-pressed",String(on));
+    var av=h("span","sqav");if(gid){av.textContent=(label||"?").charAt(0).toUpperCase();av.style.background="hsl("+hue(gid)+" 55% 36%)"}else{av.appendChild(ico(IC_PPL))}
+    r.appendChild(av);r.appendChild(h("span","sqn",label));r.addEventListener("click",function(){enterGroup(gid||"")});return r;
+  }
+  sq.appendChild(sqRow(isAdmin()?"Tutti gli amici":"I miei amici",""));
+  Object.keys(UG||{}).forEach(function(g){sq.appendChild(sqRow(UG[g],g))});
+  if(!ng)sq.appendChild(h("p","m","Non fai ancora parte di nessuna squadra."));
+  b.appendChild(sq);
   if(S.cg){
     var role=myRole(),nm=(GR&&GR.n)||UG[S.cg]||"",cnt=Object.keys(GM||{}).length;
     var wa=h("div","wa"),hd=h("div","wh"),bk=h("button","wb","‹");bk.type="button";bk.setAttribute("aria-label","Torna a tutti gli amici");bk.addEventListener("click",function(){enterGroup("")});
