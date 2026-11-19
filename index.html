@@ -108,7 +108,7 @@ li.u label{cursor:default;border-left-style:dashed}
 .box input,.box textarea{display:block;width:100%;margin:0 0 10px;padding:13px 14px;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:12px}
 .box textarea{resize:vertical;word-break:break-all;font-size:13px}
 .fr{position:relative;display:grid;grid-template-columns:48px 1fr;gap:14px;align-items:center;margin:10px 0 0;padding:14px;background:var(--panel);border-radius:16px}
-.fr.me{box-shadow:inset 0 0 0 2px var(--amber)}
+.fr.pinned{box-shadow:inset 0 0 0 2px var(--line)}.fr button.pnb.on{color:var(--ink);border-color:var(--amber)}.fr.me{box-shadow:inset 0 0 0 2px var(--amber)}
 .av{position:relative;width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--red);font:900 24px "Big Shoulders Display",Impact,sans-serif}
 .rk{position:absolute;right:-5px;bottom:-5px;min-width:20px;height:20px;padding:0 5px;border:2px solid var(--panel);border-radius:10px;background:var(--ink);color:var(--bg);font:700 11px/16px "Instrument Sans",system-ui,sans-serif;text-align:center}
 .rk.first{background:var(--amber);color:#0b1030}
@@ -1382,6 +1382,16 @@ function drawStrip(el){
   });
   el.onpointerleave=function(e){if(e.pointerType!=="mouse")return;clearTimeout(HT);HT=setTimeout(function(){show(pinned)},600)};
 }
+var PIN_MAX=4;
+function pinKey(){return"mcu-pins-"+(S.me&&S.me.i)}
+function pinGet(){var a=[];try{a=JSON.parse(localStorage.getItem(pinKey())||"[]")}catch(e){}if(!Array.isArray(a))a=[];return a.filter(function(k){return FR&&typeof FR[k]==="string"}).slice(0,PIN_MAX)}
+function pinSet(a){try{localStorage.setItem(pinKey(),JSON.stringify(a.slice(0,PIN_MAX)))}catch(e){}}
+function pinToggle(id){
+  var a=pinGet(),i=a.indexOf(id);
+  if(i>=0)a.splice(i,1);
+  else{if(a.length>=PIN_MAX){msg(ct("Puoi fissare al massimo "+PIN_MAX+" amici: sblocca prima qualcuno.","You can pin up to "+PIN_MAX+" friends: unpin someone first."));return}a.unshift(id)}
+  pinSet(a);drawList();
+}
 function drawList(){
   var el=$("fl");if(!el)return;
   var cg=(tab==="am")?"":S.cg;
@@ -1393,8 +1403,10 @@ function drawList(){
   if(amF&&FR){Object.keys(FR).forEach(function(k){if(k!=="_i"&&typeof FR[k]==="string"&&k!==S.me.i&&!list.some(function(x){return x.id===k}))list.push({id:k,n:FR[k],d:[],u:0})})}
   if(amF){list=list.filter(function(f){if(FSEL)return f.id===FSEL;if(FQT)return String(f.n||"").toLowerCase().indexOf(FQT)>=0||dn(f.n).toLowerCase().indexOf(FQT)>=0;return true})}
   list.sort(function(a,b){return b.d.length-a.d.length});
+  var PINS=amF?pinGet():[];
+  if(PINS.length)list.sort(function(a,b){var x=PINS.indexOf(a.id),y=PINS.indexOf(b.id);if(x<0&&y<0)return 0;if(x<0)return 1;if(y<0)return -1;return x-y});
   list.forEach(function(f,ri){
-    var d=h("div","fr"+(f.me?" me":"")),av=h("div","av",(f.n||"?").charAt(0).toUpperCase());av.style.background="hsl("+hue(f.id)+" 55% 36%)";avFill(av,f.id,f.n);d.style.setProperty("--n",ri);if(list.length>1)av.appendChild(h("span","rk"+(ri===0?" first":""),String(ri+1)));
+    var d=h("div","fr"+(f.me?" me":"")),av=h("div","av",(f.n||"?").charAt(0).toUpperCase());av.style.background="hsl("+hue(f.id)+" 55% 36%)";avFill(av,f.id,f.n);d.style.setProperty("--n",ri);if(list.length>1)av.appendChild(h("span","rk"+(ri===0&&PINS.indexOf(f.id)<0?" first":""),PINS.indexOf(f.id)>=0?"📌":String(ri+1)));
     var body=h("div"),top=h("b");
     top.appendChild(h("span",null,(f.me?dn(f.n)+" (tu)":dn(f.n))+(cg&&GM[f.id]&&(GM[f.id].r==="owner"||GM[f.id].r==="admin")?" ★":"")));top.appendChild(h("span",null,f.d.length+"/"+total));
     var bar=h("div","bar"),fi=h("i");fi.style.width=(100*f.d.length/total)+"%";bar.appendChild(fi);
@@ -1439,6 +1451,13 @@ function drawList(){
       });fx.appendChild(fr2);body.appendChild(fx);
     }
     var rgp=Math.round(100*f.d.length/Math.max(1,total)),rgk=f.id+":"+rgp,rg=h("span","ring"+(RGS[rgk]?"":" rga"));RGS[rgk]=1;rg.style.setProperty("--p",rgp);rg.appendChild(av);
+    if(amF&&!f.me){
+      var pd=PINS.indexOf(f.id)>=0,px=body.querySelector(".adm");
+      if(!px){px=h("div","adm");body.appendChild(px)}
+      var pb=h("button","pnb"+(pd?" on":""),pd?ct("📌 Sblocca","📌 Unpin"):ct("📌 Fissa in alto","📌 Pin to top"));pb.type="button";pb.setAttribute("data-nt","1");pb.setAttribute("aria-pressed",String(pd));
+      pb.addEventListener("click",function(){pinToggle(f.id)});px.appendChild(pb);
+      if(pd)d.classList.add("pinned");
+    }
     d.appendChild(rg);d.appendChild(body);el.appendChild(d);
   });
   if(!cg&&!isAdmin()&&list.length===(amF?0:1)&&!FSEL&&!FQT&&FRO===S.me.i&&!FRLEG)el.appendChild(h("p","m","Non hai ancora amici in lista. Scrivi il nome di un amico qui sopra e mandagli la richiesta."));
@@ -1780,8 +1799,9 @@ function avBox(){
 
 /* ===== NOVITA' DEL SITO (popup) ===== */
 /* Ad ogni modifica visibile agli utenti: aumenta NEWS_V e aggiungi una voce in NEWS (it + en). Mai cose che riguardano l'amministratore. */
-var NEWS_V=22,NEWS=[
- {v:22,d:"2026-11-19",ic:"💓",ti:{it:"Qualcosa sta battendo forte",en:"Something is beating hard"},tx:{it:"In prima pagina c’è qualcosa che sta battendo forte… toccalo più volte, e di fila. Chi lo trova scopre un segreto: ma attenzione, poi non si può dimenticare quello che si legge.",en:"On the first page something is beating hard… tap it several times, in a row. Whoever finds it discovers a secret, but be careful: you can’t unread what you read."}},
+var NEWS_V=23,NEWS=[
+ {v:23,d:"2026-11-19",ic:"📌",ti:{it:"Fissa i tuoi amici",en:"Pin your friends"},tx:{it:"Nella scheda Amici puoi fissare in alto fino a 4 amici, come su WhatsApp: tocca “📌 Fissa in alto” sotto il nome. Per toglierlo tocca “Sblocca”.",en:"In the Friends tab you can pin up to 4 friends to the top, like on WhatsApp: tap “📌 Pin to top” under their name. Tap “Unpin” to remove it."}},
+ {v:22,d:"2026-11-19",ic:"💓",pin:1,ti:{it:"Qualcosa sta battendo forte",en:"Something is beating hard"},tx:{it:"In prima pagina c’è qualcosa che sta battendo forte… toccalo più volte, e di fila. Chi lo trova scopre un segreto: ma attenzione, poi non si può dimenticare quello che si legge.",en:"On the first page something is beating hard… tap it several times, in a row. Whoever finds it discovers a secret, but be careful: you can’t unread what you read."}},
  {v:21,d:"2026-11-19",ic:"⭐",ti:{it:"Chi ha dato le stelle",en:"Who gave the stars"},tx:{it:"Tocca “Media amici” sotto un film per vedere chi ha votato e quante stelle ha dato.",en:"Tap “Friends’ average” under a film to see who voted and how many stars they gave."}},
  {v:20,d:"2026-11-19",ic:"🛡️",hero:1,ti:{it:"Più colore, più magia",en:"More colour, more magic"},tx:{it:"Anello di avanzamento attorno alle foto di amici e profilo, un colore diverso per ogni era, @tag che brilla quando il messaggio è per te, polvere cosmica in Amici e Gruppo, titolo che si accende al passaggio del mouse e lo scudo di Capitan America che si ferma sul film che segni.",en:"A progress ring around friends’ and profile photos, a different colour for every era, an @tag that glows when the message is for you, cosmic dust in Friends and Group, a poster title that lights up on hover, and Captain America’s shield landing on the film you mark."},chips:{it:["Anello","Colori per era","Scudo"],en:["Ring","Era colours","Shield"]}},
  {v:19,d:"2026-11-19",ic:"✨",hero:1,ti:{it:"Effetti nuovi",en:"New effects"},tx:{it:"Reazioni con emoji ai messaggi dei gruppi e lo “schiocco” di Thanos: quando togli la spunta a un film o svuoti qualcosa, tutto si dissolve in polvere.",en:"Emoji reactions on group messages, and Thanos’ “snap”: when you untick a film or clear something, it all turns to dust."},chips:{it:["Reazioni","Schiocco"],en:["Reactions","The snap"]}},
@@ -1825,7 +1845,7 @@ function newsPanel(){
   function close(){newsMark();ov.remove();newsOpen=false;newsCheck()}
   x.addEventListener("click",close);ov.addEventListener("click",function(e){if(e.target===ov)close()});
   var list=h("div","nwl");
-  NEWS.map(function(n,i){return{n:n,i:i}}).sort(function(a,c){return c.n.v-a.n.v||a.i-c.i}).forEach(function(o){
+  NEWS.filter(function(n){return !(n.pin&&SPF)}).map(function(n,i){return{n:n,i:i}}).sort(function(a,c){return (a.n.pin?1:0)-(c.n.pin?1:0)||c.n.v-a.n.v||a.i-c.i}).forEach(function(o){
     var n=o.n,isNew=n.v>seen,card=h("div","nw"+(isNew?" nwnew":"")+(n.hero?" nwhero":""));
     var ic=h("span","nwi",n.ic||"•");card.appendChild(ic);
     var body=h("div","nwb"),tp=h("div","nwt");tp.appendChild(h("b",null,EN?n.ti.en:n.ti.it));
