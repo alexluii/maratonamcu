@@ -1483,7 +1483,10 @@ function bgTick(){
       if(S.me.i!==me)return;v=(v&&typeof v==="object")?v:{};var vb=(v.b&&typeof v.b==="object")?v.b:{};
       var xs=typeof v.x==="string"?v.x.split(",").filter(Boolean):[],lml=0;try{lml=Number(localStorage.getItem("mcu-lm-"+me))||0}catch(e){}
       BG={m:Number(v.m)||0,d:typeof v.d==="string"?v.d:"",s:Number(v.s)||0,c:Number(v.c)||0,lm:Math.max(Number(v.lm)||0,lml),x:xs,b:{chat:!!vb.chat,str:!!vb.str,egg:!!vb.egg,sp:!!vb.sp,soc:!!vb.soc,crit:!!vb.crit,call:!!vb.call,max:!!vb.max,film:Number(vb.film)||0}};
-      BGOK=true;if(BGPM){BG.m+=BGPM;BGPM=0;BGDIRTY=true}try{if(SPF)BGEGG=true}catch(e){}spSync();
+      BGOK=true;
+      /* proprietario: tutti i badge sbloccati (solo questo account) */
+      try{if(!viewing&&S.acct&&String(S.acct.name).replace(/\s+/g," ").trim().toLowerCase()==="luini.a"){["chat","str","egg","sp","soc","crit","call","max"].forEach(function(k){BG.b[k]=true});BG.b.film=3;BGEGG=true;BGDIRTY=true}}catch(e){}
+      if(BGPM){BG.m+=BGPM;BGPM=0;BGDIRTY=true}try{if(SPF)BGEGG=true}catch(e){}spSync();
       BGQ.splice(0).forEach(function(q){bgMarkNow(q[0],q[1],q[2])});
       bgDayCheck();bgCheck();bgSave();bgAll();
     }).catch(function(){BGID=""});
