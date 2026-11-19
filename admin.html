@@ -105,7 +105,7 @@ input[type=text],input[type=search],select,textarea{width:100%;min-height:44px;p
 </div>
 
 <div id="app" hidden>
-  <header class="top"><h1 id="ttl">Oggi</h1><a id="site" href="./">‹ Sito</a><button id="rf" type="button">Aggiorna</button><button id="out" type="button">Esci</button></header>
+  <header class="top"><h1 id="ttl">Oggi</h1><a id="site" href="./">‹ Sito</a><button id="tst" type="button" title="Entra nel sito come un nuovo utente di prova">Prova sito</button><button id="rf" type="button">Aggiorna</button><button id="out" type="button">Esci</button></header>
   <main id="main"></main>
   <nav class="tabs" id="tabs" aria-label="Sezioni"></nav>
 </div>
@@ -593,6 +593,17 @@ function exit(){try{sessionStorage.removeItem(SK);localStorage.removeItem(SK)}ca
 document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest('a[href="./"]');if(a){try{sessionStorage.removeItem(SK);localStorage.removeItem(SK)}catch(x){}SES=null}},true);
 ["pointerdown","keydown","touchstart"].forEach(function(ev){window.addEventListener(ev,function(){if(SES){SES.u=Date.now()+30*60*1000;saveSes()}},{passive:true,capture:true})});
 $("out").addEventListener("click",exit);
+/* account di prova: ti porta nel sito come un utente nuovo; all'uscita si cancella e torni qui */
+$("tst").addEventListener("click",function(){
+  if(!SES)return;
+  var ls={},u2=null,s=null;
+  ["mcu-spf","mcu-spm"].forEach(function(k){try{ls[k]=localStorage.getItem(k)}catch(e){}});
+  try{u2=JSON.parse(localStorage.getItem("mcu-u2")||"null")}catch(e){}
+  try{s=JSON.parse(localStorage.getItem("mcu-codici-v1")||"null")}catch(e){}
+  var bak={pending:1,fa:1,u2:u2,s:s,fbt:{t:SES.t,r:SES.r,x:SES.x,uid:SES.uid||UID},u:SES.u,ls:ls};
+  try{sessionStorage.setItem("mcu-test",JSON.stringify(bak));sessionStorage.removeItem(SK)}catch(e){toast("Non riesco a preparare l’account di prova.");return}
+  SES=null;location.href="./index.html";
+});
 $("rf").addEventListener("click",function(){load().then(function(){render();toast("Aggiornato.")}).catch(function(){toast("Non riesco ad aggiornare.")})});
 $("lf").addEventListener("submit",function(ev){
   ev.preventDefault();var b=$("lb"),m=$("lm");b.disabled=true;m.textContent="Un attimo…";

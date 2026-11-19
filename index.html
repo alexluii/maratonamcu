@@ -1300,22 +1300,32 @@ function testStart(){
     msg("Account di prova non creato ("+(e&&e.message||"errore")+").");
   });
 }
+function testRestore(bak){
+  try{
+    if(bak.u2){bak.u2.a=Date.now();localStorage.setItem(U2K,JSON.stringify(bak.u2))}else localStorage.removeItem(U2K);
+    if(bak.s)localStorage.setItem(K,JSON.stringify(bak.s));else localStorage.removeItem(K);
+    Object.keys(bak.ls||{}).forEach(function(k){if(bak.ls[k]===null||bak.ls[k]===undefined)localStorage.removeItem(k);else localStorage.setItem(k,bak.ls[k])});
+    if(bak.fbt&&bak.fbt.r)sessionStorage.setItem(ADM_KEY,JSON.stringify({t:bak.fbt.t,r:bak.fbt.r,x:bak.fbt.x,uid:bak.fbt.uid,u:Date.now()+30*60000}));
+    sessionStorage.removeItem(TKEY);
+  }catch(e){}
+}
 function testExit(){
   var bak=testRaw();if(!bak)return;
   var t=bak.t||null;
   function fin(){
-    try{
-      if(t)localStorage.setItem(TDEL,JSON.stringify(t));
-      var u2=bak.u2||null;if(u2)u2.a=Date.now();
-      if(u2)localStorage.setItem(U2K,JSON.stringify(u2));
-      localStorage.setItem(K,JSON.stringify(bak.s));
-      Object.keys(bak.ls||{}).forEach(function(k){if(bak.ls[k]===null||bak.ls[k]===undefined)localStorage.removeItem(k);else localStorage.setItem(k,bak.ls[k])});
-      if(bak.fbt&&bak.u>Date.now())sessionStorage.setItem(ADM_KEY,JSON.stringify({t:bak.fbt.t,r:bak.fbt.r,x:bak.fbt.x,uid:bak.fbt.uid,u:bak.u}));
-      sessionStorage.removeItem(TKEY);
-    }catch(e){}
-    location.reload();
+    try{if(t){t.fa=bak.fa?1:0;localStorage.setItem(TDEL,JSON.stringify(t))}}catch(e){}
+    testRestore(bak);location.reload();
   }
   (U2?u2token().then(function(tk){return u2call("delete",{idToken:tk})}):Promise.resolve()).catch(function(){}).then(fin);
+}
+function testBoot(){
+  var bak=testRaw();if(!bak||!bak.pending||!DB_URL)return;
+  delete bak.pending;try{sessionStorage.setItem(TKEY,JSON.stringify(bak))}catch(e){}
+  FBT=null;ADM_UNTIL=0;admClear();U2=null;
+  var nm="prova"+hex(3),pw="Pv-"+hex(10);
+  doCreate(nm,pw).then(function(){
+    return nkOf(nm).then(function(nk){bak.t={uid:S.me.i,name:nm,nk:nk};sessionStorage.setItem(TKEY,JSON.stringify(bak));location.reload()});
+  }).catch(function(){testRestore(bak);location.href=bak.fa?"./admin.html":"./"});
 }
 function testBar(){
   var b=document.getElementById("testbar");
@@ -1345,9 +1355,9 @@ function testClean(){
       if(nk)del(aUrl(nk));
       var seq=Promise.resolve();tasks.forEach(function(f){seq=seq.then(f)});return seq;
     });
-  }).then(function(){try{localStorage.removeItem(TDEL)}catch(e){}TCL=false}).catch(function(){TCL=false});
+  }).then(function(){try{localStorage.removeItem(TDEL)}catch(e){}TCL=false;if(t.fa){try{if(sessionStorage.getItem(ADM_KEY))location.href="./admin.html"}catch(e){}}}).catch(function(){TCL=false});
 }
-setTimeout(testClean,4500);setInterval(testClean,30000);
+setTimeout(testBoot,200);setTimeout(testClean,900);setInterval(testClean,30000);
 /* ===== OCCHIETTO PASSWORD ===== */
 (function(){
   var OPEN='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
