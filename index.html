@@ -402,7 +402,7 @@ html.spm h1 .ln{overflow:visible}html.spm h1 .ln:last-child{display:flex;align-i
 .spc i{display:block;font:700 10px/1 "Orbitron",system-ui,sans-serif;letter-spacing:.2em;color:#ff2bd6;font-style:normal;margin-bottom:5px;text-shadow:0 0 6px #ff2bd6}
 .spc.w{border-color:var(--line);box-shadow:none;background:transparent;color:var(--mute)}
 .spc.w i{color:var(--mute);text-shadow:none}
-.spsw{display:inline-flex;align-items:center;gap:10px;margin:8px 0 0;font:600 13px/1 "Instrument Sans",system-ui,sans-serif;color:var(--mute)}
+.spdot{display:block;width:10px;height:10px;margin:12px 0 0 4px;padding:0;border:0;border-radius:50%;background:#ff2b4a;box-shadow:0 0 8px #ff2b4a;cursor:pointer;opacity:.9}.spdot:before{content:"";position:absolute;margin:-12px 0 0 -12px;width:34px;height:34px}.spsw{display:inline-flex;align-items:center;gap:10px;margin:8px 0 0;font:600 13px/1 "Instrument Sans",system-ui,sans-serif;color:var(--mute)}
 .spsw button{position:relative;width:46px;height:26px;border-radius:13px;border:2px solid var(--line);background:var(--track);cursor:pointer;padding:0;transition:.2s}
 .spsw button:after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--mute);transition:.2s}
 .spsw button[aria-checked="true"]{border-color:#00f0ff;background:rgba(0,240,255,.25);box-shadow:0 0 10px #00f0ff}
@@ -1249,6 +1249,10 @@ function spApply(on){
 function spSwitch(){
   var el=document.getElementById("spslot");if(!el)return;el.textContent="";
   if(!SPF&&!SPM)return;
+  if(!SPM){
+    var dt=document.createElement("button");dt.type="button";dt.className="spdot";dt.setAttribute("data-nt","1");dt.setAttribute("aria-label","Spoiler mode");dt.title="Spoiler mode";
+    dt.addEventListener("click",spAsk);el.appendChild(dt);return;
+  }
   var w=document.createElement("span");w.className="spsw";w.setAttribute("data-nt","1");
   var lb=document.createElement("span");lb.textContent="Spoiler mode";
   var b=document.createElement("button");b.type="button";b.setAttribute("role","switch");b.setAttribute("aria-checked",String(SPM));b.setAttribute("aria-label","Spoiler mode");
@@ -1775,7 +1779,8 @@ function avBox(){
 
 /* ===== NOVITA' DEL SITO (popup) ===== */
 /* Ad ogni modifica visibile agli utenti: aumenta NEWS_V e aggiungi una voce in NEWS (it + en). Mai cose che riguardano l'amministratore. */
-var NEWS_V=21,NEWS=[
+var NEWS_V=22,NEWS=[
+ {v:22,d:"2026-11-19",ic:"💓",ti:{it:"Qualcosa sta battendo forte",en:"Something is beating hard"},tx:{it:"In prima pagina c’è qualcosa che sta battendo forte… toccalo più volte, e di fila. Chi lo trova scopre un segreto: ma attenzione, poi non si può dimenticare quello che si legge.",en:"On the first page something is beating hard… tap it several times, in a row. Whoever finds it discovers a secret, but be careful: you can’t unread what you read."}},
  {v:21,d:"2026-11-19",ic:"⭐",ti:{it:"Chi ha dato le stelle",en:"Who gave the stars"},tx:{it:"Tocca “Media amici” sotto un film per vedere chi ha votato e quante stelle ha dato.",en:"Tap “Friends’ average” under a film to see who voted and how many stars they gave."}},
  {v:20,d:"2026-11-19",ic:"🛡️",hero:1,ti:{it:"Più colore, più magia",en:"More colour, more magic"},tx:{it:"Anello di avanzamento attorno alle foto di amici e profilo, un colore diverso per ogni era, @tag che brilla quando il messaggio è per te, polvere cosmica in Amici e Gruppo, titolo che si accende al passaggio del mouse e lo scudo di Capitan America che si ferma sul film che segni.",en:"A progress ring around friends’ and profile photos, a different colour for every era, an @tag that glows when the message is for you, cosmic dust in Friends and Group, a poster title that lights up on hover, and Captain America’s shield landing on the film you mark."},chips:{it:["Anello","Colori per era","Scudo"],en:["Ring","Era colours","Shield"]}},
  {v:19,d:"2026-11-19",ic:"✨",hero:1,ti:{it:"Effetti nuovi",en:"New effects"},tx:{it:"Reazioni con emoji ai messaggi dei gruppi e lo “schiocco” di Thanos: quando togli la spunta a un film o svuoti qualcosa, tutto si dissolve in polvere.",en:"Emoji reactions on group messages, and Thanos’ “snap”: when you untick a film or clear something, it all turns to dust."},chips:{it:["Reazioni","Schiocco"],en:["Reactions","The snap"]}},
