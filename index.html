@@ -1638,7 +1638,8 @@ function avBox(){
 
 /* ===== NOVITA' DEL SITO (popup) ===== */
 /* Ad ogni modifica visibile agli utenti: aumenta NEWS_V e aggiungi una voce in NEWS (it + en). Mai cose che riguardano l'amministratore. */
-var NEWS_V=17,NEWS=[
+var NEWS_V=18,NEWS=[
+ {v:18,d:"2026-11-19",ic:"🛟",ti:{it:"Aiuto nella guida",en:"Help in the tour"},tx:{it:"La guida ora ha un passaggio che mostra dove chiedere aiuto quando qualcosa non va.",en:"The tour now has a step showing where to ask for help when something goes wrong."}},
  {v:17,d:"2026-11-19",ic:"👆",ti:{it:"Guida più facile da trovare",en:"Tour easier to find"},tx:{it:"Il pulsante “Rivedi la guida” ora è in cima alle novità.",en:"The “Replay the tour” button is now at the top of What’s new."}},
  {v:16,d:"2026-11-19",ic:"🧭",hero:1,ti:{it:"Guida di benvenuto",en:"Welcome tour"},tx:{it:"Chi crea un account ora trova una breve guida che evidenzia i pulsanti del sito e spiega a cosa servono: Lista, Amici, Gruppo, Profilo, campanella e novità. In cima a queste novità puoi rivederla quando vuoi.",en:"New accounts now get a short tour that highlights the site’s buttons and explains what they do: List, Friends, Group, Profile, bell and what’s new. You can replay it any time at the top of this panel."},chips:{it:["Evidenzia i pulsanti","Si può saltare","Rivedibile"],en:["Highlights the buttons","Can be skipped","Replayable"]}},
  {v:15,d:"2026-11-18",ic:"⏳",ti:{it:"Amicizie in sospeso",en:"Pending friend requests"},tx:{it:"Nella scheda Amici vedi le richieste che hai mandato. Appena l’altra persona accetta, spariscono da lì e la trovi tra i tuoi amici.",en:"In the Friends tab you can see the requests you’ve sent. As soon as the other person accepts, they disappear from there and show up among your friends."}},
@@ -1713,6 +1714,7 @@ function trSteps(){
    {el:"tIo",tb:"io",t:ct("Lista","List"),x:ct("Tutti i film e le serie in ordine cronologico. Tocca un titolo per segnarlo come visto: il tuo avanzamento si aggiorna da solo.","All the films and series in chronological order. Tap a title to mark it as watched: your progress updates by itself.")},
    {el:"tAm",tb:"am",t:ct("Amici","Friends"),x:ct("Cerca un nome e manda la richiesta. Quando l’altro accetta vedi quanti film ha visto e, con il pallino verde, se è online.","Search a name and send a request. Once they accept, you see how many films they’ve watched and, with the green dot, whether they’re online.")},
    {el:"tGr",tb:"gr",t:ct("Gruppo","Group"),x:ct("Crea un gruppo o entra con un codice. In chat scrivi @ per taggare qualcuno e puoi avviare una chiamata vocale.","Create a group or join with a code. In the chat type @ to tag someone, and you can start a voice call.")},
+   {el:"admWrite",tb:"gr",cg0:1,t:ct("Serve aiuto?","Need help?"),x:ct("Per qualsiasi problema o domanda scrivi all’amministratore da questo pulsante: ti risponde appena può. Puoi anche segnalare un messaggio dal menu ⋯ in chat, o una persona dal suo profilo.","For any problem or question, write to the administrator with this button: you’ll get a reply as soon as possible. You can also report a message from the ⋯ menu in chat, or a person from their profile.")},
    {el:"tPr",tb:"pr",t:ct("Profilo","Profile"),x:ct("Carica la tua foto e scegli se il profilo è pubblico o privato.","Upload your photo and choose whether your profile is public or private.")},
    {el:"bell",tb:"io",t:ct("Campanella","Bell"),x:ct("Qui arrivano le richieste di amicizia e gli avvisi. Lo storico lo puoi cancellare quando vuoi.","Friend requests and notices arrive here. You can clear the history whenever you like.")},
    {el:"infoBtn",tb:"io",t:ct("Novità","What’s new"),x:ct("Qui leggi le novità del sito man mano che arrivano, e puoi rivedere questa guida.","Read what’s new on the site here as it arrives, and replay this tour any time."),b:ct("Fine","Done")}
@@ -1721,7 +1723,7 @@ function trSteps(){
 function trUsable(id){var e=$(id);if(!e)return null;var r=e.getBoundingClientRect();return r.width>0&&r.height>0?e:null}
 function trEnd(){if(!TR)return;trMark();TR.ov.remove();TR=null;window.removeEventListener("resize",trPlace);document.removeEventListener("keydown",trKey2);document.body.classList.remove("touring");try{tab="io";render()}catch(e){}}
 function trKey2(e){if(!TR)return;if(e.key==="Escape")trEnd();else if(e.key==="ArrowRight"||e.key==="Enter"){if(document.activeElement&&document.activeElement.tagName==="BUTTON")return;trGo(1)}else if(e.key==="ArrowLeft")trGo(-1)}
-function trOk(i){var q=TR.st[i];if(!q.el)return true;if(q.tb&&tab!==q.tb){try{tab=q.tb;render()}catch(e){}}return!!trUsable(q.el)}
+function trOk(i){var q=TR.st[i];if(!q.el)return true;if(q.tb&&(tab!==q.tb||(q.cg0&&S.cg))){try{tab=q.tb;if(q.cg0)S.cg="";render()}catch(e){}}return!!trUsable(q.el)}
 function trGo(d){
   if(!TR)return;var n=TR.i+d;
   while(n>=0&&n<TR.st.length&&!trOk(n))n+=d;
@@ -1731,7 +1733,7 @@ function trGo(d){
 }
 function trDraw(){
   var st=TR.st[TR.i],last=TR.i===TR.st.length-1;
-  if(st.tb){try{if(tab!==st.tb){tab=st.tb;render()}}catch(e){}}
+  if(st.tb){try{if(tab!==st.tb||(st.cg0&&S.cg)){tab=st.tb;if(st.cg0)S.cg="";render()}}catch(e){}}
   var c=TR.card;c.textContent="";
   c.appendChild(h("p","trn",(TR.i+1)+" / "+TR.st.length));
   c.appendChild(h("h3",null,st.t));c.appendChild(h("p","trx",st.x));
@@ -2733,7 +2735,7 @@ function groupsBox(){
   bj.appendChild(ico(IC_CODE));bj.appendChild(document.createTextNode(" Entra con il codice"));
   bn.addEventListener("click",function(){wrap.textContent="";wrap.appendChild(requestForm())});
   bj.addEventListener("click",function(){wrap.textContent="";wrap.appendChild(groupForm())});
-  var bw=h("button",null);bw.type="button";bw.appendChild(document.createTextNode("✉ Scrivi all’amministratore"));
+  var bw=h("button",null);bw.type="button";bw.appendChild(document.createTextNode("✉ Scrivi all’amministratore"));bw.id="admWrite";
   bw.addEventListener("click",function(){reqModal({onNew:function(){wrap.textContent="";wrap.appendChild(requestForm())}})});
   row.appendChild(bn);row.appendChild(bj);b.appendChild(row);var row2=h("div","row ar mini");row2.appendChild(bw);b.appendChild(row2);b.appendChild(wrap);
   Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].by===S.me.i}).forEach(function(k){
