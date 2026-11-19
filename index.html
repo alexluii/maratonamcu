@@ -402,7 +402,7 @@ html.spm h1 .ln{overflow:visible}html.spm h1 .ln:last-child{display:flex;align-i
 .spc i{display:block;font:700 10px/1 "Orbitron",system-ui,sans-serif;letter-spacing:.2em;color:#ff2bd6;font-style:normal;margin-bottom:5px;text-shadow:0 0 6px #ff2bd6}
 .spc.w{border-color:var(--line);box-shadow:none;background:transparent;color:var(--mute)}
 .spc.w i{color:var(--mute);text-shadow:none}
-.spdot{display:block;width:10px;height:10px;margin:12px 0 0 4px;padding:0;border:0;border-radius:50%;background:#ff2b4a;box-shadow:0 0 8px #ff2b4a;cursor:pointer;opacity:.9}.spdot:before{content:"";position:absolute;margin:-12px 0 0 -12px;width:34px;height:34px}.spsw{display:inline-flex;align-items:center;gap:10px;margin:8px 0 0;font:600 13px/1 "Instrument Sans",system-ui,sans-serif;color:var(--mute)}
+#spheart{display:inline-block}#spheart.hb{animation:sphb 2.2s ease-in-out infinite;transform-origin:center}@keyframes sphb{0%,50%,100%{transform:scale(1)}8%{transform:scale(1.28)}16%{transform:scale(1)}24%{transform:scale(1.2)}32%{transform:scale(1)}}@media(prefers-reduced-motion:reduce){#spheart.hb{animation:none}}.spdot{display:block;width:10px;height:10px;margin:12px 0 0 4px;padding:0;border:0;border-radius:50%;background:#ff2b4a;box-shadow:0 0 8px #ff2b4a;cursor:pointer;opacity:.9}.spdot:before{content:"";position:absolute;margin:-12px 0 0 -12px;width:34px;height:34px}.spsw{display:inline-flex;align-items:center;gap:10px;margin:8px 0 0;font:600 13px/1 "Instrument Sans",system-ui,sans-serif;color:var(--mute)}
 .spsw button{position:relative;width:46px;height:26px;border-radius:13px;border:2px solid var(--line);background:var(--track);cursor:pointer;padding:0;transition:.2s}
 .spsw button:after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--mute);transition:.2s}
 .spsw button[aria-checked="true"]{border-color:#00f0ff;background:rgba(0,240,255,.25);box-shadow:0 0 10px #00f0ff}
@@ -1247,6 +1247,7 @@ function spApply(on){
   spSwitch();
 }
 function spSwitch(){
+  var hb=document.getElementById("spheart");if(hb)hb.classList.toggle("hb",!SPF&&!SPM);
   var el=document.getElementById("spslot");if(!el)return;el.textContent="";
   if(!SPF&&!SPM)return;
   if(!SPM){
@@ -1862,8 +1863,8 @@ function trSteps(){
    {el:"admWrite",tb:"gr",cg0:1,t:ct("Serve aiuto?","Need help?"),x:ct("Per qualsiasi problema o domanda scrivi all’amministratore da questo pulsante: ti risponde appena può. Puoi anche segnalare un messaggio dal menu ⋯ in chat, o una persona dal suo profilo.","For any problem or question, write to the administrator with this button: you’ll get a reply as soon as possible. You can also report a message from the ⋯ menu in chat, or a person from their profile.")},
    {el:"tPr",tb:"pr",t:ct("Profilo","Profile"),x:ct("Carica la tua foto e scegli se il profilo è pubblico o privato.","Upload your photo and choose whether your profile is public or private.")},
    {el:"bell",tb:"io",t:ct("Campanella","Bell"),x:ct("Qui arrivano le richieste di amicizia e gli avvisi. Lo storico lo puoi cancellare quando vuoi.","Friend requests and notices arrive here. You can clear the history whenever you like.")},
-   {el:"infoBtn",tb:"io",t:ct("Novità","What’s new"),x:ct("Qui leggi le novità del sito man mano che arrivano, e puoi rivedere questa guida.","Read what’s new on the site here as it arrives, and replay this tour any time."),b:ct("Fine","Done")}
-  ];
+   {el:"infoBtn",tb:"io",t:ct("Novità","What’s new"),x:ct("Qui leggi le novità del sito man mano che arrivano, e puoi rivedere questa guida.","Read what’s new on the site here as it arrives, and replay this tour any time.")}
+  ].concat(SPF?[]:[{el:"spheart",tb:"io",t:ct("Un segreto","A secret"),x:ct("C’è un segreto in prima pagina… ascolta il cuore: sta battendo forte. Toccalo più volte, di fila.","There’s a secret on the first page… listen to the heart: it’s beating hard. Tap it several times in a row."),b:ct("Fine","Done")}]).map(function(st,i,a){if(i===a.length-1&&!st.b)st.b=ct("Fine","Done");return st});
 }
 function trUsable(id){var e=$(id);if(!e)return null;var r=e.getBoundingClientRect();return r.width>0&&r.height>0?e:null}
 function trEnd(){if(!TR)return;trMark();TR.ov.remove();TR=null;window.removeEventListener("resize",trPlace);document.removeEventListener("keydown",trKey2);document.body.classList.remove("touring");try{tab="io";render()}catch(e){}}
