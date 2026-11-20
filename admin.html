@@ -160,11 +160,23 @@ function msgBox(uid,name,ctx){
 function obj(x){return x&&typeof x==="object"?x:{}}
 
 /* ---------- elenco titoli (preso da index.html) ---------- */
+/* il catalogo (titoli, quanti sono già usciti) è diverso per ogni maratona: li tengo entrambi pronti e uso quello della maratona che sto guardando in questo momento (ADM_ROOM) */
+var BYID_MCU={},TOTAL_MCU=0,BYID_DC={},TOTAL_DC=0;
+function parseCat(t,re){
+  var m=t.match(re);if(!m)return null;
+  var arr=new Function("return ["+m[1]+"]")(),bi={},tot=0;
+  arr.forEach(function(ph){ph[1].forEach(function(x){var u=(x[3]||"").indexOf("U")>=0&&x[4]&&new Date(x[4][0],x[4][1]-1,x[4][2]).getTime()>Date.now();bi[x[0]]={t:x[1],u:u};if(!u)tot++})});
+  return{bi:bi,tot:tot};
+}
+function applyMarTitles(){
+  var c=ADM_ROOM===ROOM?{bi:BYID_MCU,tot:TOTAL_MCU}:{bi:BYID_DC,tot:TOTAL_DC};
+  byId=c.bi;total=c.tot;
+}
 function loadTitles(){
   return fetch("./index.html").then(function(r){return r.text()}).then(function(t){
-    var m=t.match(/var P=\[\n([\s\S]*?)\n\];/);if(!m)return;
-    var arr=new Function("return ["+m[1]+"]")();
-    arr.forEach(function(ph){ph[1].forEach(function(x){var u=(x[3]||"").indexOf("U")>=0&&x[4]&&new Date(x[4][0],x[4][1]-1,x[4][2]).getTime()>Date.now();byId[x[0]]={t:x[1],u:u};if(!u)total++})});
+    var mc=parseCat(t,/var P=\[\n([\s\S]*?)\n\];/);if(mc){BYID_MCU=mc.bi;TOTAL_MCU=mc.tot}
+    var dc=parseCat(t,/var PDC=\[\n([\s\S]*?)\n\];/);if(dc){BYID_DC=dc.bi;TOTAL_DC=dc.tot}
+    applyMarTitles();
   }).catch(function(){});
 }
 function doneOf(u){return(Array.isArray(u.d)?u.d:[]).filter(function(i){return Number.isInteger(i)&&(!byId[i]||!byId[i].u)})}
@@ -656,6 +668,7 @@ $("rf").addEventListener("click",function(){load().then(function(){render();toas
 $("marSw").addEventListener("click",function(){
   ADM_ROOM=ADM_ROOM===ROOM?ROOM+"_dc":ROOM;
   $("marSw").textContent="Maratona: "+(ADM_ROOM===ROOM?"MCU":"DC");
+  applyMarTitles();
   toast("Carico i dati della maratona "+(ADM_ROOM===ROOM?"MCU":"DC")+"…");
   load().then(function(){render()}).catch(function(){toast("Non riesco a caricare questa maratona.")});
 });
