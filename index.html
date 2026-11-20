@@ -656,6 +656,8 @@ var PDC=[
 var MAR="mcu",MAR_CHOSEN=false;
 try{var _mm=localStorage.getItem("mcu-mar");if(_mm==="dc"||_mm==="mcu"){MAR=_mm;MAR_CHOSEN=true}}catch(e){}
 if(MAR==="dc")P=PDC;
+/* marSeg: suffisso per i percorsi Firebase che devono restare separati tra le maratone (progressi, badge, voti, gruppi). "" per MCU così i dati già esistenti non si muovono; "_dc" solo per la maratona DC, nuova e senza dati precedenti */
+function marSeg(){return MAR==="dc"?"_dc":""}
 var items=[],byId={},phOf={},openPh={},total=0;
 function eraH(pi){return Math.round(14+pi*(320/Math.max(1,P.length-1)))%360}
 
@@ -822,7 +824,7 @@ function reservedName(n){
   return /alessandr|admin|amministrat|moderat|staff/.test(t);
 }
 function D(){return viewing?viewing.d:S.me.d}
-function remUrl(id){return DB_URL.replace(/\/+$/,"")+"/removed/"+ROOM+(id?"/"+id:"")+".json"}
+function remUrl(id){return DB_URL.replace(/\/+$/,"")+"/removed/"+ROOM+marSeg()+(id?"/"+id:"")+".json"}
 var FB_API_KEY="AIzaSyCvYDHW-dleGjx9U0WT50PcayjGx2m3Iik",ADMIN_EMAIL="luinialessandro9@gmail.com",ADMIN_UID="lvhh3G1jVUfsmZDeGHoArysTVpr1",FBT=null; // accesso amministratore Firebase (vuoto = non attivo)
 function fbSignIn(){return Promise.resolve(false)}
 function admBox(){
@@ -1120,7 +1122,7 @@ function field(box,label,ro,val,rows){
   var ta=h("textarea");ta.rows=rows;ta.readOnly=ro;ta.value=val;ta.setAttribute("aria-label",label);
   box.appendChild(ta);return ta;
 }
-function dbUrl(p){return DB_URL.replace(/\/+$/,"")+"/rooms/"+ROOM+(p?"/"+p:"")+".json"}
+function dbUrl(p){return DB_URL.replace(/\/+$/,"")+"/rooms/"+ROOM+marSeg()+(p?"/"+p:"")+".json"}
 function setSync(){var e=$("sy");if(e)e.className=online?"m ok":"m";if(e)e.textContent=!DB_URL?"":(online===null?"Sincronizzazione…":online?"Sincronizzato con gli amici: si aggiorna da solo.":"Connessione non riuscita"+(lastErr?" ("+lastErr+")":"")+", riprovo…")}
 function push(){
   if(!DB_URL||!S.acct)return;
@@ -1308,7 +1310,7 @@ function moveFriends(oid,nid,nname){
 }
 var RT={},rtAt=0,rtSig="";
 function esc(t){return String(t==null?"":t).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
-function rtUrl(f,u){return DB_URL.replace(/\/+$/,"")+"/ratings/"+ROOM+(f?"/"+f:"")+(u?"/"+u:"")+".json"}
+function rtUrl(f,u){return DB_URL.replace(/\/+$/,"")+"/ratings/"+ROOM+marSeg()+(f?"/"+f:"")+(u?"/"+u:"")+".json"}
 function rtLoad(force){
   if(!DB_URL||!S.acct||document.hidden)return;
   if(!force&&Date.now()-rtAt<20000)return;rtAt=Date.now();
@@ -1457,7 +1459,7 @@ setTimeout(thBtn,0);setTimeout(testBoot,200);setTimeout(testClean,900);setInterv
 })();
 /* ===== BADGE ===== */
 var BG={m:0,d:"",s:0,c:0,lm:0,x:[],b:{}},BGA={},BGOK=false,BGID="",BGT=0,BGEGG=false,BGQ=[],BGFL=0,BGDIRTY=false,BGWARN=false;
-function bgUrl(id){return DB_URL.replace(/\/+$/,"")+"/badges/"+ROOM+(id?"/"+id:"")+".json"}
+function bgUrl(id){return DB_URL.replace(/\/+$/,"")+"/badges/"+ROOM+marSeg()+(id?"/"+id:"")+".json"}
 function bgDay(off){return new Date(Date.now()+(off||0)*864e5).toLocaleDateString("sv-SE",{timeZone:"Europe/Rome"})}
 var FTIER=[10,50,100],BG_GAP=30*60000,BG_CALL=86400;
 var BDG=[
@@ -1985,7 +1987,7 @@ function gcntTxt(){return GCNT===null?"gruppi: —":GCNT+(GCNT===1?" gruppo aper
 var UCNT=null;
 function loadUcnt(){
   if(!DB_URL||document.hidden)return;
-  getJ(DB_URL.replace(/\/+$/,"")+"/rooms/"+ROOM+".json?shallow=true").then(function(o){UCNT=o&&typeof o==="object"?Object.keys(o).length:0}).catch(function(){UCNT=null}).then(function(){
+  getJ(DB_URL.replace(/\/+$/,"")+"/rooms/"+ROOM+marSeg()+".json?shallow=true").then(function(o){UCNT=o&&typeof o==="object"?Object.keys(o).length:0}).catch(function(){UCNT=null}).then(function(){
     var g=$("ucnt");if(g&&g.lastChild){g.hidden=UCNT===null;g.firstChild.className="led"+(UCNT===null?"":" on");g.lastChild.textContent=UCNT===null?"iscritti: —":UCNT+(UCNT===1?" persona iscritta":" persone iscritte")}
   });
 }
