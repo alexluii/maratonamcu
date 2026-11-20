@@ -431,7 +431,7 @@ li .unc{margin:4px 2px 0 6px;padding:5px 9px;border-left:3px solid #e3a21a;borde
 .pwrap{position:relative;display:block}.pwrap input{padding-right:46px!important;box-sizing:border-box}.pwrap button.pweye{position:absolute!important;right:6px;top:50%;transform:translateY(-50%)!important;width:36px!important;height:36px!important;min-width:0!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;color:var(--mute)!important;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px}.pwrap button.pweye:focus-visible{outline:2px solid var(--focus,#2f6bff)}
 .bdgs{padding:12px 14px}.bdg-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:6px;margin-top:6px}.bdg{display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 3px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--ink);font:inherit;cursor:pointer;opacity:.5}.bdg .bdg-i{font-size:21px;line-height:1.1;filter:grayscale(1)}.bdg-n{font-size:10.5px;font-weight:700;line-height:1.15;text-align:center}.bdg-p{font-size:10px;color:var(--mute);min-height:1em}.bdg.got{opacity:1;border-color:var(--amber)}.bdg.got .bdg-i{filter:none}.bdg.on{opacity:1;box-shadow:0 0 0 2px var(--line)}.bdg-d{margin:8px 2px 0;min-height:1.3em}
 #testbar{position:fixed;left:50%;top:44px;transform:translateX(-50%);z-index:10000;display:flex;align-items:center;gap:10px;padding:5px 6px 5px 14px;border-radius:999px;background:#d92d3f;color:#fff;font:700 12px/1 "Instrument Sans",system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.3);white-space:nowrap}#testbar button{border:0;border-radius:999px;padding:7px 12px;background:#fff;color:#d92d3f;font:700 12px/1 "Instrument Sans",system-ui,sans-serif;cursor:pointer}
-.mdl{position:fixed;inset:0;z-index:99;background:rgba(5,8,28,.72);display:flex;align-items:center;justify-content:center;padding:16px}.mbox{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:10px}.mbox input{display:block;width:100%;box-sizing:border-box;margin:0;padding:13px 14px;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:12px}.mbox input:focus-visible{outline:3px solid var(--focus);outline-offset:1px}.mbox .k{margin:0}.mbox .m{margin:0}.mbox .gerr:empty{display:none}.mbox,.mbox *{font-family:inherit}.mbox button{min-height:44px;font:inherit;font-weight:700}
+.mdl{position:fixed;inset:0;z-index:10050;background:rgba(5,8,28,.72);display:flex;align-items:center;justify-content:center;padding:16px}.mbox{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:420px;width:100%;display:flex;flex-direction:column;gap:10px}.mbox input{display:block;width:100%;box-sizing:border-box;margin:0;padding:13px 14px;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:12px}.mbox input:focus-visible{outline:3px solid var(--focus);outline-offset:1px}.mbox .k{margin:0}.mbox .m{margin:0}.mbox .gerr:empty{display:none}.mbox,.mbox *{font-family:inherit}.mbox button{min-height:44px;font:inherit;font-weight:700}
 .mbox.warn{border:3px solid var(--red);box-shadow:0 0 0 0 rgba(214,36,58,.0);animation:warnblink 1.3s ease-in-out infinite}
 @keyframes warnblink{0%,100%{border-color:var(--red);box-shadow:0 0 0 0 rgba(214,36,58,.55)}50%{border-color:rgba(214,36,58,.25);box-shadow:0 0 18px 4px rgba(214,36,58,.45)}}
 @media (prefers-reduced-motion:reduce){.mbox.warn{animation:none;box-shadow:0 0 14px 2px rgba(214,36,58,.4)}}
@@ -517,6 +517,18 @@ body.gated{overflow:hidden}
 .mpk-spons img{width:70%;height:70%;object-fit:contain}
 .mpk-x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:max(14px,env(safe-area-inset-right,0px));z-index:2;width:38px;height:38px;border-radius:999px;border:1px solid #2a2238;background:rgba(255,255,255,.04);color:#8b84a6;font-size:22px;line-height:1;cursor:pointer}
 .mpk-x:hover,.mpk-x:focus-visible{color:#fff;border-color:#fff;outline:none}
+.mpk-auth{display:flex;flex-direction:column;align-items:stretch;gap:.7rem;width:100%;max-width:22rem}
+.mpk-atabs{display:flex;gap:0;border:1px solid #2a2238;border-radius:999px;overflow:hidden;align-self:center;margin-bottom:.3rem}
+.mpk-atab{flex:1;padding:8px 18px;border:0;background:none;color:#8b84a6;font:700 13px "Instrument Sans",sans-serif;cursor:pointer}
+.mpk-atab[aria-pressed="true"]{background:#f3eeff;color:#060309}
+.mpk-ain{width:100%;padding:13px 14px;border-radius:12px;border:1px solid #2a2238;background:rgba(255,255,255,.04);color:#f3eeff;font:500 15px "Instrument Sans",sans-serif}
+.mpk-ain::placeholder{color:#5c5579}
+.mpk-ain:focus{outline:none;border-color:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.12)}
+.mpk-aerr{min-height:1.2em;margin:0;font:600 13px "Instrument Sans",sans-serif;color:#ff6a7a}
+.mpk-ago{padding:14px;border:0;border-radius:12px;background:#f3eeff;color:#060309;font:800 15px "Instrument Sans",sans-serif;letter-spacing:.01em;cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 0 22px rgba(255,255,255,.35);transition:transform .2s,box-shadow .2s}
+.mpk-ago:hover,.mpk-ago:focus-visible{transform:translateY(-2px);box-shadow:0 0 0 1px rgba(255,255,255,.2),0 0 32px rgba(255,255,255,.55);outline:none}
+.mpk-ago:disabled{opacity:.6;cursor:default;transform:none}
+.mpk-ahint,.mpk-arule{margin:0;font:400 12px/1.5 "Instrument Sans",sans-serif;color:#8b84a6}
 .marSwBtn{margin:14px 0 0;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font:600 12px "Instrument Sans",sans-serif;cursor:pointer}
 .marSwBtn:hover,.marSwBtn:focus-visible{color:var(--ink);border-color:var(--red);outline:none}
 .marSwBtn svg{width:14px;height:14px;flex:none}
@@ -527,16 +539,28 @@ body.gated{overflow:hidden}
 <div class="mpk-bg"></div>
 <button type="button" class="mpk-x" id="mpkX" aria-label="Chiudi" hidden>&times;</button>
 <div class="mpk-wrap">
-<span class="mpk-eyebrow">Una piattaforma, più saghe</span>
+<span class="mpk-eyebrow" id="mpkEyebrow">Una piattaforma, più saghe</span>
 <h2 class="mpk-h1" aria-label="Cronomaratona">
 <span class="mpk-ln" aria-hidden="true">CRONO</span>
 <span class="mpk-ln mpk-m2" aria-hidden="true">MARAT<svg class="mpk-sw" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="58" r="34" fill="none" stroke="currentColor" stroke-width="7"/><rect x="42" y="8" width="16" height="10" rx="3" fill="currentColor"/><line x1="68" y1="20" x2="76" y2="28" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><line class="mpk-hand" x1="50" y1="58" x2="50" y2="34" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><circle cx="50" cy="58" r="4.5" fill="currentColor"/></svg>NA</span>
 </h2>
-<p class="mpk-sub">Guarda tutto nell'ordine giusto. Scegli la maratona con gli amici: progressi, badge e spoiler mode, per ogni universo.</p>
-<div class="mpk-pick">
+<p class="mpk-sub" id="mpkSub">Guarda tutto nell'ordine giusto. Scegli la maratona con gli amici: progressi, badge e spoiler mode, per ogni universo.</p>
+<div class="mpk-pick" id="mpkPick">
 <button class="mpk-u mpk-mcu" type="button" data-mar="mcu">MCU<span class="mpk-mt">MARVEL</span></button>
 <span class="mpk-slash" aria-hidden="true">/</span>
 <button class="mpk-u mpk-dc" type="button" data-mar="dc">DC<span class="mpk-mt">UNIVERSE</span></button>
+</div>
+<div class="mpk-auth" id="mpkAuth" hidden>
+<div class="mpk-atabs" role="tablist">
+<button type="button" class="mpk-atab" id="mpkTabNew" aria-pressed="true">Crea account</button>
+<button type="button" class="mpk-atab" id="mpkTabIn" aria-pressed="false">Accedi</button>
+</div>
+<input id="mpkUser" class="mpk-ain" type="text" maxlength="24" placeholder="Username (es. mario.rossi)" autocomplete="username" autocapitalize="off" spellcheck="false" aria-label="Username">
+<input id="mpkPass" class="mpk-ain" type="password" maxlength="64" placeholder="Password (da 8 caratteri)" aria-label="Password">
+<p class="mpk-aerr" id="mpkAerr" role="alert"></p>
+<button type="button" class="mpk-ago" id="mpkGo">Crea account</button>
+<p class="mpk-ahint" id="mpkHint" hidden>Hai dimenticato la password? Scrivi ad Alessandro: ti sblocca l'account.</p>
+<p class="mpk-arule" id="mpkRule">Creando l'account ti impegni a mantenere un atteggiamento rispettoso e consono con gli altri: chi non lo fa può essere silenziato o rimosso dal sito.</p>
 </div>
 <div class="mpk-spons" id="mpkSpons" aria-label="Sponsor" hidden></div>
 </div>
@@ -2275,7 +2299,8 @@ function avBox(){
 
 /* ===== NOVITA' DEL SITO (popup) ===== */
 /* Ad ogni modifica visibile agli utenti: aumenta NEWS_V e aggiungi una voce in NEWS (it + en). Mai cose che riguardano l'amministratore. */
-var NEWS_V=30,NEWS=[
+var NEWS_V=31,NEWS=[
+ {v:31,d:"2026-11-20",ic:"🔑",hero:1,ti:{it:"Accesso dalla schermata Cronomaratona",en:"Log in from the Cronomaratona screen"},tx:{it:"Accedi o crea l'account direttamente nella schermata Cronomaratona, prima di scegliere MCU o DC. Quando esci, torni proprio qui: accedi di nuovo e poi scegli la maratona.",en:"Log in or create your account right on the Cronomaratona screen, before picking MCU or DC. When you log out, you're brought back here: log in again and then choose the marathon."},chips:{it:["Accesso unificato","Scelta maratona dopo"],en:["Unified login","Marathon choice comes after"]}},
  {v:30,d:"2026-11-20",ic:"🦸",hero:1,ti:{it:"Arriva la Maratona DC",en:"The DC Marathon has arrived"},tx:{it:"Oltre alla Maratona MCU ora puoi scegliere anche la Maratona DC: stessa logica, catalogo cronologico tutto suo, badge e progressi separati, uscite in arrivo con il conto alla rovescia e la Spoiler Mode disponibile anche qui. Scegli quale maratona guardare dalla schermata iniziale.",en:"Alongside the MCU Marathon you can now pick the DC Marathon too: same logic, its own chronological catalogue, separate badges and progress, upcoming releases with a countdown, and Spoiler Mode available here too. Choose which marathon to watch from the opening screen."},chips:{it:["Catalogo DC","Badge separati","Spoiler Mode"],en:["DC catalogue","Separate badges","Spoiler Mode"]}},
  {v:29,d:"2026-11-20",ic:"⚡",ti:{it:"Aggiornamenti più veloci",en:"Faster updates"},tx:{it:"Badge e gruppi ora si aggiornano all’istante per tutti, senza dover aspettare.",en:"Badges and groups now update instantly for everyone, with no more waiting."}},
  {v:28,d:"2026-11-20",ic:"🌗",ti:{it:"Tema chiaro o scuro",en:"Light or dark theme"},tx:{it:"Da computer puoi scegliere se vedere il sito in tema chiaro o scuro con il pulsante in basso a sinistra. La scelta resta salvata.",en:"On a computer you can choose between the light and dark theme with the button at the bottom left. Your choice is remembered."}},
@@ -3681,7 +3706,7 @@ function ensureLang(){
   var g=$("langov");
   if(LANG){if(g)g.remove();return false}
   if(g)return true;
-  var ov=h("div","mdl gate");ov.id="langov";ov.setAttribute("role","dialog");ov.setAttribute("aria-modal","true");ov.setAttribute("data-nt","1");ov.style.zIndex="120";
+  var ov=h("div","mdl gate");ov.id="langov";ov.setAttribute("role","dialog");ov.setAttribute("aria-modal","true");ov.setAttribute("data-nt","1");ov.style.zIndex="10100";
   var bx=h("div","mbox lbox");
   bx.appendChild(h("p","k","Scegli la lingua · Choose your language"));
   var row=h("div","lrow");
@@ -3998,7 +4023,7 @@ function render(){admUi();renderTicker();testBar();
   $("tGr").setAttribute("aria-pressed",tab==="gr");
   updBadge();
   if(tab==="io")renderMine();else renderFriends();
-  ensureGate();
+  if(!ensureLang()&&needsGate())openMarPicker();
 }
 $("app").addEventListener("change",function(e){
   var id=e.target.getAttribute("data-i");if(id===null||viewing)return;
@@ -4050,12 +4075,24 @@ function updateMarHeader(){
   if(h)h.setAttribute("aria-label","Maratona "+nm);
   document.documentElement.classList.toggle("mar-dc",MAR==="dc");
   var t=$("marSwTxt");if(t)t.textContent=ct("Cambia maratona","Switch marathon");
+  var eb=$("mpkEyebrow");if(eb)eb.textContent=ct("Una piattaforma, più saghe","One platform, more sagas");
+}
+function mpkAuthRender(){
+  var need=needsGate();
+  var auth=$("mpkAuth"),pick=$("mpkPick"),sub=$("mpkSub"),x=$("mpkX");
+  if(auth)auth.hidden=!need;
+  if(pick)pick.style.display=need?"none":"";
+  if(sub){
+    var wy="";try{wy=localStorage.getItem("mcu-why")||""}catch(e){}
+    sub.textContent=!need?ct("Guarda tutto nell'ordine giusto. Scegli la maratona con gli amici: progressi, badge e spoiler mode, per ogni universo.","Watch everything in the right order. Pick the marathon with friends: progress, badges and spoiler mode, for every universe."):wy?wy:EXP?ct("Per sicurezza l'accesso scade dopo un'ora di inattività. Accedi di nuovo.","For security, access expires after an hour of inactivity. Log in again."):ct("Crea un account per salvare i tuoi progressi e vederli con gli amici, in ogni maratona.","Create an account to save your progress and see it with friends, in every marathon.");
+  }
+  if(x)x.hidden=need||!MAR_CHOSEN;
 }
 function openMarPicker(){
   var mp=$("marPick");if(!mp)return;
   try{spFont()}catch(e){}
+  mpkAuthRender();
   mp.hidden=false;
-  var x=$("mpkX");if(x)x.hidden=false;
   document.body.style.overflow="hidden";
 }
 function closeMarPicker(){
@@ -4064,6 +4101,7 @@ function closeMarPicker(){
   document.body.style.overflow="";
 }
 function chooseMar(m){
+  if(needsGate())return; // accedi prima di scegliere la maratona
   if(m!==MAR){MAR=m;P=(m==="dc")?PDC:PMCU;buildItems()}
   try{localStorage.setItem("mcu-mar",m)}catch(e){}
   MAR_CHOSEN=true;
@@ -4071,6 +4109,37 @@ function chooseMar(m){
   closeMarPicker();
   if(SPM)spLoad(function(){render()});else render();
   try{pull(true)}catch(e){}
+}
+var mpkMode="new";
+function mpkSetMode(m){
+  mpkMode=m;
+  var tn=$("mpkTabNew"),tl=$("mpkTabIn"),go=$("mpkGo"),pass=$("mpkPass"),hint=$("mpkHint"),rule=$("mpkRule"),err=$("mpkAerr");
+  if(tn)tn.setAttribute("aria-pressed",String(m==="new"));
+  if(tl)tl.setAttribute("aria-pressed",String(m==="in"));
+  if(go)go.textContent=m==="new"?ct("Crea account","Create account"):ct("Accedi","Log in");
+  if(pass)pass.autocomplete=m==="new"?"new-password":"current-password";
+  if(hint)hint.hidden=m==="new";
+  if(rule)rule.hidden=m!=="new";
+  if(err)err.textContent="";
+}
+function mpkGo(){
+  var ni=$("mpkUser"),pi=$("mpkPass"),er=$("mpkAerr"),go=$("mpkGo");
+  if(!ni||!pi||!er||!go)return;
+  var nm=ni.value.replace(/\s+/g," ").trim(),pw=pi.value.trim();
+  if(!nm){er.textContent=ct("Scrivi il tuo username.","Enter your username.");ni.focus();return}
+  if(mpkMode==="new"&&(pw.length<8||pw.length>64)){er.textContent=ct("La password deve avere da 8 a 64 caratteri.","The password must be 8 to 64 characters long.");pi.focus();return}
+  if(mpkMode==="in"&&!pw){er.textContent=ct("Scrivi la password.","Enter your password.");pi.focus();return}
+  go.disabled=true;er.textContent=ct("Un attimo…","One moment…");
+  (mpkMode==="new"?doCreate:doLogin)(nm,pw).then(function(){
+    EXP=false;why("");go.disabled=false;
+    msg(mpkMode==="new"?ct("Account creato. I tuoi progressi ora sono condivisi.","Account created. Your progress is now shared."):ct("Bentornato! Progressi ripristinati.","Welcome back! Progress restored."));
+    mpkAuthRender();render();
+    pull();loadUcnt();loadGcnt();
+  }).catch(function(e){
+    go.disabled=false;var m=e&&e.message;
+    if(m==="migrate"){er.textContent="";GATE_OK=true;openMigrate(e.legacy.name,e.legacy.pin,e.legacy.rs);return}
+    er.textContent=m==="baduser"?ct("Username non valido: da 3 a 20 caratteri, solo lettere minuscole, numeri, punto e trattino basso.","Invalid username: 3 to 20 characters, lowercase letters, numbers, dot and underscore only."):m==="taken"?ct("Questo username è già in uso. Se è tuo, tocca Accedi.","This username is already taken. If it's yours, tap Log in."):m==="reserved"?ct("Questo nome è riservato.","This name is reserved."):m==="badname"?ct("Nome non valido.","Invalid name."):m==="weakpw"?ct("La password deve avere da 8 a 64 caratteri.","The password must be 8 to 64 characters long."):m==="bad"?ct("Username o password non corretti.","Incorrect username or password."):m==="many"?ct("Troppi tentativi. Aspetta qualche minuto e riprova.","Too many attempts. Wait a few minutes and try again."):m==="noauth"?ct("Il login con password non è ancora attivo sul server.","Password login isn't active on the server yet."):ct("Non riesco a collegarmi. Riprova tra poco.","Can't connect right now. Please try again shortly.");
+  });
 }
 (function(){
   var sw=$("marSwBtn");if(sw)sw.addEventListener("click",openMarPicker);
@@ -4080,11 +4149,13 @@ function chooseMar(m){
     var b=e.target.closest("button[data-mar]");
     if(b)chooseMar(b.getAttribute("data-mar"))
   });
-  if(!MAR_CHOSEN&&!needsGate()){
-    try{spFont()}catch(e){}
-    mp.hidden=false;
-    document.body.style.overflow="hidden";
-  }
+  var tn=$("mpkTabNew"),tl=$("mpkTabIn"),go=$("mpkGo");
+  if(tn)tn.addEventListener("click",function(){mpkSetMode("new")});
+  if(tl)tl.addEventListener("click",function(){mpkSetMode("in")});
+  if(go)go.addEventListener("click",mpkGo);
+  [$("mpkUser"),$("mpkPass")].forEach(function(x){if(x)x.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();mpkGo()}})});
+  mpkSetMode(EXP?"in":"new");
+  if(!MAR_CHOSEN&&!needsGate()&&!ensureLang())openMarPicker();
   updateMarHeader();
 })();
 setTimeout(function(){document.body.classList.remove("boot")},2800);
