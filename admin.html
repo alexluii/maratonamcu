@@ -112,6 +112,9 @@ input[type=text],input[type=search],select,textarea{width:100%;min-height:44px;p
 <div id="toast" class="toast" role="status" hidden></div>
 
 <script>
+/* il pannello si apre solo se nel sito hai fatto l'accesso come luini.a (la vera protezione resta il login Firebase e le regole del database) */
+(function(){var ok=false;try{var s=JSON.parse(localStorage.getItem("mcu-codici-v1")||"null"),u=JSON.parse(localStorage.getItem("mcu-u2")||"null");ok=!!(s&&s.acct&&String(s.acct.name).replace(/\s+/g," ").trim().toLowerCase()==="luini.a"&&u)}catch(e){}
+if(!ok){try{document.documentElement.style.display="none"}catch(e){}location.replace("./");throw new Error("accesso non consentito")}})();
 var KEY="AIzaSyCvYDHW-dleGjx9U0WT50PcayjGx2m3Iik",UID="lvhh3G1jVUfsmZDeGHoArysTVpr1";
 var DB="https://maratona-579e6-default-rtdb.europe-west1.firebasedatabase.app",ROOM="amici-mcu";
 var SK="mcu-adm",SES=null,byId={},total=0;
