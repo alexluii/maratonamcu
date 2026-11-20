@@ -2172,7 +2172,7 @@ function gKeys(name,pass){
   var nm=String(name||"").replace(/\s+/g," ").trim().slice(0,24),code=String(pass).trim(),gid;
   return sha("gc:"+code).then(function(x){gid=x.slice(0,20);return sha("gp:"+gid+":"+code)}).then(function(ph){return{gid:gid,n:nm,ph:ph.slice(0,32)}});
 }
-function enterGroup(gid){S.cg=gid;S.f={};GM={};GR=null;save(false);viewing=null;render()}
+function enterGroup(gid){S.cg=gid;S.f={};GM={};GR=null;save(false);viewing=null;render();try{pull(true)}catch(e){}} // aggiorna subito membri/gruppo invece di aspettare il prossimo giro periodico
 function joinGroup(name,pass){
   return gKeys("",pass).then(function(k){
     return getJ(gmUrl(k.gid,S.me.i)).catch(function(){return null}).then(function(mine){
@@ -2308,7 +2308,8 @@ function avBox(){
 
 /* ===== NOVITA' DEL SITO (popup) ===== */
 /* Ad ogni modifica visibile agli utenti: aumenta NEWS_V e aggiungi una voce in NEWS (it + en). Mai cose che riguardano l'amministratore. */
-var NEWS_V=32,NEWS=[
+var NEWS_V=33,NEWS=[
+ {v:33,d:"2026-11-20",ic:"⚡",ti:{it:"Gruppi e chat più veloci",en:"Faster groups and chat"},tx:{it:"Entrando in un gruppo le persone e i progressi si aggiornano subito, invece di aspettare qualche secondo. Anche i messaggi della chat arrivano più in fretta.",en:"Entering a group now updates people and progress right away, instead of waiting a few seconds. Chat messages also arrive faster."}},
  {v:32,d:"2026-11-20",ic:"🔀",ti:{it:"Cambio maratona più diretto",en:"A more direct marathon switch"},tx:{it:"Dopo l'accesso il pannello di login si dissolve e solo dopo compare la scelta della maratona, come un passaggio a parte. E il pulsante \"Cambia maratona\" ora ti porta direttamente nell'altra maratona con un piccolo effetto, invece di riaprire la schermata di scelta.",en:"After logging in, the login panel dissolves and only then does the marathon choice appear, as its own step. And the \"Switch marathon\" button now takes you straight to the other marathon with a small effect, instead of reopening the choice screen."},chips:{it:["Dissolvenza","Switch diretto"],en:["Dissolve effect","Direct switch"]}},
  {v:31,d:"2026-11-20",ic:"🔑",hero:1,ti:{it:"Accesso dalla schermata Cronomaratona",en:"Log in from the Cronomaratona screen"},tx:{it:"Accedi o crea l'account direttamente nella schermata Cronomaratona, prima di scegliere MCU o DC. Quando esci, torni proprio qui: accedi di nuovo e poi scegli la maratona.",en:"Log in or create your account right on the Cronomaratona screen, before picking MCU or DC. When you log out, you're brought back here: log in again and then choose the marathon."},chips:{it:["Accesso unificato","Scelta maratona dopo"],en:["Unified login","Marathon choice comes after"]}},
  {v:30,d:"2026-11-20",ic:"🦸",hero:1,ti:{it:"Arriva la Maratona DC",en:"The DC Marathon has arrived"},tx:{it:"Oltre alla Maratona MCU ora puoi scegliere anche la Maratona DC: stessa logica, catalogo cronologico tutto suo, badge e progressi separati, uscite in arrivo con il conto alla rovescia e la Spoiler Mode disponibile anche qui. Scegli quale maratona guardare dalla schermata iniziale.",en:"Alongside the MCU Marathon you can now pick the DC Marathon too: same logic, its own chronological catalogue, separate badges and progress, upcoming releases with a countdown, and Spoiler Mode available here too. Choose which marathon to watch from the opening screen."},chips:{it:["Catalogo DC","Badge separati","Spoiler Mode"],en:["DC catalogue","Separate badges","Spoiler Mode"]}},
@@ -4208,7 +4209,7 @@ function mpkGo(){
 setTimeout(function(){document.body.classList.remove("boot")},2800);
 render();
 if(LEGACY)setTimeout(function(){openMigrate(LEGACY,"")},300);
-if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}var pk=0;setInterval(function(){pk++;var need=(tab==="am"||tab==="gr")?1:(liveOK()?3:2);if(pk%need)return;pull()},5000);loadGcnt();setInterval(loadGcnt,30000);loadUcnt();setInterval(loadUcnt,60000);setInterval(pullChat,5000)}
+if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}var pk=0;setInterval(function(){pk++;var need=(tab==="am"||tab==="gr")?1:(liveOK()?6:4);if(pk%need)return;pull()},2500);loadGcnt();setInterval(loadGcnt,30000);loadUcnt();setInterval(loadUcnt,60000);setInterval(pullChat,2000)}
 admLoad();if(fbMode())$("admFoot").hidden=!(S.acct&&isOwnN(S.acct.name));if(adminOk()){render();renderSponsors();loadReports()}
 $("admBtn").addEventListener("click",function(){if(adminOk()){admExit();return}location.href="admin.html"});
 refreshUpcoming();setInterval(refreshUpcoming,3600000);loadSponsors();setInterval(loadSponsors,120000);setInterval(loadReports,15000);if(window.matchMedia)window.matchMedia("(min-width:1080px)").addEventListener("change",placeSp);setInterval(tick,1000);document.addEventListener("visibilitychange",function(){if(!document.hidden){pull();try{bgTick()}catch(e){}}});
