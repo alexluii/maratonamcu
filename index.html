@@ -1118,7 +1118,7 @@ function pull(force,local){
   }).catch(function(e){online=false;lastErr=String(e&&e.message||e);setSync()}).then(function(){pulling=false});
 }
 
-var FR=null,FRQ={},FRO="",frSig=null,frBusy=false,FRLEG=false,FRN={},PUB=false,auxSig=null;
+var FR=null,FRQ={},FRO="",frSig=null,frBusy=false,FRLEG=false,FRN={},PUB=false,auxSig=null,DLSIG=null;
 function pubUrl(id){return DB_URL.replace(/\/+$/,"")+"/pub/"+id+".json"}
 function fsUrl(from,to){return DB_URL.replace(/\/+$/,"")+"/friendSent/"+from+(to?"/"+to:"")+".json"}
 var FSENT={};
@@ -1768,7 +1768,6 @@ function drawList(){
   var el=$("fl");if(!el)return;
   var cg=(tab==="am")?"":S.cg;
   if(cg){drawStrip(el);return}
-  el.textContent="";
   var amF=!cg&&tab==="am";
   var list=amF?[]:[{id:S.me.i,me:1,n:S.me.n||"Tu",d:valid(myArr()),u:S.me.u}];
   Object.keys(S.f).forEach(function(k){if(!cg&&!isFr(k))return;list.push({id:k,n:S.f[k].n,d:valid(S.f[k].d),u:S.f[k].u})});
@@ -1777,6 +1776,13 @@ function drawList(){
   list.sort(function(a,b){return b.d.length-a.d.length});
   var PINS=amF?pinGet():[];
   if(PINS.length)list.sort(function(a,b){var x=PINS.indexOf(a.id),y=PINS.indexOf(b.id);if(x<0&&y<0)return 0;if(x<0)return 1;if(y<0)return -1;return x-y});
+  /* se non è cambiato niente di visibile, non tocco il DOM: evita il "lampeggio" a ogni aggiornamento in sottofondo */
+  if(!isAdmin()){
+    var dlsig=JSON.stringify({l:list.map(function(f){return[f.id,f.n,f.d.length,f.u]}),p:PINS,fsel:FSEL,fqt:FQT,am:amF,bg:Object.keys(BGA||{}).sort().map(function(k){return[k,BGA[k]&&BGA[k].m]})});
+    if(dlsig===DLSIG&&el.childNodes.length)return;
+    DLSIG=dlsig;
+  }
+  el.textContent="";
   list.forEach(function(f,ri){
     var d=h("div","fr"+(f.me?" me":"")),av=h("div","av",(f.n||"?").charAt(0).toUpperCase());av.style.background="hsl("+hue(f.id)+" 55% 36%)";avFill(av,f.id,f.n);d.style.setProperty("--n",ri);if(list.length>1)av.appendChild(h("span","rk"+(ri===0&&PINS.indexOf(f.id)<0?" first":""),PINS.indexOf(f.id)>=0?"📌":String(ri+1)));
     var body=h("div"),top=h("b");
