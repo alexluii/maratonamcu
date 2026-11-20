@@ -518,6 +518,11 @@ body.gated{overflow:hidden}
 .mpk-x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:max(14px,env(safe-area-inset-right,0px));z-index:2;width:38px;height:38px;border-radius:999px;border:1px solid #2a2238;background:rgba(255,255,255,.04);color:#8b84a6;font-size:22px;line-height:1;cursor:pointer}
 .mpk-x:hover,.mpk-x:focus-visible{color:#fff;border-color:#fff;outline:none}
 .mpk-auth{display:flex;flex-direction:column;align-items:stretch;gap:.7rem;width:100%;max-width:22rem}
+.mpk-auth[hidden]{display:none}
+.mpk-auth,.mpk-pick{transition:opacity .26s ease,transform .26s ease}
+.mpk-swout{opacity:0;transform:translateY(10px) scale(.97)}
+.mpk-swin{opacity:0;transform:translateY(-8px) scale(1.03)}
+@media(prefers-reduced-motion:reduce){.mpk-auth,.mpk-pick{transition:none}}
 .mpk-atabs{display:flex;gap:0;border:1px solid #2a2238;border-radius:999px;overflow:hidden;align-self:center;margin-bottom:.3rem}
 .mpk-atab{flex:1;padding:8px 18px;border:0;background:none;color:#8b84a6;font:700 13px "Instrument Sans",sans-serif;cursor:pointer}
 .mpk-atab[aria-pressed="true"]{background:#f3eeff;color:#060309}
@@ -531,6 +536,10 @@ body.gated{overflow:hidden}
 .mpk-ahint,.mpk-arule{margin:0;font:400 12px/1.5 "Instrument Sans",sans-serif;color:#8b84a6}
 .marSwBtn{margin:14px 0 0;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font:600 12px "Instrument Sans",sans-serif;cursor:pointer}
 .marSwBtn:hover,.marSwBtn:focus-visible{color:var(--ink);border-color:var(--red);outline:none}
+.marfx{position:fixed;inset:0;z-index:10200;pointer-events:none;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,var(--fxc,#ff2d4e) 0%,rgba(0,0,0,0) 70%);opacity:0;animation:marfxb .6s ease both}
+.marfx.dc{--fxc:#17b4ff}
+@keyframes marfxb{0%{opacity:0;transform:scale(.4)}35%{opacity:.92;transform:scale(1.15)}60%{opacity:.5;transform:scale(1)}100%{opacity:0;transform:scale(1.3)}}
+@media(prefers-reduced-motion:reduce){.marfx{display:none}}
 .marSwBtn svg{width:14px;height:14px;flex:none}
 </style>
 </head>
@@ -2299,7 +2308,8 @@ function avBox(){
 
 /* ===== NOVITA' DEL SITO (popup) ===== */
 /* Ad ogni modifica visibile agli utenti: aumenta NEWS_V e aggiungi una voce in NEWS (it + en). Mai cose che riguardano l'amministratore. */
-var NEWS_V=31,NEWS=[
+var NEWS_V=32,NEWS=[
+ {v:32,d:"2026-11-20",ic:"🔀",ti:{it:"Cambio maratona più diretto",en:"A more direct marathon switch"},tx:{it:"Dopo l'accesso il pannello di login si dissolve e solo dopo compare la scelta della maratona, come un passaggio a parte. E il pulsante \"Cambia maratona\" ora ti porta direttamente nell'altra maratona con un piccolo effetto, invece di riaprire la schermata di scelta.",en:"After logging in, the login panel dissolves and only then does the marathon choice appear, as its own step. And the \"Switch marathon\" button now takes you straight to the other marathon with a small effect, instead of reopening the choice screen."},chips:{it:["Dissolvenza","Switch diretto"],en:["Dissolve effect","Direct switch"]}},
  {v:31,d:"2026-11-20",ic:"🔑",hero:1,ti:{it:"Accesso dalla schermata Cronomaratona",en:"Log in from the Cronomaratona screen"},tx:{it:"Accedi o crea l'account direttamente nella schermata Cronomaratona, prima di scegliere MCU o DC. Quando esci, torni proprio qui: accedi di nuovo e poi scegli la maratona.",en:"Log in or create your account right on the Cronomaratona screen, before picking MCU or DC. When you log out, you're brought back here: log in again and then choose the marathon."},chips:{it:["Accesso unificato","Scelta maratona dopo"],en:["Unified login","Marathon choice comes after"]}},
  {v:30,d:"2026-11-20",ic:"🦸",hero:1,ti:{it:"Arriva la Maratona DC",en:"The DC Marathon has arrived"},tx:{it:"Oltre alla Maratona MCU ora puoi scegliere anche la Maratona DC: stessa logica, catalogo cronologico tutto suo, badge e progressi separati, uscite in arrivo con il conto alla rovescia e la Spoiler Mode disponibile anche qui. Scegli quale maratona guardare dalla schermata iniziale.",en:"Alongside the MCU Marathon you can now pick the DC Marathon too: same logic, its own chronological catalogue, separate badges and progress, upcoming releases with a countdown, and Spoiler Mode available here too. Choose which marathon to watch from the opening screen."},chips:{it:["Catalogo DC","Badge separati","Spoiler Mode"],en:["DC catalogue","Separate badges","Spoiler Mode"]}},
  {v:29,d:"2026-11-20",ic:"⚡",ti:{it:"Aggiornamenti più veloci",en:"Faster updates"},tx:{it:"Badge e gruppi ora si aggiornano all’istante per tutti, senza dover aspettare.",en:"Badges and groups now update instantly for everyone, with no more waiting."}},
@@ -4077,8 +4087,8 @@ function updateMarHeader(){
   var t=$("marSwTxt");if(t)t.textContent=ct("Cambia maratona","Switch marathon");
   var eb=$("mpkEyebrow");if(eb)eb.textContent=ct("Una piattaforma, più saghe","One platform, more sagas");
 }
-function mpkAuthRender(){
-  var need=needsGate();
+var mpkLastNeed=null;
+function mpkApplyAuthState(need){
   var auth=$("mpkAuth"),pick=$("mpkPick"),sub=$("mpkSub"),x=$("mpkX");
   if(auth)auth.hidden=!need;
   if(pick)pick.style.display=need?"none":"";
@@ -4087,6 +4097,30 @@ function mpkAuthRender(){
     sub.textContent=!need?ct("Guarda tutto nell'ordine giusto. Scegli la maratona con gli amici: progressi, badge e spoiler mode, per ogni universo.","Watch everything in the right order. Pick the marathon with friends: progress, badges and spoiler mode, for every universe."):wy?wy:EXP?ct("Per sicurezza l'accesso scade dopo un'ora di inattività. Accedi di nuovo.","For security, access expires after an hour of inactivity. Log in again."):ct("Crea un account per salvare i tuoi progressi e vederli con gli amici, in ogni maratona.","Create an account to save your progress and see it with friends, in every marathon.");
   }
   if(x)x.hidden=need||!MAR_CHOSEN;
+}
+function mpkAuthRender(){
+  var need=needsGate();
+  var changed=mpkLastNeed!==null&&mpkLastNeed!==need;
+  mpkLastNeed=need;
+  var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+  if(changed&&!reduce){
+    var auth=$("mpkAuth"),pick=$("mpkPick");
+    var leaving=need?pick:auth; // ciò che sta per sparire: il pannello che non serve più
+    var entering=need?auth:pick; // ciò che comparirà come "secondo passaggio", dopo la dissolvenza
+    if(leaving){
+      leaving.classList.add("mpk-swout");
+      setTimeout(function(){
+        mpkApplyAuthState(need);
+        leaving.classList.remove("mpk-swout");
+        if(entering){
+          entering.classList.add("mpk-swin");
+          requestAnimationFrame(function(){requestAnimationFrame(function(){entering.classList.remove("mpk-swin")})});
+        }
+      },260);
+      return;
+    }
+  }
+  mpkApplyAuthState(need);
 }
 function openMarPicker(){
   var mp=$("marPick");if(!mp)return;
@@ -4110,6 +4144,19 @@ function chooseMar(m){
   if(SPM)spLoad(function(){render()});else render();
   try{pull(true)}catch(e){}
 }
+function marFx(to,cb){
+  if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches){cb();return}
+  var ov=document.createElement("div");ov.className="marfx"+(to==="dc"?" dc":"");ov.setAttribute("aria-hidden","true");
+  document.body.appendChild(ov);
+  var done=false;
+  setTimeout(function(){if(done)return;done=true;cb()},230); // il cambio avviene al culmine del flash, cosi' resta nascosto
+  setTimeout(function(){ov.remove()},700);
+}
+function swapMar(){
+  if(needsGate()||!MAR_CHOSEN){openMarPicker();return} // niente ancora da scambiare: mostra la scelta completa
+  var to=MAR==="dc"?"mcu":"dc";
+  marFx(to,function(){chooseMar(to)});
+}
 var mpkMode="new";
 function mpkSetMode(m){
   mpkMode=m;
@@ -4131,7 +4178,7 @@ function mpkGo(){
   if(mpkMode==="in"&&!pw){er.textContent=ct("Scrivi la password.","Enter your password.");pi.focus();return}
   go.disabled=true;er.textContent=ct("Un attimo…","One moment…");
   (mpkMode==="new"?doCreate:doLogin)(nm,pw).then(function(){
-    EXP=false;why("");go.disabled=false;
+    EXP=false;why("");go.disabled=false;er.textContent="";
     msg(mpkMode==="new"?ct("Account creato. I tuoi progressi ora sono condivisi.","Account created. Your progress is now shared."):ct("Bentornato! Progressi ripristinati.","Welcome back! Progress restored."));
     mpkAuthRender();render();
     pull();loadUcnt();loadGcnt();
@@ -4142,7 +4189,7 @@ function mpkGo(){
   });
 }
 (function(){
-  var sw=$("marSwBtn");if(sw)sw.addEventListener("click",openMarPicker);
+  var sw=$("marSwBtn");if(sw)sw.addEventListener("click",swapMar);
   var mx=$("mpkX");if(mx)mx.addEventListener("click",closeMarPicker);
   var mp=$("marPick");
   mp.addEventListener("click",function(e){
