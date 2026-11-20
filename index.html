@@ -1887,12 +1887,6 @@ function lsOpen(url){
         else if(url.indexOf("/friendNote/")>0||url.indexOf("/friendSent/")>0){auxSig=null;frAux(S.me.i)}
         else if(url.indexOf("/notifs/")>0)nfLoad();
         else if(url.indexOf("/userGroups/")>0||url.indexOf("/groupMembers/")>0||/\/groups\/[^/]+\.json/.test(url))pull(true);
-        else if(/\/badges\//.test(url)){
-          BGA=(l.data&&typeof l.data==="object")?l.data:{};BGT=Date.now();
-          try{var mo=BGA[S.me.i];if(BGOK&&!BGDIRTY&&mo&&Number(mo.m)>BG.m){BG.m=Number(mo.m);if(tab==="pr")renderFriends()}}catch(e){}
-          if(tab==="am"||tab==="gr"){try{drawList()}catch(e){}}
-        }
-        else if(/\/chats\//.test(url))pullChat();
       },400);
     }
     es.addEventListener("put",function(e){try{var m=JSON.parse(e.data),pa=lsPath(m.path),v=m.data===undefined?null:m.data;l.data=pa.length?lsSet(l.data,pa,v):(v===null?{}:v);l.ready=true;l.t=Date.now();l.bo=3000;fire()}catch(x){}});
@@ -1909,10 +1903,9 @@ function liveGet(url){
 }
 function liveStart(){
   if(!DB_URL||!S.acct||!S.me||!S.me.i)return;
-  var me=S.me.i,u=[dbUrl(),fqUrl(me),nfUrl(),prUrl(),bgUrl(),rtUrl()]; /* +2 (membri e chat) quando sei dentro un gruppo */
-  if(S.cg){u.push(gmUrl(S.cg));u.push(chUrl(S.cg))}
+  var me=S.me.i,u=[dbUrl(),fqUrl(me),nfUrl(),prUrl()]; /* massimo 4 connessioni aperte: prudenza sui limiti del browser */
   u.forEach(function(x){lsOpen(x)});
-  Object.keys(LS).forEach(function(k){if(/\/(groupMembers|groups|chats)\//.test(k)&&u.indexOf(k)<0){var l=LS[k];try{if(l.es)l.es.close()}catch(e){}clearTimeout(l.rt);clearTimeout(l.dt);delete LS[k]}});
+  Object.keys(LS).forEach(function(k){if(/\/(groupMembers|groups)\//.test(k)&&u.indexOf(k)<0){var l=LS[k];try{if(l.es)l.es.close()}catch(e){}clearTimeout(l.rt);clearTimeout(l.dt);delete LS[k]}});
 }
 function liveOK(){var l=LS[dbUrl()];return !!(l&&l.ready&&Date.now()-l.t<90000)}
 setInterval(function(){if(!S.acct&&Object.keys(LS).length)lsClose();else if(S.acct&&!document.hidden)liveStart()},3000);
