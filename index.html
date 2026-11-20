@@ -515,11 +515,17 @@ body.gated{overflow:hidden}
 .mpk-spons a{display:grid;place-items:center;width:48px;height:48px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.08);overflow:hidden;transition:transform .2s}
 .mpk-spons a:hover{transform:translateY(-2px)}
 .mpk-spons img{width:70%;height:70%;object-fit:contain}
+.mpk-x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:max(14px,env(safe-area-inset-right,0px));z-index:2;width:38px;height:38px;border-radius:999px;border:1px solid #2a2238;background:rgba(255,255,255,.04);color:#8b84a6;font-size:22px;line-height:1;cursor:pointer}
+.mpk-x:hover,.mpk-x:focus-visible{color:#fff;border-color:#fff;outline:none}
+.marSwBtn{margin:14px 0 0;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font:600 12px "Instrument Sans",sans-serif;cursor:pointer}
+.marSwBtn:hover,.marSwBtn:focus-visible{color:var(--ink);border-color:var(--red);outline:none}
+.marSwBtn svg{width:14px;height:14px;flex:none}
 </style>
 </head>
 <body class="boot" data-tab="io">
 <div id="marPick" role="dialog" aria-modal="true" aria-label="Scegli la maratona" hidden>
 <div class="mpk-bg"></div>
+<button type="button" class="mpk-x" id="mpkX" aria-label="Chiudi" hidden>&times;</button>
 <div class="mpk-wrap">
 <span class="mpk-eyebrow">Una piattaforma, più saghe</span>
 <h2 class="mpk-h1" aria-label="Cronomaratona">
@@ -539,6 +545,7 @@ body.gated{overflow:hidden}
 <header class="hero"><div class="wrap">
 <p class="credit" id="spcred"><span class="cr-a">Sito creato da <b>Alessandro</b> per gli amici</span><span class="cr-b">creato con il <b>LOCU</b> <i aria-label="amore" id="spheart">♥</i></span><span id="igslot"></span><span id="spslot"></span></p>
 <h1 aria-label="Maratona MCU" id="marH1"><span class="ln"><span>Maratona</span></span><span class="ln"><span id="marSub">MCU</span></span></h1>
+<button type="button" id="marSwBtn" class="marSwBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h12M11 2.5 16.5 7 11 11.5M20 17H8M13 12.5 7.5 17 13 21.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="marSwTxt">Cambia maratona</span></button>
 <p id="stat"></p>
 <div class="reel" id="reel" role="img"><div class="cells" id="cells"></div></div>
 <aside class="legend" aria-label="Legenda"><p class="lg-t">Legenda</p><ul>
@@ -712,6 +719,7 @@ function addUpcoming(list){
   if(ch){ph.sort(function(a,b){return relOf(a[4])-relOf(b[4])});buildItems();render()}
 }
 function refreshUpcoming(){
+  if(MAR!=="mcu")return; // le uscite online (TMDB Marvel + nodo "upcoming") riguardano solo l'MCU
   igLoad();
   if(DB_URL)fetch(DB_URL.replace(/\/+$/,"")+"/upcoming.json").then(function(r){return r.ok?r.json():null}).then(function(o){
     if(o&&typeof o==="object")addUpcoming(Object.keys(o).map(function(k){var v=o[k]||{};return{id:Number(v.id)||0,t:v.t,r:v.r,h:v.h,s:v.s}}));
@@ -1023,7 +1031,7 @@ function renderSponsors(){placeSp();mpkSponsRender();
   var n=ids.length+(adm?1:0),c=Math.max(1,Math.min(n,4)),g=h("div","sp-grid");g.style.setProperty("--c",c);
   ids.forEach(function(k){
     var a=h("a","sp-tile");a.href=okSite(SP[k].u);a.target="_blank";a.rel="noopener noreferrer sponsored";a.setAttribute("aria-label","Sponsor: "+SP[k].u.replace(/^https?:\/\/(www\.)?/,"").split("/")[0]);
-    var im=h("img");im.alt="";im.addEventListener("load",function(){try{var c=document.createElement("canvas");c.width=c.height=1;var x=c.getContext("2d");x.drawImage(im,0,0,1,1,0,0,1,1);var p=x.getImageData(0,0,1,1).data;a.style.background=p[3]<40?"#fff":"rgb("+p[0]+","+p[1]+","+p[2]+")"}catch(e){}});im.src=SP[k].l;a.appendChild(im);
+    var im=h("img");im.alt="";im.src=SP[k].l;a.appendChild(im);
     if(adm){
       var x=h("button","sp-x","×");x.type="button";x.setAttribute("aria-label","Rimuovi sponsor");var arm=false;
       x.addEventListener("click",function(e){
@@ -1101,7 +1109,7 @@ function renderMine(){
   });
   $("app").innerHTML=html;
   drawHero(m,fresh);
-  if(fresh&&!viewing){var fk=Object.keys(fresh);if(fk.length)setTimeout(function(){shield(fk[0])},70)}
+  if(fresh&&!viewing&&MAR==="mcu"){var fk=Object.keys(fresh);if(fk.length)setTimeout(function(){shield(fk[0])},70)}
 }
 function hm(x){var m=Math.round(x*60);return{h:Math.floor(m/60),m:m%60}}
 function hmTxt(x){var t=hm(x);return t.h+" ore"+(t.m?" e "+t.m+" min":"")}
@@ -2009,7 +2017,12 @@ function gcntTxt(){return GCNT===null?"gruppi: —":GCNT+(GCNT===1?" gruppo aper
 var UCNT=null;
 function loadUcnt(){
   if(!DB_URL||document.hidden)return;
-  getJ(DB_URL.replace(/\/+$/,"")+"/rooms/"+ROOM+marSeg()+".json?shallow=true").then(function(o){UCNT=o&&typeof o==="object"?Object.keys(o).length:0}).catch(function(){UCNT=null}).then(function(){
+  // conta le persone iscritte su TUTTO il sito (entrambe le maratone), non solo quella attiva
+  Promise.all([ROOM,ROOM+"_dc"].map(function(r){return getJ(DB_URL.replace(/\/+$/,"")+"/rooms/"+r+".json?shallow=true").catch(function(){return null})})).then(function(a){
+    if(!a[0]&&!a[1]){UCNT=null;return}
+    var ids={};a.forEach(function(o){if(o&&typeof o==="object")Object.keys(o).forEach(function(k){ids[k]=1})});
+    UCNT=Object.keys(ids).length;
+  }).catch(function(){UCNT=null}).then(function(){
     var g=$("ucnt");if(g&&g.lastChild){g.hidden=UCNT===null;g.firstChild.className="led"+(UCNT===null?"":" on");g.lastChild.textContent=UCNT===null?"iscritti: —":UCNT+(UCNT===1?" persona iscritta":" persone iscritte")}
   });
 }
@@ -4028,18 +4041,32 @@ function updateMarHeader(){
   if(s)s.textContent=nm;
   if(h)h.setAttribute("aria-label","Maratona "+nm);
   document.documentElement.classList.toggle("mar-dc",MAR==="dc");
+  var t=$("marSwTxt");if(t)t.textContent=ct("Cambia maratona","Switch marathon");
+}
+function openMarPicker(){
+  var mp=$("marPick");if(!mp)return;
+  try{spFont()}catch(e){}
+  mp.hidden=false;
+  var x=$("mpkX");if(x)x.hidden=false;
+  document.body.style.overflow="hidden";
+}
+function closeMarPicker(){
+  var mp=$("marPick");if(!mp)return;
+  mp.hidden=true;
+  document.body.style.overflow="";
 }
 function chooseMar(m){
   if(m!==MAR){MAR=m;P=(m==="dc")?PDC:PMCU;buildItems()}
   try{localStorage.setItem("mcu-mar",m)}catch(e){}
   MAR_CHOSEN=true;
   updateMarHeader();
-  $("marPick").hidden=true;
-  document.body.style.overflow="";
+  closeMarPicker();
   render();
   try{pull(true)}catch(e){}
 }
 (function(){
+  var sw=$("marSwBtn");if(sw)sw.addEventListener("click",openMarPicker);
+  var mx=$("mpkX");if(mx)mx.addEventListener("click",closeMarPicker);
   var mp=$("marPick");
   mp.addEventListener("click",function(e){
     var b=e.target.closest("button[data-mar]");
