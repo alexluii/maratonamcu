@@ -392,7 +392,7 @@ body:has(.tkr:not([hidden])) .adm-pill{top:46px}
 .ph{--era:hsl(var(--eh,40) 82% 52%);--eraT:hsl(var(--eh,40) 74% 36%)}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ph{--eraT:hsl(var(--eh,40) 92% 72%)}}:root[data-theme="dark"] .ph{--eraT:hsl(var(--eh,40) 92% 72%)}.ph .pn{color:var(--eraT)}.ph .pp i{background:var(--era)}.cells i.d{background:hsl(var(--eh,40) 85% 55%)}
 .cm .mt.mme{box-shadow:0 0 0 2px #ffd23f,0 0 12px 2px rgba(255,210,63,.75)}.cm.tag{box-shadow:inset 3px 0 0 #ffd23f,0 0 0 1px #ffd23f,0 0 18px rgba(255,210,63,.4)}.cm.tag.gl{animation:tagb 1.5s ease-in-out 4}.cm.tag.gl .mt.mme{animation:mtg 1.5s ease-in-out 4}@keyframes tagb{50%{box-shadow:inset 3px 0 0 #ffd23f,0 0 0 2px #ffe27a,0 0 32px rgba(255,210,63,.85)}}@keyframes mtg{50%{box-shadow:0 0 0 3px #fff3b0,0 0 24px 7px rgba(255,210,63,1)}}
 #cosmos{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1;opacity:0;transition:opacity .6s}body[data-tab="am"] #cosmos,body[data-tab="gr"] #cosmos{opacity:1}
-.shr{position:fixed;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 14px #ffb627;z-index:259;pointer-events:none;animation:shr .6s ease-out forwards}@keyframes shr{from{transform:scale(.5);opacity:1}to{transform:scale(5);opacity:0}}
+.shr{position:fixed;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 14px #ffb627;z-index:259;pointer-events:none;animation:shr .6s ease-out forwards}@keyframes shr{from{transform:scale(.5);opacity:1}to{transform:scale(5);opacity:0}}.shr.dc{box-shadow:0 0 14px #17b4ff}
 @media (hover:hover) and (pointer:fine){.ticket:not(.done) .tk-t{background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.95) 50%,transparent 62%) no-repeat 160% 0/260% 100%,linear-gradient(currentColor,currentColor);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;transition:background-position .9s ease,filter .35s}.ticket:not(.done):hover .tk-t{background-position:-60% 0,0 0;filter:drop-shadow(0 0 14px rgba(255,255,255,.85))}}
 @media (prefers-reduced-motion:reduce){.ring.rga,.cm.tag.gl,.cm.tag.gl .mt.mme{animation:none!important}#cosmos{display:none}}
 
@@ -1146,7 +1146,7 @@ function renderMine(){
   });
   $("app").innerHTML=html;
   drawHero(m,fresh);
-  if(fresh&&!viewing&&MAR==="mcu"){var fk=Object.keys(fresh);if(fk.length)setTimeout(function(){shield(fk[0])},70)}
+  if(fresh&&!viewing){var fk=Object.keys(fresh);if(fk.length){if(MAR==="mcu")setTimeout(function(){shield(fk[0])},70);else if(MAR==="dc"&&!SPM)setTimeout(function(){dcShield(fk[0])},70)}}
 }
 function hm(x){var m=Math.round(x*60);return{h:Math.floor(m/60),m:m%60}}
 function hmTxt(x){var t=hm(x);return t.h+" ore"+(t.m?" e "+t.m+" min":"")}
@@ -2309,7 +2309,8 @@ function avBox(){
 
 /* ===== NOVITA' DEL SITO (popup) ===== */
 /* Ad ogni modifica visibile agli utenti: aumenta NEWS_V e aggiungi una voce in NEWS (it + en). Mai cose che riguardano l'amministratore. */
-var NEWS_V=34,NEWS=[
+var NEWS_V=35,NEWS=[
+ {v:35,d:"2026-11-20",ic:"🔰",ti:{it:"Scudo DC per gli amici",en:"DC shield for friends"},tx:{it:"Anche nella Maratona DC, quando un amico segna un titolo come visto compare un effetto: lo stemma della S di Superman che atterra al suo posto, al posto dello scudo di Capitan America. Per ora è attivo solo fuori dalla Spoiler Mode.",en:"In the DC Marathon too, when a friend marks something as watched you now get an effect: Superman's S-shield landing on it, instead of Captain America's shield. For now it's only active outside Spoiler Mode."},chips:{it:["Effetto DC","S di Superman"],en:["DC effect","Superman's S"]}},
  {v:34,d:"2026-11-20",ic:"📺",hero:1,ti:{it:"Arrivano le serie TV DC",en:"DC TV series have arrived"},tx:{it:"Nella Maratona DC c'è una nuova sezione \"Universi TV\": tutto l'Arrowverse (Arrow, The Flash, Supergirl, Legends of Tomorrow, Black Lightning, Batwoman, Superman & Lois, Stargirl) più Smallville, Gotham, Titans, Doom Patrol, Harley Quinn, Pennyworth, Constantine, Swamp Thing, Lucifer, iZombie e Krypton, in ordine di uscita reale.",en:"The DC Marathon has a new \"TV Universes\" section: the whole Arrowverse (Arrow, The Flash, Supergirl, Legends of Tomorrow, Black Lightning, Batwoman, Superman & Lois, Stargirl) plus Smallville, Gotham, Titans, Doom Patrol, Harley Quinn, Pennyworth, Constantine, Swamp Thing, Lucifer, iZombie and Krypton, in real release order."},chips:{it:["90 stagioni","Ordine cronologico"],en:["90 seasons","Chronological order"]}},
  {v:33,d:"2026-11-20",ic:"⚡",ti:{it:"Gruppi e chat più veloci",en:"Faster groups and chat"},tx:{it:"Entrando in un gruppo le persone e i progressi si aggiornano subito, invece di aspettare qualche secondo. Anche i messaggi della chat arrivano più in fretta.",en:"Entering a group now updates people and progress right away, instead of waiting a few seconds. Chat messages also arrive faster."}},
  {v:32,d:"2026-11-20",ic:"🔀",ti:{it:"Cambio maratona più diretto",en:"A more direct marathon switch"},tx:{it:"Dopo l'accesso il pannello di login si dissolve e solo dopo compare la scelta della maratona, come un passaggio a parte. E il pulsante \"Cambia maratona\" ora ti porta direttamente nell'altra maratona con un piccolo effetto, invece di riaprire la schermata di scelta.",en:"After logging in, the login panel dissolves and only then does the marathon choice appear, as its own step. And the \"Switch marathon\" button now takes you straight to the other marathon with a small effect, instead of reopening the choice screen."},chips:{it:["Dissolvenza","Switch diretto"],en:["Dissolve effect","Direct switch"]}},
@@ -2502,6 +2503,37 @@ function shield(id){
     ],{duration:950,easing:"cubic-bezier(.3,.7,.35,1)",fill:"forwards"});
     a.onfinish=function(){
       var ring=document.createElement("div");ring.className="shr";ring.style.cssText="left:"+tgt.x+"px;top:"+tgt.y+"px";document.body.appendChild(ring);
+      setTimeout(function(){ring.remove()},700);
+      setTimeout(function(){var f=el.animate([{opacity:1,transform:"scale(1)"},{opacity:0,transform:"scale(.7)"}],{duration:320,fill:"forwards"});f.onfinish=function(){el.remove()}},700);
+    };
+    setTimeout(function(){if(el.parentNode)el.remove()},2600);
+  }catch(e){}
+}
+var SD_SVG='<svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true"><path d="M50 2 L92 24 L92 60 L50 98 L8 60 L8 24 Z" fill="#f4c430" stroke="#8a6d1f" stroke-width="2"/><path d="M50 11 L83 27 L83 57 L50 89 L17 57 L17 27 Z" fill="#0a3161"/><text x="50" y="70" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="58" text-anchor="middle" fill="#c8102e">S</text></svg>';
+function dcShield(id){
+  try{
+    if(rmo()||!document.body)return;
+    var old=document.getElementById("shld");if(old)old.remove();
+    var vh=innerHeight,vw=innerWidth,tgt=null,cb=document.querySelector('input[data-i="'+id+'"]');
+    function ok(e){if(!e)return null;var r=e.getBoundingClientRect();return r.width>0&&r.top>50&&r.bottom<vh-90?r:null}
+    var r=ok(cb&&cb.closest("li"));if(r)tgt={x:r.left+36,y:r.top+r.height/2};
+    if(!tgt){var c=document.querySelector("#cells i.pop")||document.querySelector("#cells i.d:last-of-type");r=ok(c);if(r)tgt={x:r.left+r.width/2,y:r.top+r.height/2}}
+    if(!tgt){var tb=document.querySelector("#tk .tk-b");r=tb&&tb.getBoundingClientRect();if(r&&r.top>50&&r.bottom<vh-90)tgt={x:r.left+r.width/2,y:r.top+r.height/2}}
+    if(!tgt){var li=cb&&cb.closest("li");r=li&&li.getBoundingClientRect();if(r&&r.bottom>60&&r.top<vh-100)tgt={x:r.left+36,y:Math.min(vh-130,Math.max(80,r.top+r.height/2))}}
+    if(!tgt)tgt={x:vw/2,y:vh*.45};
+    var S0=64,el=document.createElement("div");el.id="shld";el.setAttribute("aria-hidden","true");el.innerHTML=SD_SVG;
+    el.style.cssText="position:fixed;left:"+(tgt.x-S0/2)+"px;top:"+(tgt.y-S0/2)+"px;width:"+S0+"px;height:"+S0+"px;z-index:260;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));opacity:0";
+    document.body.appendChild(el);
+    var dx=vw+90-tgt.x,dy=-Math.min(260,tgt.y-10);
+    var a=el.animate([
+      {transform:"translate("+dx+"px,"+dy+"px) rotate(0deg) scale(.5)",opacity:0,offset:0},
+      {opacity:1,offset:.15},
+      {transform:"translate("+(dx*.32)+"px,"+(dy*.08-50)+"px) rotate(560deg) scale(1)",offset:.58},
+      {transform:"translate(0,0) rotate(930deg) scale(1.3)",offset:.86},
+      {transform:"translate(0,0) rotate(1000deg) scale(1)",opacity:1,offset:1}
+    ],{duration:950,easing:"cubic-bezier(.3,.7,.35,1)",fill:"forwards"});
+    a.onfinish=function(){
+      var ring=document.createElement("div");ring.className="shr dc";ring.style.cssText="left:"+tgt.x+"px;top:"+tgt.y+"px";document.body.appendChild(ring);
       setTimeout(function(){ring.remove()},700);
       setTimeout(function(){var f=el.animate([{opacity:1,transform:"scale(1)"},{opacity:0,transform:"scale(.7)"}],{duration:320,fill:"forwards"});f.onfinish=function(){el.remove()}},700);
     };
