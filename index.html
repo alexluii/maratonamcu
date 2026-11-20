@@ -3795,7 +3795,7 @@ function admUi(){
   if(b)b.textContent=on?"Esci dall’amministratore":"Accesso amministratore";
   if(!p){p=h("button","adm-pill","Admin · Esci");p.id="admPill";p.type="button";p.addEventListener("click",admExit);document.body.appendChild(p)}
   p.hidden=!on;if(on)updBadge();
-  var fa=$("admFoot");if(fa&&fbMode())fa.hidden=on;
+  var fa=$("admFoot");if(fa&&fbMode())fa.hidden=on||!(S.acct&&isOwnN(S.acct.name));
   var rs=$("reset");if(rs)rs.hidden=!!S.acct;
 }
 function flyTitle(ov,ttl,after){
@@ -3918,7 +3918,7 @@ setTimeout(function(){document.body.classList.remove("boot")},2800);
 render();
 if(LEGACY)setTimeout(function(){openMigrate(LEGACY,"")},300);
 if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}var pk=0;setInterval(function(){pk++;var need=liveOK()?6:((tab==="am"||tab==="gr")?1:2);if(pk%need)return;pull()},5000);loadGcnt();setInterval(loadGcnt,30000);loadUcnt();setInterval(loadUcnt,60000);setInterval(pullChat,5000)}
-admLoad();if(fbMode())$("admFoot").hidden=false;if(adminOk()){render();renderSponsors();loadReports()}
+admLoad();if(fbMode())$("admFoot").hidden=!(S.acct&&isOwnN(S.acct.name));if(adminOk()){render();renderSponsors();loadReports()}
 $("admBtn").addEventListener("click",function(){if(adminOk()){admExit();return}location.href="admin.html"});
 refreshUpcoming();setInterval(refreshUpcoming,3600000);loadSponsors();setInterval(loadSponsors,120000);setInterval(loadReports,15000);if(window.matchMedia)window.matchMedia("(min-width:1080px)").addEventListener("change",placeSp);setInterval(tick,1000);document.addEventListener("visibilitychange",function(){if(!document.hidden)pull()});
 startTr();
