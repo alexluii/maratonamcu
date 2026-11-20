@@ -818,6 +818,14 @@ function u2token(){
 function curTok(){return(FBT&&adminOk())?fbToken():(U2?u2token():Promise.resolve(null))}
 u2load();
 try{if(sessionStorage.getItem("mcu-test"))window.__newAcct=1}catch(e){}
+try{
+  /* l'account di prova sta per essere creato: non mostrare per nessun istante il vero account dell'amministratore */
+  var _tp=JSON.parse(sessionStorage.getItem("mcu-test")||"null");
+  if(_tp&&_tp.pending){
+    S={me:{i:rid(),n:"",d:{},u:0},f:{},h:{}};S.cg="";S.h={};
+    U2=null;ADM_UNTIL=0;FBT=null;try{admClear()}catch(e){}
+  }
+}catch(e){}
 window.fetch=function(u,o){
   var b=DB_URL?DB_URL.replace(/\/+$/,""):null;
   if(b&&typeof u==="string"&&u.indexOf(b)===0&&u.indexOf("auth=")<0)return curTok().then(function(t){return RAWF(t?u+(u.indexOf("?")<0?"?":"&")+"auth="+encodeURIComponent(t):u,o)});
