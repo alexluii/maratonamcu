@@ -510,6 +510,12 @@ body.gated{overflow:hidden}
 .mpk-u:hover .mpk-mt,.mpk-u:focus-visible .mpk-mt{color:var(--c)}
 .mpk-u.mpk-dc{--c:#17b4ff}
 @media(max-width:460px){.mpk-pick{flex-direction:column;gap:1.1rem}.mpk-slash{transform:rotate(90deg);font-size:1.6rem;margin:-.2rem 0}}
+.mpk-spons{display:flex;flex-direction:column;align-items:center;gap:.6rem;margin-top:.4rem}
+.mpk-spons .mpk-sl{font:600 10px "Instrument Sans",sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#4a4460}
+.mpk-spons .mpk-sg{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.mpk-spons a{display:grid;place-items:center;width:52px;height:36px;padding:3px;border-radius:6px;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.08);overflow:hidden;transition:transform .2s}
+.mpk-spons a:hover{transform:translateY(-2px)}
+.mpk-spons img{max-width:calc(100% - 8px);max-height:calc(100% - 8px);object-fit:contain}
 </style>
 </head>
 <body class="boot" data-tab="io">
@@ -527,6 +533,7 @@ body.gated{overflow:hidden}
 <span class="mpk-slash" aria-hidden="true">/</span>
 <button class="mpk-u mpk-dc" type="button" data-mar="dc">DC<span class="mpk-mt">UNIVERSE</span></button>
 </div>
+<div class="mpk-spons" id="mpkSpons" aria-label="Sponsor" hidden></div>
 </div>
 </div>
 <div class="tkr" id="tkr" hidden role="region" aria-label="Prossime uscite"></div>
@@ -995,7 +1002,20 @@ function spMove(ids,i,d){
   var a=ids.slice();var t=a[i];a[i]=a[j];a[j]=t;
   Promise.all(a.map(function(k,n){if(SP[k]&&SP[k].o===n)return null;return aPut(spUrl(k).replace(/\.json$/,"/o.json"),n).then(function(){if(SP[k])SP[k].o=n})})).then(function(){renderSponsors()}).catch(function(er){msg("Non riuscito ("+(er&&er.message||"errore")+").")});
 }
-function renderSponsors(){placeSp();
+function mpkSponsRender(){
+  var m=$("mpkSpons");if(!m)return;
+  var ids=Object.keys(SP).filter(function(k){return SP[k]&&okImg(SP[k].l)&&okSite(SP[k].u)}).sort(function(a,b){return spKey(a)-spKey(b)});
+  if(!ids.length){m.hidden=true;m.textContent="";return}
+  m.hidden=false;m.textContent="";
+  m.appendChild(h("span","mpk-sl",ct("Con il sostegno di","Supported by")));
+  var g=h("div","mpk-sg");
+  ids.forEach(function(k){
+    var a=h("a");a.href=okSite(SP[k].u);a.target="_blank";a.rel="noopener noreferrer sponsored";a.setAttribute("aria-label","Sponsor: "+SP[k].u.replace(/^https?:\/\/(www\.)?/,"").split("/")[0]);
+    var im=h("img");im.alt="";im.src=SP[k].l;a.appendChild(im);g.appendChild(a);
+  });
+  m.appendChild(g);
+}
+function renderSponsors(){placeSp();mpkSponsRender();
   var el=$("spons");if(!el)return;
   var ids=Object.keys(SP).filter(function(k){return SP[k]&&okImg(SP[k].l)&&okSite(SP[k].u)}).sort(function(a,b){return spKey(a)-spKey(b)});
   var adm=isAdmin();
