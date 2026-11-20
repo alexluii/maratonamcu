@@ -1009,6 +1009,9 @@ function spMove(ids,i,d){
   var a=ids.slice();var t=a[i];a[i]=a[j];a[j]=t;
   Promise.all(a.map(function(k,n){if(SP[k]&&SP[k].o===n)return null;return aPut(spUrl(k).replace(/\.json$/,"/o.json"),n).then(function(){if(SP[k])SP[k].o=n})})).then(function(){renderSponsors()}).catch(function(er){msg("Non riuscito ("+(er&&er.message||"errore")+").")});
 }
+function spBgMatch(im,a){
+  im.addEventListener("load",function(){try{var c=document.createElement("canvas");c.width=c.height=1;var x=c.getContext("2d");x.drawImage(im,0,0,1,1,0,0,1,1);var p=x.getImageData(0,0,1,1).data;a.style.background=p[3]<40?"#fff":"rgb("+p[0]+","+p[1]+","+p[2]+")"}catch(e){}});
+}
 function mpkSponsRender(){
   var m=$("mpkSpons");if(!m)return;
   var ids=Object.keys(SP).filter(function(k){return SP[k]&&okImg(SP[k].l)&&okSite(SP[k].u)}).sort(function(a,b){return spKey(a)-spKey(b)});
@@ -1017,7 +1020,7 @@ function mpkSponsRender(){
   var g=h("div","mpk-sg");
   ids.forEach(function(k){
     var a=h("a");a.href=okSite(SP[k].u);a.target="_blank";a.rel="noopener noreferrer sponsored";a.setAttribute("aria-label","Sponsor: "+SP[k].u.replace(/^https?:\/\/(www\.)?/,"").split("/")[0]);
-    var im=h("img");im.alt="";im.src=SP[k].l;a.appendChild(im);g.appendChild(a);
+    var im=h("img");im.alt="";spBgMatch(im,a);im.src=SP[k].l;a.appendChild(im);g.appendChild(a);
   });
   m.appendChild(g);
 }
@@ -1031,7 +1034,7 @@ function renderSponsors(){placeSp();mpkSponsRender();
   var n=ids.length+(adm?1:0),c=Math.max(1,Math.min(n,4)),g=h("div","sp-grid");g.style.setProperty("--c",c);
   ids.forEach(function(k){
     var a=h("a","sp-tile");a.href=okSite(SP[k].u);a.target="_blank";a.rel="noopener noreferrer sponsored";a.setAttribute("aria-label","Sponsor: "+SP[k].u.replace(/^https?:\/\/(www\.)?/,"").split("/")[0]);
-    var im=h("img");im.alt="";im.src=SP[k].l;a.appendChild(im);
+    var im=h("img");im.alt="";spBgMatch(im,a);im.src=SP[k].l;a.appendChild(im);
     if(adm){
       var x=h("button","sp-x","×");x.type="button";x.setAttribute("aria-label","Rimuovi sponsor");var arm=false;
       x.addEventListener("click",function(e){
@@ -2500,12 +2503,13 @@ function snap(el){
     g.className=(g.className||"")+" snapg";g.setAttribute("aria-hidden","true");g.setAttribute("data-nt","1");
     g.style.cssText="position:fixed;left:"+r.left+"px;top:"+r.top+"px;width:"+r.width+"px;height:"+r.height+"px;margin:0;pointer-events:none;z-index:250;box-sizing:border-box";
     document.body.appendChild(g);
-    var cs=getComputedStyle(el),cols=[cs.color,"#ffb627","#8b8fb0","#d6243a"];
-    if(cs.backgroundColor&&cs.backgroundColor!=="rgba(0, 0, 0, 0)")cols.push(cs.backgroundColor);
-    var n=Math.min(80,Math.max(18,Math.round(r.width*r.height/380))),box=document.createElement("div");box.className="snapb";box.setAttribute("aria-hidden","true");
+    var cs=getComputedStyle(el),fire=MAR==="dc",cols=fire?["#ff7a00","#ffb627","#ff3d1a","#ffd166","#c62828"]:[cs.color,"#ffb627","#8b8fb0","#d6243a"];
+    if(!fire&&cs.backgroundColor&&cs.backgroundColor!=="rgba(0, 0, 0, 0)")cols.push(cs.backgroundColor);
+    var n=Math.min(80,Math.max(18,Math.round(r.width*r.height/380))),box=document.createElement("div");box.className="snapb"+(fire?" snapb-fire":"");box.setAttribute("aria-hidden","true");
     for(var i=0;i<n;i++){
       var p=document.createElement("i"),fx=Math.random(),sz=2+Math.random()*4;
-      p.style.cssText="left:"+(r.left+fx*r.width)+"px;top:"+(r.top+Math.random()*r.height)+"px;width:"+sz+"px;height:"+sz+"px;background:"+cols[i%cols.length]+";--dx:"+(30+Math.random()*130)+"px;--dy:"+(-20-Math.random()*110)+"px;--dr:"+(Math.random()*360)+"deg;animation-delay:"+Math.round(fx*520+Math.random()*120)+"ms";
+      var dx=fire?((Math.random()-.5)*60):(30+Math.random()*130),dy=fire?(-70-Math.random()*170):(-20-Math.random()*110);
+      p.style.cssText="left:"+(r.left+fx*r.width)+"px;top:"+(r.top+Math.random()*r.height)+"px;width:"+sz+"px;height:"+sz+"px;background:"+cols[i%cols.length]+";--dx:"+dx+"px;--dy:"+dy+"px;--dr:"+(Math.random()*360)+"deg;animation-delay:"+Math.round(fx*520+Math.random()*120)+"ms"+(fire?";box-shadow:0 0 6px "+cols[i%cols.length]:"");
       box.appendChild(p);
     }
     document.body.appendChild(box);
