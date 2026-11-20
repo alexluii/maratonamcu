@@ -271,6 +271,30 @@ function setUserLang(id,name,l){
   });
 }
 function nkOf(n){return sha("nm:"+String(n).replace(/\s+/g," ").trim().slice(0,24).toLowerCase()).then(function(x){return x.slice(0,20)})}
+function isTestAcct(n){return /^prova[0-9a-f]{6}$/i.test(String(n||"").trim())}
+/* elimina del tutto un account (usato per gli account di prova dimenticati): stesso giro di pulizia che fa il sito quando esce da solo */
+function purgeAccount(id){
+  function rd(p,q){return GET(p,q).catch(function(){return null})}
+  var tasks=[];function del(p){tasks.push(function(){return DEL(p).catch(function(){})})}
+  return Promise.all([rd("friendSent/"+id),rd("friends/"+id),rd("userGroups/"+id),rd("ratings/"+ROOM),rd("accounts/"+ROOM)]).then(function(r){
+    var fs=obj(r[0]),fr=obj(r[1]),ug=obj(r[2]),rt=obj(r[3]),acc=obj(r[4]);
+    Object.keys(fs).forEach(function(k){del("friendReq/"+k+"/"+id);del("friendNote/"+k+"/"+id)});
+    Object.keys(fr).forEach(function(k){if(k!=="_i")del("friends/"+k+"/"+id)});
+    Object.keys(rt).forEach(function(f){if(rt[f]&&rt[f][id]!==undefined)del("ratings/"+ROOM+"/"+f+"/"+id)});
+    var nk=Object.keys(acc).filter(function(k){return acc[k]&&acc[k].id===id})[0];
+    var gids=Object.keys(ug);
+    return Promise.all(gids.map(function(g){
+      return rd("chats/"+g,'?orderBy="$key"&limitToLast=200').then(function(o){
+        Object.keys(obj(o)).forEach(function(k){if(o[k]&&o[k].i===id)del("chats/"+g+"/"+k)});
+        del("groupMembers/"+g+"/"+id);
+      });
+    })).then(function(){
+      ["friendSent/"+id,"friends/"+id,"friendReq/"+id,"friendNote/"+id,"userGroups/"+id,"pub/"+id,"rooms/"+ROOM+"/"+id,"avatars/"+ROOM+"/"+id,"presence/"+ROOM+"/"+id,"badges/"+ROOM+"/"+id,"requests/"+ROOM+"/"+id,"notifs/"+ROOM+"/"+id,"members/"+id].forEach(del);
+      if(nk)del("accounts/"+ROOM+"/"+nk);
+      var seq=Promise.resolve();tasks.forEach(function(f){seq=seq.then(f)});return seq;
+    });
+  });
+}
 function renameUser(id,oldName,newName){
   var nn=String(newName).replace(/^\s*@+/,"").replace(/\s+/g," ").trim().slice(0,24);
   if(!/^[\p{Script=Latin}\p{N} .'_-]{1,24}$/u.test(nn))return Promise.reject(new Error("badname"));
@@ -420,9 +444,9 @@ function pagePers(){
     ids.sort(function(a,c){return(ST.removed[a]?1:0)-(ST.removed[c]?1:0)||ST.users[a].n.localeCompare(ST.users[c].n)});
     if(!ids.length)list.appendChild(h("div","card m","Nessuna persona trovata."));
     ids.forEach(function(id){
-      var u=ST.users[id],rm=!!ST.removed[id],d=doneOf(u).length,card=h("div","card"),head=h("button","person flat");head.type="button";
+      var u=ST.users[id],rm=!!ST.removed[id],isT=isTestAcct(u.n),d=doneOf(u).length,card=h("div","card"),head=h("button","person flat");head.type="button";
       head.appendChild(h("span","av",initials(u.n)));
-      var t=h("div","t"),nm=h("b",null,u.n+(rm?" (tolto dall’elenco)":""));t.appendChild(nm);
+      var t=h("div","t"),nm=h("b",null,u.n+(isT?" (account di prova)":"")+(rm?" (tolto dall’elenco)":""));t.appendChild(nm);
       t.appendChild(h("span","m",d+(total?"/"+total:"")+" titoli · ultimo accesso: "+ago(Number(u.u))));
       var bar=h("div","bar"),i=h("i");i.style.width=(total?Math.min(100,d/total*100):0)+"%";bar.appendChild(i);t.appendChild(bar);head.appendChild(t);head.appendChild(h("span","chev","▾"));
       var body=h("div");body.hidden=true;head.addEventListener("click",function(){body.hidden=!body.hidden});
@@ -452,7 +476,16 @@ function pagePers(){
       var rb=btn(rm?"Rimetti nell’elenco":"Togli dall’elenco","sm"+(rm?"":" bad"));
       var act=function(){(rm?DEL("removed/"+ROOM+"/"+id):PUT("removed/"+ROOM+"/"+id,true)).then(function(){LOG((rm?"Rimesso nell’elenco: ":"Tolto dall’elenco: ")+u.n);if(rm)delete ST.removed[id];else ST.removed[id]=true;draw()}).catch(fail)};
       if(rm)rb.addEventListener("click",act);else two(rb,"Togli dall’elenco",act);
-      row.appendChild(rb);body.appendChild(row);card.appendChild(head);card.appendChild(body);list.appendChild(card);
+      row.appendChild(rb);body.appendChild(row);
+      if(isT){
+        var pg=h("p","m","Account di prova: puoi eliminarlo del tutto (dati, amicizie, messaggi nei gruppi). Di norma si elimina da solo quando esci dall’account di prova sul sito.");pg.style.marginTop="14px";body.appendChild(pg);
+        var pb=btn("Elimina per sempre questo account di prova","sm bad");
+        two(pb,"Elimina per sempre questo account di prova",function(){
+          pb.disabled=true;purgeAccount(id).then(function(){LOG("Eliminato l’account di prova "+u.n);delete ST.users[id];toast("Account di prova "+u.n+" eliminato.");draw()}).catch(function(e){pb.disabled=false;fail(e)});
+        });
+        body.appendChild(pb);
+      }
+      card.appendChild(head);card.appendChild(body);list.appendChild(card);
     });
   }
   s.addEventListener("input",function(){query=s.value;draw()});draw();
