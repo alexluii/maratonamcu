@@ -1649,13 +1649,14 @@ function badgeBox(){
   b.appendChild(g);b.appendChild(det);return b;
 }
 /* ===== SPOILER MODE ===== */
-var SPM=false,SPD=null,SPF=false,SPT=[],SPL=false,SPOK=false;
+var SPM=false,SPD=null,SPD_MAR=null,SPF=false,SPT=[],SPL=false,SPOK=false;
 try{SPM=localStorage.getItem("mcu-spm")==="1";SPF=localStorage.getItem("mcu-spf")==="1";SPOK=localStorage.getItem("mcu-spok")==="1"}catch(e){}
 try{if(sessionStorage.getItem("mcu-test")){SPM=false;SPF=false;SPOK=false}}catch(e){}
+function spFile(){return MAR==="dc"?"spoiler-dc.json":"spoiler.json"} // ogni maratona ha il suo file di spoiler
 function spLoad(cb){
-  if(SPD){cb&&cb();return}
-  if(window.__SPOILER_DATA){SPD=window.__SPOILER_DATA;cb&&cb();return}
-  fetch("spoiler.json?v="+Math.floor(Date.now()/36e5)).then(function(r){return r.ok?r.json():{}}).then(function(j){SPD=j||{}}).catch(function(){SPD={}}).then(function(){cb&&cb()});
+  if(SPD&&SPD_MAR===MAR){cb&&cb();return}
+  if(window.__SPOILER_DATA&&!SPD_MAR){SPD=window.__SPOILER_DATA;SPD_MAR=MAR;cb&&cb();return}
+  fetch(spFile()+"?v="+Math.floor(Date.now()/36e5)).then(function(r){return r.ok?r.json():{}}).then(function(j){SPD=j||{};SPD_MAR=MAR}).catch(function(){SPD={};SPD_MAR=MAR}).then(function(){cb&&cb()});
 }
 function spRow(id,x){
   if(!SPM||!SPD||!x||x.u)return"";
@@ -4061,7 +4062,7 @@ function chooseMar(m){
   MAR_CHOSEN=true;
   updateMarHeader();
   closeMarPicker();
-  render();
+  if(SPM)spLoad(function(){render()});else render();
   try{pull(true)}catch(e){}
 }
 (function(){
