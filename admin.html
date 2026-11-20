@@ -105,7 +105,7 @@ input[type=text],input[type=search],select,textarea{width:100%;min-height:44px;p
 </div>
 
 <div id="app" hidden>
-  <header class="top"><h1 id="ttl">Oggi</h1><a id="site" href="./">‹ Sito</a><button id="tst" type="button" title="Entra nel sito come un nuovo utente di prova">Prova sito</button><button id="rf" type="button">Aggiorna</button><button id="out" type="button">Esci</button></header>
+  <header class="top"><h1 id="ttl">Oggi</h1><button id="marSw" type="button" title="Cambia la maratona di cui vedi i dati (persone, progressi, badge)">Maratona: MCU</button><a id="site" href="./">‹ Sito</a><button id="tst" type="button" title="Entra nel sito come un nuovo utente di prova">Prova sito</button><button id="rf" type="button">Aggiorna</button><button id="out" type="button">Esci</button></header>
   <main id="main"></main>
   <nav class="tabs" id="tabs" aria-label="Sezioni"></nav>
 </div>
@@ -183,9 +183,11 @@ function migrateGroups(){
     return Promise.all(q).then(function(){setTimeout(function(){toast("Ho sistemato "+q.length+(q.length===1?" gruppo":" gruppi")+" creati prima dell’aggiornamento.")},400)},function(e){setTimeout(function(){toast("Non sono riuscito a sistemare i gruppi ("+(e&&e.message||"errore")+"). Scrivilo ad Alessandro… cioè a Claude.")},400)});
   });
 }
+/* ADM_ROOM: quale maratona sto guardando in admin (persone/progressi/badge). Richieste, segnalazioni e reset PIN restano condivisi tra le maratone (sono legati all'account, non alla maratona), quindi usano sempre ROOM */
+var ADM_ROOM=ROOM;
 function load(){
   LOADERR=null;var rd=function(p){return GET(p).catch(function(e){LOADERR=e&&e.message||"errore";return null})};
-  return Promise.all([rd("rooms/"+ROOM),rd("removed/"+ROOM),rd("groups"),rd("groupMembers"),rd("mutes"),rd("groupRequests/"+ROOM),rd("reports/"+ROOM),rd("requests/"+ROOM)]).then(function(r){
+  return Promise.all([rd("rooms/"+ADM_ROOM),rd("removed/"+ADM_ROOM),rd("groups"),rd("groupMembers"),rd("mutes"),rd("groupRequests/"+ROOM),rd("reports/"+ROOM),rd("requests/"+ROOM)]).then(function(r){
     ST={users:obj(r[0]),removed:obj(r[1]),groups:obj(r[2]),members:obj(r[3]),mutes:obj(r[4]),greq:obj(r[5]),reports:obj(r[6]),preq:obj(r[7])};
     return migrateGroups();
   });
@@ -314,7 +316,7 @@ function renameUser(id,oldName,newName){
       return PUT("accounts/"+ROOM+"/"+k[1],Object.assign({},rec,{o:rec.o||oldName})).then(function(){return k[0]===k[1]?null:DEL("accounts/"+ROOM+"/"+k[0])});
     });
   }).then(function(){
-    return PUT("rooms/"+ROOM+"/"+id+"/n",nn);
+    return Promise.all(MAR_ROOMS.map(function(r){return PUT("rooms/"+r+"/"+id+"/n",nn).catch(function(){})}));
   }).then(function(){
     if(ST.users[id])ST.users[id].n=nn;
     return syncNames().catch(function(){});
@@ -484,7 +486,7 @@ function pagePers(){
       mv.addEventListener("click",function(){if(!sel.value)return;var gid=sel.value;mv.disabled=true;movePerson(id,u.n,gid).then(function(){LOG("Spostato "+u.n+" nella squadra «"+ST.groups[gid].n+"»");toast(u.n+" è nella squadra «"+ST.groups[gid].n+"».");ST.members[gid]=obj(ST.members[gid]);ST.members[gid][id]={n:u.n,r:ST.members[gid][id]&&ST.members[gid][id].r||"member"};mv.disabled=false;draw()}).catch(function(e){mv.disabled=false;fail(e)})});
       row.appendChild(mv);
       var rb=btn(rm?"Rimetti nell’elenco":"Togli dall’elenco","sm"+(rm?"":" bad"));
-      var act=function(){(rm?DEL("removed/"+ROOM+"/"+id):PUT("removed/"+ROOM+"/"+id,true)).then(function(){LOG((rm?"Rimesso nell’elenco: ":"Tolto dall’elenco: ")+u.n);if(rm)delete ST.removed[id];else ST.removed[id]=true;draw()}).catch(fail)};
+      var act=function(){(rm?DEL("removed/"+ADM_ROOM+"/"+id):PUT("removed/"+ADM_ROOM+"/"+id,true)).then(function(){LOG((rm?"Rimesso nell’elenco: ":"Tolto dall’elenco: ")+u.n);if(rm)delete ST.removed[id];else ST.removed[id]=true;draw()}).catch(fail)};
       if(rm)rb.addEventListener("click",act);else two(rb,"Togli dall’elenco",act);
       row.appendChild(rb);body.appendChild(row);
       if(isT){
@@ -651,6 +653,12 @@ $("tst").addEventListener("click",function(){
   SES=null;location.href="./index.html";
 });
 $("rf").addEventListener("click",function(){load().then(function(){render();toast("Aggiornato.")}).catch(function(){toast("Non riesco ad aggiornare.")})});
+$("marSw").addEventListener("click",function(){
+  ADM_ROOM=ADM_ROOM===ROOM?ROOM+"_dc":ROOM;
+  $("marSw").textContent="Maratona: "+(ADM_ROOM===ROOM?"MCU":"DC");
+  toast("Carico i dati della maratona "+(ADM_ROOM===ROOM?"MCU":"DC")+"…");
+  load().then(function(){render()}).catch(function(){toast("Non riesco a caricare questa maratona.")});
+});
 $("lf").addEventListener("submit",function(ev){
   ev.preventDefault();var b=$("lb"),m=$("lm");b.disabled=true;m.textContent="Un attimo…";
   fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key="+KEY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:$("e").value.trim(),password:$("p").value,returnSecureToken:true})})
