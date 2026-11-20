@@ -12,6 +12,10 @@
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#080c26;--panel:#121945;--ink:#eef1ff;--mute:#9ea7d4;--red:#ff5468;--amber:#ffbe3d;--star:#ffbe3d;--line:#222b62;--track:#18204f;--cell:#2b3679;--focus:#ffbe3d;--glass:rgba(18,25,69,.84);color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#080c26;--panel:#121945;--ink:#eef1ff;--mute:#9ea7d4;--red:#ff5468;--amber:#ffbe3d;--star:#ffbe3d;--line:#222b62;--track:#18204f;--cell:#2b3679;--focus:#ffbe3d;--glass:rgba(18,25,69,.84);color-scheme:dark}
+/* tema maratona DC: stesso impianto, accento blu invece del rosso Marvel */
+:root.mar-dc{--red:#1c57d6}
+@media (prefers-color-scheme:dark){:root.mar-dc:not([data-theme="light"]){--red:#5b9dff}}
+:root.mar-dc[data-theme="dark"]{--red:#5b9dff}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
@@ -4004,6 +4008,7 @@ function updateMarHeader(){
   var h=$("marH1"),s=$("marSub"),nm=MAR==="dc"?"DC":"MCU";
   if(s)s.textContent=nm;
   if(h)h.setAttribute("aria-label","Maratona "+nm);
+  document.documentElement.classList.toggle("mar-dc",MAR==="dc");
 }
 function chooseMar(m){
   if(m!==MAR){MAR=m;P=(m==="dc")?PDC:PMCU;buildItems()}
