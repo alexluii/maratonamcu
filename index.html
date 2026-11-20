@@ -1524,13 +1524,13 @@ function bgTick(){
     }).catch(function(){BGID=""});
     return;
   }
-  if(BGOK){try{if(SPF)BGEGG=true}catch(e){}spSync();bgDayCheck();bgCheck();if(BGDIRTY&&Date.now()-BGFL>60000)bgSave();if(Date.now()-BGT>15000)bgAll()}
+  if(BGOK){try{if(SPF)BGEGG=true}catch(e){}spSync();bgDayCheck();bgCheck();if(BGDIRTY&&Date.now()-BGFL>60000)bgSave();if(Date.now()-BGT>8000)bgAll()}
 }
 function bgAll(){
   BGT=Date.now();
   getJ(bgUrl()).then(function(v){BGA=(v&&typeof v==="object")?v:{};try{var mo=BGA[S.me.i];if(BGOK&&!BGDIRTY&&mo&&Number(mo.m)>BG.m){BG.m=Number(mo.m);if(tab==="pr")renderFriends()}}catch(e){}if(tab==="am"||tab==="gr"){try{drawList()}catch(e){}}}).catch(function(){});
 }
-setInterval(bgTick,20000);setTimeout(bgTick,3500);
+setInterval(bgTick,8000);setTimeout(bgTick,1500);
 function badgeBox(){
   var b=h("section","box gbox bdgs");var gh=h("div","gh");gh.appendChild(h("p","k",ct("Badge","Badges")));b.appendChild(gh);
   var g=h("div","bdg-g"),det=h("p","m bdg-d");det.setAttribute("data-nt","1");det.textContent=ct("Tocca un badge per i dettagli.","Tap a badge for details.");
@@ -3302,7 +3302,7 @@ function clDraw(){
     if(here){if(pl)pl.remove()}
     else{
       if(!pl){pl=h("button",null);pl.id="callPill";pl.type="button";pl.setAttribute("data-nt","1");pl.appendChild(ico("M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"));pl.appendChild(h("b",null,clTime()));pl.appendChild(h("span",null,ct(" In chiamata"," In call")));
-        pl.addEventListener("click",function(){tab="gr";S.cg=CALL.gid;render();setTimeout(function(){pull(true)},30)});document.body.appendChild(pl)}
+        pl.addEventListener("click",function(){tab="gr";S.cg=CALL.gid;render();setTimeout(function(){pull(true);try{bgTick()}catch(e){}},30)});document.body.appendChild(pl)}
     }
   }else if(pl)pl.remove();
 }
@@ -3707,14 +3707,14 @@ function renderFriends(){
             var weak=!validCred(up.value,true);
             return fbSignIn(up.value).then(function(){return null},function(){return"fb"}).then(function(fb){
               msg(fb?"Sbloccato, ma l’accesso sicuro a Firebase non è riuscito: controlla che la password sia la stessa.":weak?"Sbloccato, ma la password è debole: cambiala con “Cambia nome o PIN”.":"Amministratore sbloccato per 30 minuti.");
-              renderFriends();renderSponsors();pull(true);
+              renderFriends();renderSponsors();pull(true);try{bgTick()}catch(e){}
             });
           }).catch(function(e){ubt.disabled=false;msg(e&&e.message==="bad"?"Password non corretta.":"Operazione non riuscita ("+(e&&e.message||"errore")+").")});
         });
         ub.appendChild(up);ub.appendChild(ubt);
       }else{
         ub.appendChild(h("p","k","Amministratore sbloccato"));
-        var lk=h("button",null,"Blocca ora");lk.type="button";lk.addEventListener("click",function(){ADM_UNTIL=0;FBT=null;viewing=null;renderFriends();renderSponsors()});ub.appendChild(lk);
+        var lk=h("button",null,"Blocca ora");lk.type="button";lk.addEventListener("click",function(){ADM_UNTIL=0;FBT=null;viewing=null;renderFriends();renderSponsors();pull(true);try{bgTick()}catch(e){}});ub.appendChild(lk);
       }
       b.appendChild(ub);
     }
@@ -3912,10 +3912,10 @@ $("app").addEventListener("click",function(e){
   var sm=t.closest("summary");
   if(sm&&sm.parentNode&&sm.parentNode.getAttribute("data-p")!==null)openPh[sm.parentNode.getAttribute("data-p")]=!sm.parentNode.open;
 });
-$("tIo").addEventListener("click",function(){tab="io";msg("");render();setTimeout(function(){pull(true)},30)});
-$("tAm").addEventListener("click",function(){tab="am";msg("");render();setTimeout(function(){pull(true)},30)});
-$("tPr").addEventListener("click",function(){tab="pr";msg("");render();setTimeout(function(){pull(true)},30)});
-$("tGr").addEventListener("click",function(){tab="gr";msg("");render();setTimeout(function(){pull(true)},30)});
+$("tIo").addEventListener("click",function(){tab="io";msg("");render();setTimeout(function(){pull(true);try{bgTick()}catch(e){}},30)});
+$("tAm").addEventListener("click",function(){tab="am";msg("");render();setTimeout(function(){pull(true);try{bgTick()}catch(e){}},30)});
+$("tPr").addEventListener("click",function(){tab="pr";msg("");render();setTimeout(function(){pull(true);try{bgTick()}catch(e){}},30)});
+$("tGr").addEventListener("click",function(){tab="gr";msg("");render();setTimeout(function(){pull(true);try{bgTick()}catch(e){}},30)});
 var rb=$("reset"),armed=false;
 rb.addEventListener("click",function(){
   if(viewing)return;
@@ -3939,7 +3939,7 @@ if(DB_URL&&S.acct&&!U2){LEGACY=S.acct.name;S.acct=null;S.me={i:rid(),n:"",d:{},u
 setTimeout(function(){document.body.classList.remove("boot")},2800);
 render();
 if(LEGACY)setTimeout(function(){openMigrate(LEGACY,"")},300);
-if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}var pk=0;setInterval(function(){pk++;var need=(tab==="am"||tab==="gr")?1:(liveOK()?6:2);if(pk%need)return;pull()},5000);loadGcnt();setInterval(loadGcnt,30000);loadUcnt();setInterval(loadUcnt,60000);setInterval(pullChat,5000)}
+if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}var pk=0;setInterval(function(){pk++;var need=(tab==="am"||tab==="gr")?1:(liveOK()?3:2);if(pk%need)return;pull()},5000);loadGcnt();setInterval(loadGcnt,30000);loadUcnt();setInterval(loadUcnt,60000);setInterval(pullChat,5000)}
 admLoad();if(fbMode())$("admFoot").hidden=!(S.acct&&isOwnN(S.acct.name));if(adminOk()){render();renderSponsors();loadReports()}
 $("admBtn").addEventListener("click",function(){if(adminOk()){admExit();return}location.href="admin.html"});
 refreshUpcoming();setInterval(refreshUpcoming,3600000);loadSponsors();setInterval(loadSponsors,120000);setInterval(loadReports,15000);if(window.matchMedia)window.matchMedia("(min-width:1080px)").addEventListener("change",placeSp);setInterval(tick,1000);document.addEventListener("visibilitychange",function(){if(!document.hidden){pull();try{bgTick()}catch(e){}}});
