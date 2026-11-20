@@ -1561,9 +1561,9 @@ function badgeBox(){
   b.appendChild(g);b.appendChild(det);return b;
 }
 /* ===== SPOILER MODE ===== */
-var SPM=false,SPD=null,SPF=false,SPT=[],SPL=false;
-try{SPM=localStorage.getItem("mcu-spm")==="1";SPF=localStorage.getItem("mcu-spf")==="1"}catch(e){}
-try{if(sessionStorage.getItem("mcu-test")){SPM=false;SPF=false}}catch(e){}
+var SPM=false,SPD=null,SPF=false,SPT=[],SPL=false,SPOK=false;
+try{SPM=localStorage.getItem("mcu-spm")==="1";SPF=localStorage.getItem("mcu-spf")==="1";SPOK=localStorage.getItem("mcu-spok")==="1"}catch(e){}
+try{if(sessionStorage.getItem("mcu-test")){SPM=false;SPF=false;SPOK=false}}catch(e){}
 function spLoad(cb){
   if(SPD){cb&&cb();return}
   if(window.__SPOILER_DATA){SPD=window.__SPOILER_DATA;cb&&cb();return}
@@ -1584,7 +1584,7 @@ function spRow(id,x){
 function spApply(on){
   SPM=!!on;
   try{localStorage.setItem("mcu-spm",on?"1":"0")}catch(e){}
-  if(on){try{localStorage.removeItem("mcu-sph")}catch(e){}}
+  if(on){try{localStorage.removeItem("mcu-sph");localStorage.setItem("mcu-spok","1")}catch(e){}SPOK=true}
   document.documentElement.classList.toggle("spm",SPM);
   var ln=document.querySelectorAll("h1 .ln"),host=ln.length?ln[ln.length-1]:null,old=document.querySelector(".spn");
   if(old)old.remove();
@@ -1605,7 +1605,7 @@ function spSwitch(){
     var dt=document.createElement("button");dt.type="button";dt.className="spdot";dt.setAttribute("data-nt","1");dt.setAttribute("aria-label","Spoiler mode");dt.title="Spoiler mode";
     dt.innerHTML='<i aria-hidden="true"></i><span class="spred">SPOILER</span>';
     var first=false;try{first=localStorage.getItem("mcu-sph")==="1"}catch(e){}
-    dt.addEventListener("click",function(){try{localStorage.removeItem("mcu-sph")}catch(e){}spAsk();spSwitch()});
+    dt.addEventListener("click",function(){try{localStorage.removeItem("mcu-sph")}catch(e){}if(SPOK)spApply(true);else spAsk();spSwitch()});
     if(!first){el.appendChild(dt);return}
     var w=document.createElement("div");w.className="spfirst";w.setAttribute("data-nt","1");
     var bb=document.createElement("div");bb.className="spbub";bb.textContent=ct("Cliccami!","Click me!");
