@@ -600,6 +600,18 @@ var P=[
 ["Fase 6 — Doomsday",[[139,"Wonder Man",4.2,"S"],[140,"Daredevil: Born Again, stagione 2",6.5,"S"],[141,"The Punisher: One Last Kill",1],[45,"Spider-Man: Brand New Day",2.2,"E"],[142,"VisionQuest",6,"S"],[46,"I Fantastici Quattro: Gli inizi",2.2,"E"],[47,"Avengers: Doomsday",2.5,"EU",[2026,12,18]]]],
 ["In arrivo",[[143,"Avengers: Secret Wars",2.5,"EU",[2027,12,17]]]]
 ];
+// PDC: catalogo maratona DC, stesso formato di P [id stabile, titolo, ore, S=serie E=essenziale U=in uscita]
+var PDC=[
+["Anni ’70-’80 — Superman di Donner",[[1000,"Superman",2.4,"E"],[1001,"Superman II",2.1,"E"],[1002,"Superman III",2,""],[1003,"Superman IV: In cerca della pace",1.5,""]]],
+["Anni ’80-’90 — Batman di Burton e Schumacher",[[1010,"Batman",2.1,"E"],[1011,"Batman Returns",2,"E"],[1012,"Batman Forever",2,""],[1013,"Batman & Robin",2.1,""]]],
+["Trilogia di Gotham (Nolan)",[[1020,"Batman Begins",2.5,"E"],[1021,"Il Cavaliere Oscuro",2.6,"E"],[1022,"Il Cavaliere Oscuro – Il Ritorno",2.8,"E"]]],
+["Universi alternativi",[[1030,"Watchmen",2.7],[1031,"Joker",2.2],[1032,"Joker: Folie à Deux",2.3]]],
+["DC Extended Universe — Le origini",[[1040,"Man of Steel",2.3,"E"],[1041,"Batman v Superman: Dawn of Justice",2.5,"E"],[1042,"Suicide Squad",2.3],[1043,"Wonder Woman",2.4,"E"],[1044,"Justice League",2,"E"],[1045,"Aquaman",2.3,"E"],[1046,"Shazam!",2.2,"E"]]],
+["DC Extended Universe — Verso la fine",[[1050,"Birds of Prey",1.8],[1051,"Wonder Woman 1984",2.5],[1052,"The Suicide Squad",2.1,"E"],[1053,"Peacemaker, stagione 1",6.4,"SE"],[1054,"Black Adam",2.2],[1055,"Shazam: Fury of the Gods",2.1],[1056,"The Flash",2.3,"E"],[1057,"Blue Beetle",2.1],[1058,"Aquaman and the Lost Kingdom",2.1]]],
+["The Batman (Elseworlds)",[[1060,"The Batman",3,"E"],[1061,"The Batman Part II",2.6,"EU",[2027,10,1]]]],
+["Nuovo DCU — Capitolo Uno: Dei e Mostri",[[1070,"Creature Commandos, stagione 1",3.5,"S"],[1071,"Superman",2.3,"E"],[1072,"Peacemaker, stagione 2",6,"SE"],[1073,"Supergirl: Woman of Tomorrow",2.1,"E"],[1074,"Clayface",2,"E"]]],
+["In arrivo",[[1080,"Man of Tomorrow",2.3,"EU",[2027,7,9]]]]
+];
 var items=[],byId={},phOf={},openPh={},total=0;
 function eraH(pi){return Math.round(14+pi*(320/Math.max(1,P.length-1)))%360}
 
