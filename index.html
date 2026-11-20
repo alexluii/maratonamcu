@@ -1874,6 +1874,11 @@ function lsOpen(url){
         else if(url.indexOf("/friendNote/")>0||url.indexOf("/friendSent/")>0){auxSig=null;frAux(S.me.i)}
         else if(url.indexOf("/notifs/")>0)nfLoad();
         else if(url.indexOf("/userGroups/")>0||url.indexOf("/groupMembers/")>0||/\/groups\/[^/]+\.json/.test(url))pull(true);
+        else if(/\/badges\//.test(url)){
+          BGA=(l.data&&typeof l.data==="object")?l.data:{};BGT=Date.now();
+          try{var mo=BGA[S.me.i];if(BGOK&&!BGDIRTY&&mo&&Number(mo.m)>BG.m){BG.m=Number(mo.m);if(tab==="pr")renderFriends()}}catch(e){}
+          if(tab==="am"||tab==="gr"){try{drawList()}catch(e){}}
+        }
       },400);
     }
     es.addEventListener("put",function(e){try{var m=JSON.parse(e.data),pa=lsPath(m.path),v=m.data===undefined?null:m.data;l.data=pa.length?lsSet(l.data,pa,v):(v===null?{}:v);l.ready=true;l.t=Date.now();l.bo=3000;fire()}catch(x){}});
@@ -1890,7 +1895,8 @@ function liveGet(url){
 }
 function liveStart(){
   if(!DB_URL||!S.acct||!S.me||!S.me.i)return;
-  var me=S.me.i,u=[dbUrl(),fqUrl(me),nfUrl(),prUrl()]; /* massimo 4 connessioni aperte: prudenza sui limiti del browser */
+  var me=S.me.i,u=[dbUrl(),fqUrl(me),nfUrl(),prUrl(),bgUrl()]; /* al massimo 6 connessioni aperte (+1 se sei in un gruppo): prudenza sui limiti del browser */
+  if(S.cg)u.push(gmUrl(S.cg));
   u.forEach(function(x){lsOpen(x)});
   Object.keys(LS).forEach(function(k){if(/\/(groupMembers|groups)\//.test(k)&&u.indexOf(k)<0){var l=LS[k];try{if(l.es)l.es.close()}catch(e){}clearTimeout(l.rt);clearTimeout(l.dt);delete LS[k]}});
 }
@@ -2159,7 +2165,8 @@ function avBox(){
 
 /* ===== NOVITA' DEL SITO (popup) ===== */
 /* Ad ogni modifica visibile agli utenti: aumenta NEWS_V e aggiungi una voce in NEWS (it + en). Mai cose che riguardano l'amministratore. */
-var NEWS_V=28,NEWS=[
+var NEWS_V=29,NEWS=[
+ {v:29,d:"2026-11-20",ic:"⚡",ti:{it:"Aggiornamenti più veloci",en:"Faster updates"},tx:{it:"Badge e gruppi ora si aggiornano all’istante per tutti, senza dover aspettare.",en:"Badges and groups now update instantly for everyone, with no more waiting."}},
  {v:28,d:"2026-11-20",ic:"🌗",ti:{it:"Tema chiaro o scuro",en:"Light or dark theme"},tx:{it:"Da computer puoi scegliere se vedere il sito in tema chiaro o scuro con il pulsante in basso a sinistra. La scelta resta salvata.",en:"On a computer you can choose between the light and dark theme with the button at the bottom left. Your choice is remembered."}},
  {v:27,d:"2026-11-19",ic:"💬",ti:{it:"Top chatter sistemato",en:"Top chatter fixed"},tx:{it:"Il conteggio dei messaggi per il badge 💬 Top chatter ora si salva subito e non riparte più da zero quando esci dal sito.",en:"The message count for the 💬 Top chatter badge now saves right away and no longer restarts from zero when you leave the site."}},
  {v:26,d:"2026-11-20",ic:"🏅",ti:{it:"Badge più compatti e nuovi",en:"Compact badges, plus new ones"},tx:{it:"In Profilo i badge sono più piccoli: tocca un badge per vedere come ottenerlo. Novità: 📞 Sempre in linea (24 ore in chiamata con gli amici) e 🏆 Leggenda del Multiverso. Il Top chatter ora richiede 1000 messaggi.",en:"Badges in Profile are now smaller: tap one to see how to earn it. New: 📞 Always on call (24 hours on calls with friends) and 🏆 Multiverse legend. Top chatter now needs 1000 messages."}},
@@ -3928,7 +3935,7 @@ if(LEGACY)setTimeout(function(){openMigrate(LEGACY,"")},300);
 if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}var pk=0;setInterval(function(){pk++;var need=liveOK()?6:((tab==="am"||tab==="gr")?1:2);if(pk%need)return;pull()},5000);loadGcnt();setInterval(loadGcnt,30000);loadUcnt();setInterval(loadUcnt,60000);setInterval(pullChat,5000)}
 admLoad();if(fbMode())$("admFoot").hidden=!(S.acct&&isOwnN(S.acct.name));if(adminOk()){render();renderSponsors();loadReports()}
 $("admBtn").addEventListener("click",function(){if(adminOk()){admExit();return}location.href="admin.html"});
-refreshUpcoming();setInterval(refreshUpcoming,3600000);loadSponsors();setInterval(loadSponsors,120000);setInterval(loadReports,15000);if(window.matchMedia)window.matchMedia("(min-width:1080px)").addEventListener("change",placeSp);setInterval(tick,1000);document.addEventListener("visibilitychange",function(){if(!document.hidden)pull()});
+refreshUpcoming();setInterval(refreshUpcoming,3600000);loadSponsors();setInterval(loadSponsors,120000);setInterval(loadReports,15000);if(window.matchMedia)window.matchMedia("(min-width:1080px)").addEventListener("change",placeSp);setInterval(tick,1000);document.addEventListener("visibilitychange",function(){if(!document.hidden){pull();try{bgTick()}catch(e){}}});
 startTr();
 </script>
 </body>
