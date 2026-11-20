@@ -284,9 +284,16 @@ function purgeAccount(id){
     var nk=Object.keys(acc).filter(function(k){return acc[k]&&acc[k].id===id})[0];
     var gids=Object.keys(ug);
     return Promise.all(gids.map(function(g){
-      return rd("chats/"+g,'?orderBy="$key"&limitToLast=200').then(function(o){
+      return Promise.all([rd("chats/"+g,'?orderBy="$key"&limitToLast=200'),rd("groupMembers/"+g)]).then(function(r2){
+        var o=r2[0],ms=obj(r2[1]);
         Object.keys(obj(o)).forEach(function(k){if(o[k]&&o[k].i===id)del("chats/"+g+"/"+k)});
         del("groupMembers/"+g+"/"+id);
+        var left=Object.keys(ms).filter(function(k){return k!==id}).length;
+        if(!left){
+          /* era l'ultimo membro: il gruppo resterebbe un fantasma, lo elimino e tolgo anche lui dal conteggio dei gruppi */
+          del("groups/"+g);del("groupSec/"+g);del("groupIndex/"+g);del("chats/"+g);del("mutes/"+g);
+          if(ST.groups&&ST.groups[g]){delete ST.groups[g];delete ST.members[g]}
+        }
       });
     })).then(function(){
       ["friendSent/"+id,"friends/"+id,"friendReq/"+id,"friendNote/"+id,"userGroups/"+id,"pub/"+id,"rooms/"+ROOM+"/"+id,"avatars/"+ROOM+"/"+id,"presence/"+ROOM+"/"+id,"badges/"+ROOM+"/"+id,"requests/"+ROOM+"/"+id,"notifs/"+ROOM+"/"+id,"members/"+id].forEach(del);
