@@ -483,13 +483,52 @@ body.gated{overflow:hidden}
 .lbtn:hover,.lbtn:focus-visible{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber)}
 .lbox .m{text-align:left;font-size:13px}
 .utc{margin-left:6px;font:700 10px "Instrument Sans",sans-serif;opacity:.7;white-space:nowrap}
+#marPick{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#060309;overflow:auto;padding:2.5rem 1rem;padding-top:calc(env(safe-area-inset-top,0px) + 2.5rem)}
+#marPick[hidden]{display:none}
+.mpk-bg{position:absolute;inset:0;z-index:0;background-image:radial-gradient(ellipse 60% 40% at 18% -8%,rgba(255,45,78,.18),transparent 60%),radial-gradient(ellipse 60% 40% at 82% 100%,rgba(23,180,255,.16),transparent 60%)}
+.mpk-wrap{position:relative;z-index:1;max-width:46rem;width:100%;display:flex;flex-direction:column;align-items:center;gap:1.9rem;text-align:center}
+.mpk-eyebrow{font:600 11px "Instrument Sans",sans-serif;letter-spacing:.22em;color:#8b84a6;text-transform:uppercase}
+.mpk-h1{margin:0;line-height:.96;font-family:"Orbitron",system-ui,sans-serif;font-weight:900;color:#fff;text-shadow:0 0 6px rgba(255,255,255,.7),0 0 22px rgba(255,80,110,.65),0 0 44px rgba(23,180,255,.5);animation:mpkfl 5.5s infinite}
+.mpk-ln{display:block;font-size:clamp(2.6rem,13vw,5.6rem)}
+.mpk-ln.mpk-m2{display:flex;align-items:center;justify-content:center;gap:.02em;font-size:clamp(2.3rem,11vw,4.9rem)}
+@keyframes mpkfl{0%,91%,100%{opacity:1}92%{opacity:.87}93%{opacity:1}95%{opacity:.91}96%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.mpk-h1{animation:none}}
+.mpk-sw{width:.78em;height:.78em;flex:none;color:#fff;filter:drop-shadow(0 0 5px rgba(255,80,110,.9)) drop-shadow(0 0 10px rgba(23,180,255,.7))}
+.mpk-hand{transform-box:fill-box;transform-origin:50% 100%;animation:mpksp 3s linear infinite}
+@keyframes mpksp{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.mpk-hand{animation:none}}
+.mpk-sub{font:400 1rem/1.55 "Instrument Sans",sans-serif;color:#8b84a6;max-width:28rem;margin:0}
+.mpk-pick{display:flex;align-items:center;justify-content:center;gap:clamp(1rem,5vw,2.6rem);width:100%}
+.mpk-slash{font:700 clamp(1.6rem,6vw,3rem)/1 "Orbitron",sans-serif;color:#2a2238;user-select:none}
+.mpk-u{--c:#ff2d4e;background:none;border:0;cursor:pointer;padding:.2rem .1rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;font:900 clamp(2.1rem,11vw,4.6rem)/.9 "Orbitron",sans-serif;letter-spacing:.02em;color:color-mix(in srgb,var(--c) 35%,#fff 65%);text-shadow:0 0 10px color-mix(in srgb,var(--c) 70%,transparent),0 0 1px #fff;transition:transform .25s,text-shadow .25s,color .25s}
+.mpk-u .mpk-mt{font:600 .6rem/1 "Instrument Sans",sans-serif;letter-spacing:.24em;color:#8b84a6;text-shadow:none}
+.mpk-u:hover,.mpk-u:focus-visible{transform:translateY(-4px) scale(1.04);color:color-mix(in srgb,var(--c) 70%,#fff 30%);text-shadow:0 0 4px #fff,0 0 16px var(--c),0 0 42px var(--c),0 0 80px var(--c);outline:none}
+.mpk-u:hover .mpk-mt,.mpk-u:focus-visible .mpk-mt{color:var(--c)}
+.mpk-u.mpk-dc{--c:#17b4ff}
+@media(max-width:460px){.mpk-pick{flex-direction:column;gap:1.1rem}.mpk-slash{transform:rotate(90deg);font-size:1.6rem;margin:-.2rem 0}}
 </style>
 </head>
 <body class="boot" data-tab="io">
+<div id="marPick" role="dialog" aria-modal="true" aria-label="Scegli la maratona" hidden>
+<div class="mpk-bg"></div>
+<div class="mpk-wrap">
+<span class="mpk-eyebrow">Una piattaforma, più saghe</span>
+<h2 class="mpk-h1" aria-label="Cronomaratona">
+<span class="mpk-ln" aria-hidden="true">CRONO</span>
+<span class="mpk-ln mpk-m2" aria-hidden="true">MARAT<svg class="mpk-sw" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="58" r="34" fill="none" stroke="currentColor" stroke-width="7"/><rect x="42" y="8" width="16" height="10" rx="3" fill="currentColor"/><line x1="68" y1="20" x2="76" y2="28" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><line class="mpk-hand" x1="50" y1="58" x2="50" y2="34" stroke="currentColor" stroke-width="6" stroke-linecap="round"/><circle cx="50" cy="58" r="4.5" fill="currentColor"/></svg>NA</span>
+</h2>
+<p class="mpk-sub">Guarda tutto nell'ordine giusto. Scegli la maratona con gli amici: progressi, badge e spoiler mode, per ogni universo.</p>
+<div class="mpk-pick">
+<button class="mpk-u mpk-mcu" type="button" data-mar="mcu">MCU<span class="mpk-mt">MARVEL</span></button>
+<span class="mpk-slash" aria-hidden="true">/</span>
+<button class="mpk-u mpk-dc" type="button" data-mar="dc">DC<span class="mpk-mt">UNIVERSE</span></button>
+</div>
+</div>
+</div>
 <div class="tkr" id="tkr" hidden role="region" aria-label="Prossime uscite"></div>
 <header class="hero"><div class="wrap">
 <p class="credit" id="spcred"><span class="cr-a">Sito creato da <b>Alessandro</b> per gli amici</span><span class="cr-b">creato con il <b>LOCU</b> <i aria-label="amore" id="spheart">♥</i></span><span id="igslot"></span><span id="spslot"></span></p>
-<h1 aria-label="Maratona MCU"><span class="ln"><span>Maratona</span></span><span class="ln"><span>MCU</span></span></h1>
+<h1 aria-label="Maratona MCU" id="marH1"><span class="ln"><span>Maratona</span></span><span class="ln"><span id="marSub">MCU</span></span></h1>
 <p id="stat"></p>
 <div class="reel" id="reel" role="img"><div class="cells" id="cells"></div></div>
 <aside class="legend" aria-label="Legenda"><p class="lg-t">Legenda</p><ul>
@@ -600,6 +639,7 @@ var P=[
 ["Fase 6 — Doomsday",[[139,"Wonder Man",4.2,"S"],[140,"Daredevil: Born Again, stagione 2",6.5,"S"],[141,"The Punisher: One Last Kill",1],[45,"Spider-Man: Brand New Day",2.2,"E"],[142,"VisionQuest",6,"S"],[46,"I Fantastici Quattro: Gli inizi",2.2,"E"],[47,"Avengers: Doomsday",2.5,"EU",[2026,12,18]]]],
 ["In arrivo",[[143,"Avengers: Secret Wars",2.5,"EU",[2027,12,17]]]]
 ];
+var PMCU=P;
 // PDC: catalogo maratona DC, stesso formato di P [id stabile, titolo, ore, S=serie E=essenziale U=in uscita]
 var PDC=[
 ["Anni ’70-’80 — Superman di Donner",[[1000,"Superman",2.4,"E"],[1001,"Superman II",2.1,"E"],[1002,"Superman III",2,""],[1003,"Superman IV: In cerca della pace",1.5,""]]],
@@ -612,6 +652,10 @@ var PDC=[
 ["Nuovo DCU — Capitolo Uno: Dei e Mostri",[[1070,"Creature Commandos, stagione 1",3.5,"S"],[1071,"Superman",2.3,"E"],[1072,"Peacemaker, stagione 2",6,"SE"],[1073,"Supergirl: Woman of Tomorrow",2.1,"E"],[1074,"Clayface",2,"E"]]],
 ["In arrivo",[[1080,"Man of Tomorrow",2.3,"EU",[2027,7,9]]]]
 ];
+/* scelta maratona: MAR resta "mcu" finché l'utente non scegli esplicitamente; MAR_CHOSEN dice se mostrare la schermata iniziale */
+var MAR="mcu",MAR_CHOSEN=false;
+try{var _mm=localStorage.getItem("mcu-mar");if(_mm==="dc"||_mm==="mcu"){MAR=_mm;MAR_CHOSEN=true}}catch(e){}
+if(MAR==="dc")P=PDC;
 var items=[],byId={},phOf={},openPh={},total=0;
 function eraH(pi){return Math.round(14+pi*(320/Math.max(1,P.length-1)))%360}
 
@@ -3954,6 +3998,34 @@ if(window.matchMedia&&matchMedia("(hover:hover) and (pointer:fine)").matches){
 }
 var LEGACY=null;if(DB_URL&&S.acct&&!U2&&EXP){S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false)}
 if(DB_URL&&S.acct&&!U2){LEGACY=S.acct.name;S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false)}
+function updateMarHeader(){
+  var h=$("marH1"),s=$("marSub"),nm=MAR==="dc"?"DC":"MCU";
+  if(s)s.textContent=nm;
+  if(h)h.setAttribute("aria-label","Maratona "+nm);
+}
+function chooseMar(m){
+  if(m!==MAR){MAR=m;P=(m==="dc")?PDC:PMCU;buildItems()}
+  try{localStorage.setItem("mcu-mar",m)}catch(e){}
+  MAR_CHOSEN=true;
+  updateMarHeader();
+  $("marPick").hidden=true;
+  document.body.style.overflow="";
+  render();
+  try{pull(true)}catch(e){}
+}
+(function(){
+  var mp=$("marPick");
+  mp.addEventListener("click",function(e){
+    var b=e.target.closest("button[data-mar]");
+    if(b)chooseMar(b.getAttribute("data-mar"))
+  });
+  if(!MAR_CHOSEN){
+    try{spFont()}catch(e){}
+    mp.hidden=false;
+    document.body.style.overflow="hidden";
+  }
+  updateMarHeader();
+})();
 setTimeout(function(){document.body.classList.remove("boot")},2800);
 render();
 if(LEGACY)setTimeout(function(){openMigrate(LEGACY,"")},300);
