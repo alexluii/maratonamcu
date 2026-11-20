@@ -800,7 +800,17 @@ function aUrlTok(u){return fbToken().then(function(t){return t?u+"?auth="+encode
 function aPut(u,v){return aUrlTok(u).then(function(x){return putJ(x,v)})}
 function aDel(u){return aUrlTok(u).then(function(x){return delJ(x)})}
 // ---- accesso con password (Firebase Authentication)
-var U2=null,U2K="mcu-u2",FB_AUTH="https://identitytoolkit.googleapis.com/v1/accounts:",RAWF=window.fetch.bind(window);
+var U2=null,U2K="mcu-u2",FB_AUTH="https://identitytoolkit.googleapis.com/v1/accounts:";
+var RAWF0=window.fetch.bind(window);
+/* nessuna richiesta deve restare bloccata per sempre: se la rete si incanta, dopo 12s annullo e l'errore arriva subito, così chi aspetta può riprovare invece di restare fermo */
+function RAWF(u,o){
+  if(typeof AbortController==="undefined")return RAWF0(u,o);
+  var ac=new AbortController(),oo={},t;
+  if(o)for(var k in o)oo[k]=o[k];
+  oo.signal=ac.signal;
+  t=setTimeout(function(){try{ac.abort()}catch(e){}},12000);
+  return RAWF0(u,oo).then(function(r){clearTimeout(t);return r},function(e){clearTimeout(t);throw e});
+}
 function u2save(){try{if(U2)localStorage.setItem(U2K,JSON.stringify(U2));else localStorage.removeItem(U2K)}catch(e){}}
 var EXP=false,SESS_MIN=60;
 function u2load(){try{var o=JSON.parse(localStorage.getItem(U2K)||"null");if(o&&o.r&&o.uid){if(o.a&&Date.now()-o.a>SESS_MIN*60000){EXP=true;localStorage.removeItem(U2K)}else{o.a=Date.now();U2=o;u2save()}}}catch(e){}}
@@ -1099,7 +1109,10 @@ function pull(force,local){
       var rs=Object.keys(REM).sort().join(",");if(rs!==remSig){remSig=rs;ch=true}
       var qs=Object.keys(REQ).sort().join(",");var rq=qs!==reqSig;reqSig=qs;updBadge();
       var gs=JSON.stringify([UG,GM,S.cg,GR&&GR.n,GR&&GR.img&&GR.img.length,GRQ]);if(gs!==gSig){if(gSig!==null)rq=true;gSig=gs}
-      if(mch)render();else if(rq&&tab!=="io")renderFriends();else if(ch){save(false);drawList()}
+      if(ch)save(false);
+      if(mch)render();
+      else if(rq&&(tab==="am"||tab==="gr"))renderFriends();
+      else if(ch)drawList();
     }
     setSync();
   }).catch(function(e){online=false;lastErr=String(e&&e.message||e);setSync()}).then(function(){pulling=false});
