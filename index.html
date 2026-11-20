@@ -511,11 +511,10 @@ body.gated{overflow:hidden}
 .mpk-u.mpk-dc{--c:#17b4ff}
 @media(max-width:460px){.mpk-pick{flex-direction:column;gap:1.1rem}.mpk-slash{transform:rotate(90deg);font-size:1.6rem;margin:-.2rem 0}}
 .mpk-spons{display:flex;flex-direction:column;align-items:center;gap:.6rem;margin-top:.4rem}
-.mpk-spons .mpk-sl{font:600 10px "Instrument Sans",sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#4a4460}
 .mpk-spons .mpk-sg{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
-.mpk-spons a{display:grid;place-items:center;width:52px;height:36px;padding:3px;border-radius:6px;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.08);overflow:hidden;transition:transform .2s}
+.mpk-spons a{display:grid;place-items:center;width:48px;height:48px;border-radius:8px;background:#fff;box-shadow:0 0 0 1px rgba(255,255,255,.08);overflow:hidden;transition:transform .2s}
 .mpk-spons a:hover{transform:translateY(-2px)}
-.mpk-spons img{max-width:calc(100% - 8px);max-height:calc(100% - 8px);object-fit:contain}
+.mpk-spons img{width:70%;height:70%;object-fit:contain}
 </style>
 </head>
 <body class="boot" data-tab="io">
@@ -1007,7 +1006,6 @@ function mpkSponsRender(){
   var ids=Object.keys(SP).filter(function(k){return SP[k]&&okImg(SP[k].l)&&okSite(SP[k].u)}).sort(function(a,b){return spKey(a)-spKey(b)});
   if(!ids.length){m.hidden=true;m.textContent="";return}
   m.hidden=false;m.textContent="";
-  m.appendChild(h("span","mpk-sl",ct("Con il sostegno di","Supported by")));
   var g=h("div","mpk-sg");
   ids.forEach(function(k){
     var a=h("a");a.href=okSite(SP[k].u);a.target="_blank";a.rel="noopener noreferrer sponsored";a.setAttribute("aria-label","Sponsor: "+SP[k].u.replace(/^https?:\/\/(www\.)?/,"").split("/")[0]);
