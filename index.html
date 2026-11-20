@@ -3539,7 +3539,7 @@ function nkOf(name){return sha("nm:"+String(name).replace(/\s+/g," ").trim().sli
 var RP={};
 function admCount(){return isAdminAcct()?Object.keys(REQ).length+Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].s==="p"}).length+Object.keys(RP||{}).filter(function(k){return RP[k]&&RP[k].s==="p"}).length:0}
 function updBadge(){try{renderBell()}catch(e){}var a=admCount(),n=frCount(),b=$("tAm"),b2=$("tPr");if(b){if(n)b.setAttribute("data-n",n);else b.removeAttribute("data-n")}if(b2){if(a)b2.setAttribute("data-n",a);else b2.removeAttribute("data-n")}var p=$("admPill");if(p&&!p.hidden)p.textContent=a?"Admin · "+a+" · Esci":"Admin · Esci"}
-function forceLogout(){why("Ti ho disconnesso perché il tuo account non risulta più sul server. Accedi di nuovo; se succede ancora, scrivilo ad Alessandro.");u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("Nome o PIN sono stati cambiati. Accedi con le nuove credenziali.");render()}
+function forceLogout(){why("Ti ho disconnesso perché il tuo account non risulta più sul server. Accedi di nuovo; se succede ancora, scrivilo ad Alessandro.");u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);MAR_CHOSEN=false;try{localStorage.removeItem("mcu-mar")}catch(e){}msg("Nome o PIN sono stati cambiati. Accedi con le nuove credenziali.");render()}
 function moveAccount(old,newName,newPin){
   moving=true;
   return Promise.all([acctKeys(newName,newPin),nkOf(old.name)]).then(function(r){
@@ -3793,7 +3793,9 @@ function renderFriends(){
     var ex=h("button",null,"Esci");ex.type="button";var arm=false;
     ex.addEventListener("click",function(){
       if(!arm){arm=true;ex.textContent="Tocca ancora per uscire";setTimeout(function(){arm=false;ex.textContent="Esci"},4000);return}
-      u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};S.cg="";UG={};GM={};save(false);msg("Sei uscito. Con username e password rientri quando vuoi.");renderFriends();
+      u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};S.cg="";UG={};GM={};save(false);
+      MAR_CHOSEN=false;try{localStorage.removeItem("mcu-mar")}catch(e){} // esci: si riparte dall'accesso e poi dalla scelta della maratona
+      msg("Sei uscito. Accedi di nuovo e scegli la maratona.");render();
     });
     if(fbMode()){if(adminOk())b.appendChild(admBox())}
     else if(isAdminAcct()){
@@ -3966,7 +3968,7 @@ function ensureGate(){
     if(mode==="new"&&(pw.length<8||pw.length>64)){er.textContent="La password deve avere da 8 a 64 caratteri.";pi.focus();return}
     if(mode==="in"&&!pw){er.textContent="Scrivi la password.";pi.focus();return}
     ok.disabled=true;er.textContent="Un attimo…";
-    (mode==="new"?doCreate:doLogin)(nm,pw).then(function(){EXP=false;why("");ov.setAttribute("data-fly","1");render();msg(mode==="new"?"Account creato. I tuoi progressi ora sono condivisi.":"Bentornato! Progressi ripristinati.");flyTitle(ov,ttl,function(){pull();loadUcnt();loadGcnt()})}).catch(function(e){
+    (mode==="new"?doCreate:doLogin)(nm,pw).then(function(){EXP=false;why("");ov.setAttribute("data-fly","1");render();msg(mode==="new"?"Account creato. I tuoi progressi ora sono condivisi.":"Bentornato! Progressi ripristinati.");flyTitle(ov,ttl,function(){pull();loadUcnt();loadGcnt();if(!MAR_CHOSEN)openMarPicker()})}).catch(function(e){
       ok.disabled=false;var m=e&&e.message;
       if(m==="migrate"){er.textContent="";GATE_OK=true;openMigrate(e.legacy.name,e.legacy.pin,e.legacy.rs);return}
       er.textContent=m==="baduser"?"Username non valido: da 3 a 20 caratteri, solo lettere minuscole, numeri, punto e trattino basso.":m==="taken"?"Questo username è già in uso. Se è tuo, tocca Accedi.":m==="reserved"?"Questo nome è riservato.":m==="badname"?"Nome non valido.":m==="weakpw"?"La password deve avere da 8 a 64 caratteri.":m==="bad"?"Username o password non corretti.":m==="many"?"Troppi tentativi. Aspetta qualche minuto e riprova.":m==="noauth"?"Il login con password non è ancora attivo sul server.":"Non riesco a collegarmi. Riprova tra poco.";
@@ -3975,12 +3977,13 @@ function ensureGate(){
   ok.addEventListener("click",go);[ni,pi].forEach(function(x){x.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();go()}})});
   ov.appendChild(ttl);ov.appendChild(bx);document.body.appendChild(ov);ni.focus();
 }
+function needsGate(){return !!(DB_URL&&!S.acct&&!(typeof LEGACY!=="undefined"&&LEGACY&&!GATE_OK))}
 var GATE_OK=false;
 function touch(){if(U2&&Date.now()-(U2.a||0)>15000){U2.a=Date.now();u2save()}}
 function expireCheck(){
   if(!DB_URL||!S.acct||!U2)return;
   var last=U2.a||0;try{var o=JSON.parse(localStorage.getItem(U2K)||"null");if(o&&o.a>last)last=o.a}catch(e){}
-  if(Date.now()-last>SESS_MIN*60000){EXP=true;why("");u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);msg("");render()}
+  if(Date.now()-last>SESS_MIN*60000){EXP=true;why("");u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);MAR_CHOSEN=false;try{localStorage.removeItem("mcu-mar")}catch(e){}msg("");render()}
 }
 ["pointerdown","keydown","touchstart","wheel"].forEach(function(ev){window.addEventListener(ev,touch,{passive:true,capture:true})});
 document.addEventListener("visibilitychange",function(){if(!document.hidden)expireCheck()});
@@ -4077,7 +4080,7 @@ function chooseMar(m){
     var b=e.target.closest("button[data-mar]");
     if(b)chooseMar(b.getAttribute("data-mar"))
   });
-  if(!MAR_CHOSEN){
+  if(!MAR_CHOSEN&&!needsGate()){
     try{spFont()}catch(e){}
     mp.hidden=false;
     document.body.style.overflow="hidden";
