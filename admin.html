@@ -105,15 +105,15 @@ input[type=text],input[type=search],select,textarea{width:100%;min-height:44px;p
 </div>
 
 <div id="app" hidden>
-  <header class="top"><h1 id="ttl">Oggi</h1><a id="site" href="./">‹ Sito</a><button id="tst" type="button" title="Entra nel sito come un nuovo utente di prova">Prova sito</button><button id="rf" type="button">Aggiorna</button><button id="out" type="button">Esci</button></header>
+  <header class="top"><h1 id="ttl">Oggi</h1><button id="marSw" type="button" title="Cambia la maratona di cui vedi i dati (persone, progressi, badge)">Maratona: MCU</button><a id="site" href="./">‹ Sito</a><button id="tst" type="button" title="Entra nel sito come un nuovo utente di prova">Prova sito</button><button id="rf" type="button">Aggiorna</button><button id="out" type="button">Esci</button></header>
   <main id="main"></main>
   <nav class="tabs" id="tabs" aria-label="Sezioni"></nav>
 </div>
 <div id="toast" class="toast" role="status" hidden></div>
 
 <script>
-/* il pannello si apre solo se nel sito hai fatto l'accesso come luini.a (la vera protezione resta il login Firebase e le regole del database) */
-(function(){var ok=false;try{var s=JSON.parse(localStorage.getItem("mcu-codici-v1")||"null"),u=JSON.parse(localStorage.getItem("mcu-u2")||"null");ok=!!(s&&s.acct&&String(s.acct.name).replace(/\s+/g," ").trim().toLowerCase()==="luini.a"&&u)}catch(e){}
+/* il pannello si apre solo se nel sito hai fatto l'accesso come luini.a (la vera protezione resta il login Firebase e le regole del database). Quando il file è aperto in locale (file://, per provarlo prima di pubblicarlo) questo controllo non ha senso - sul sito vero (https) resta sempre attivo */
+(function(){var ok=location.protocol==="file:";if(!ok)try{var s=JSON.parse(localStorage.getItem("mcu-codici-v1")||"null"),u=JSON.parse(localStorage.getItem("mcu-u2")||"null");ok=!!(s&&s.acct&&String(s.acct.name).replace(/\s+/g," ").trim().toLowerCase()==="luini.a"&&u)}catch(e){}
 if(!ok){try{document.documentElement.style.display="none"}catch(e){}location.replace("./");throw new Error("accesso non consentito")}})();
 var KEY="AIzaSyCvYDHW-dleGjx9U0WT50PcayjGx2m3Iik",UID="lvhh3G1jVUfsmZDeGHoArysTVpr1";
 var DB="https://maratona-579e6-default-rtdb.europe-west1.firebasedatabase.app",ROOM="amici-mcu";
@@ -160,11 +160,23 @@ function msgBox(uid,name,ctx){
 function obj(x){return x&&typeof x==="object"?x:{}}
 
 /* ---------- elenco titoli (preso da index.html) ---------- */
+/* il catalogo (titoli, quanti sono già usciti) è diverso per ogni maratona: li tengo entrambi pronti e uso quello della maratona che sto guardando in questo momento (ADM_ROOM) */
+var BYID_MCU={},TOTAL_MCU=0,BYID_DC={},TOTAL_DC=0;
+function parseCat(t,re){
+  var m=t.match(re);if(!m)return null;
+  var arr=new Function("return ["+m[1]+"]")(),bi={},tot=0;
+  arr.forEach(function(ph){ph[1].forEach(function(x){var u=(x[3]||"").indexOf("U")>=0&&x[4]&&new Date(x[4][0],x[4][1]-1,x[4][2]).getTime()>Date.now();bi[x[0]]={t:x[1],u:u};if(!u)tot++})});
+  return{bi:bi,tot:tot};
+}
+function applyMarTitles(){
+  var c=ADM_ROOM===ROOM?{bi:BYID_MCU,tot:TOTAL_MCU}:{bi:BYID_DC,tot:TOTAL_DC};
+  byId=c.bi;total=c.tot;
+}
 function loadTitles(){
   return fetch("./index.html").then(function(r){return r.text()}).then(function(t){
-    var m=t.match(/var P=\[\n([\s\S]*?)\n\];/);if(!m)return;
-    var arr=new Function("return ["+m[1]+"]")();
-    arr.forEach(function(ph){ph[1].forEach(function(x){var u=(x[3]||"").indexOf("U")>=0&&x[4]&&new Date(x[4][0],x[4][1]-1,x[4][2]).getTime()>Date.now();byId[x[0]]={t:x[1],u:u};if(!u)total++})});
+    var mc=parseCat(t,/var P=\[\n([\s\S]*?)\n\];/);if(mc){BYID_MCU=mc.bi;TOTAL_MCU=mc.tot}
+    var dc=parseCat(t,/var PDC=\[\n([\s\S]*?)\n\];/);if(dc){BYID_DC=dc.bi;TOTAL_DC=dc.tot}
+    applyMarTitles();
   }).catch(function(){});
 }
 function doneOf(u){return(Array.isArray(u.d)?u.d:[]).filter(function(i){return Number.isInteger(i)&&(!byId[i]||!byId[i].u)})}
@@ -183,9 +195,11 @@ function migrateGroups(){
     return Promise.all(q).then(function(){setTimeout(function(){toast("Ho sistemato "+q.length+(q.length===1?" gruppo":" gruppi")+" creati prima dell’aggiornamento.")},400)},function(e){setTimeout(function(){toast("Non sono riuscito a sistemare i gruppi ("+(e&&e.message||"errore")+"). Scrivilo ad Alessandro… cioè a Claude.")},400)});
   });
 }
+/* ADM_ROOM: quale maratona sto guardando in admin (persone/progressi/badge). Richieste, segnalazioni e reset PIN restano condivisi tra le maratone (sono legati all'account, non alla maratona), quindi usano sempre ROOM */
+var ADM_ROOM=ROOM;
 function load(){
   LOADERR=null;var rd=function(p){return GET(p).catch(function(e){LOADERR=e&&e.message||"errore";return null})};
-  return Promise.all([rd("rooms/"+ROOM),rd("removed/"+ROOM),rd("groups"),rd("groupMembers"),rd("mutes"),rd("groupRequests/"+ROOM),rd("reports/"+ROOM),rd("requests/"+ROOM)]).then(function(r){
+  return Promise.all([rd("rooms/"+ADM_ROOM),rd("removed/"+ADM_ROOM),rd("groups"),rd("groupMembers"),rd("mutes"),rd("groupRequests/"+ROOM),rd("reports/"+ROOM),rd("requests/"+ROOM)]).then(function(r){
     ST={users:obj(r[0]),removed:obj(r[1]),groups:obj(r[2]),members:obj(r[3]),mutes:obj(r[4]),greq:obj(r[5]),reports:obj(r[6]),preq:obj(r[7])};
     return migrateGroups();
   });
@@ -272,15 +286,17 @@ function setUserLang(id,name,l){
 }
 function nkOf(n){return sha("nm:"+String(n).replace(/\s+/g," ").trim().slice(0,24).toLowerCase()).then(function(x){return x.slice(0,20)})}
 function isTestAcct(n){return /^prova[0-9a-f]{6}$/i.test(String(n||"").trim())}
+/* le due maratone (MCU/DC) hanno progressi, badge e voti separati (stesso account, stesso login): quando si elimina un account va pulito in entrambe */
+var MAR_ROOMS=[ROOM,ROOM+"_dc"];
 /* elimina del tutto un account (usato per gli account di prova dimenticati): stesso giro di pulizia che fa il sito quando esce da solo */
 function purgeAccount(id){
   function rd(p,q){return GET(p,q).catch(function(){return null})}
   var tasks=[];function del(p){tasks.push(function(){return DEL(p).catch(function(){})})}
-  return Promise.all([rd("friendSent/"+id),rd("friends/"+id),rd("userGroups/"+id),rd("ratings/"+ROOM),rd("accounts/"+ROOM)]).then(function(r){
-    var fs=obj(r[0]),fr=obj(r[1]),ug=obj(r[2]),rt=obj(r[3]),acc=obj(r[4]);
+  return Promise.all([rd("friendSent/"+id),rd("friends/"+id),rd("userGroups/"+id),rd("accounts/"+ROOM)].concat(MAR_ROOMS.map(function(r){return rd("ratings/"+r)}))).then(function(r){
+    var fs=obj(r[0]),fr=obj(r[1]),ug=obj(r[2]),acc=obj(r[3]),rtByRoom=MAR_ROOMS.map(function(x,i){return r[4+i]});
     Object.keys(fs).forEach(function(k){del("friendReq/"+k+"/"+id);del("friendNote/"+k+"/"+id)});
     Object.keys(fr).forEach(function(k){if(k!=="_i")del("friends/"+k+"/"+id)});
-    Object.keys(rt).forEach(function(f){if(rt[f]&&rt[f][id]!==undefined)del("ratings/"+ROOM+"/"+f+"/"+id)});
+    MAR_ROOMS.forEach(function(room,i){var rt=obj(rtByRoom[i]);Object.keys(rt).forEach(function(f){if(rt[f]&&rt[f][id]!==undefined)del("ratings/"+room+"/"+f+"/"+id)})});
     var nk=Object.keys(acc).filter(function(k){return acc[k]&&acc[k].id===id})[0];
     var gids=Object.keys(ug);
     return Promise.all(gids.map(function(g){
@@ -296,7 +312,8 @@ function purgeAccount(id){
         }
       });
     })).then(function(){
-      ["friendSent/"+id,"friends/"+id,"friendReq/"+id,"friendNote/"+id,"userGroups/"+id,"pub/"+id,"rooms/"+ROOM+"/"+id,"avatars/"+ROOM+"/"+id,"presence/"+ROOM+"/"+id,"badges/"+ROOM+"/"+id,"requests/"+ROOM+"/"+id,"notifs/"+ROOM+"/"+id,"members/"+id].forEach(del);
+      ["friendSent/"+id,"friends/"+id,"friendReq/"+id,"friendNote/"+id,"userGroups/"+id,"pub/"+id,"avatars/"+ROOM+"/"+id,"presence/"+ROOM+"/"+id,"requests/"+ROOM+"/"+id,"notifs/"+ROOM+"/"+id,"members/"+id].forEach(del);
+      MAR_ROOMS.forEach(function(room){del("rooms/"+room+"/"+id);del("badges/"+room+"/"+id);del("removed/"+room+"/"+id)});
       if(nk)del("accounts/"+ROOM+"/"+nk);
       var seq=Promise.resolve();tasks.forEach(function(f){seq=seq.then(f)});return seq;
     });
@@ -311,7 +328,7 @@ function renameUser(id,oldName,newName){
       return PUT("accounts/"+ROOM+"/"+k[1],Object.assign({},rec,{o:rec.o||oldName})).then(function(){return k[0]===k[1]?null:DEL("accounts/"+ROOM+"/"+k[0])});
     });
   }).then(function(){
-    return PUT("rooms/"+ROOM+"/"+id+"/n",nn);
+    return Promise.all(MAR_ROOMS.map(function(r){return PUT("rooms/"+r+"/"+id+"/n",nn).catch(function(){})}));
   }).then(function(){
     if(ST.users[id])ST.users[id].n=nn;
     return syncNames().catch(function(){});
@@ -481,7 +498,7 @@ function pagePers(){
       mv.addEventListener("click",function(){if(!sel.value)return;var gid=sel.value;mv.disabled=true;movePerson(id,u.n,gid).then(function(){LOG("Spostato "+u.n+" nella squadra «"+ST.groups[gid].n+"»");toast(u.n+" è nella squadra «"+ST.groups[gid].n+"».");ST.members[gid]=obj(ST.members[gid]);ST.members[gid][id]={n:u.n,r:ST.members[gid][id]&&ST.members[gid][id].r||"member"};mv.disabled=false;draw()}).catch(function(e){mv.disabled=false;fail(e)})});
       row.appendChild(mv);
       var rb=btn(rm?"Rimetti nell’elenco":"Togli dall’elenco","sm"+(rm?"":" bad"));
-      var act=function(){(rm?DEL("removed/"+ROOM+"/"+id):PUT("removed/"+ROOM+"/"+id,true)).then(function(){LOG((rm?"Rimesso nell’elenco: ":"Tolto dall’elenco: ")+u.n);if(rm)delete ST.removed[id];else ST.removed[id]=true;draw()}).catch(fail)};
+      var act=function(){(rm?DEL("removed/"+ADM_ROOM+"/"+id):PUT("removed/"+ADM_ROOM+"/"+id,true)).then(function(){LOG((rm?"Rimesso nell’elenco: ":"Tolto dall’elenco: ")+u.n);if(rm)delete ST.removed[id];else ST.removed[id]=true;draw()}).catch(fail)};
       if(rm)rb.addEventListener("click",act);else two(rb,"Togli dall’elenco",act);
       row.appendChild(rb);body.appendChild(row);
       if(isT){
@@ -648,6 +665,13 @@ $("tst").addEventListener("click",function(){
   SES=null;location.href="./index.html";
 });
 $("rf").addEventListener("click",function(){load().then(function(){render();toast("Aggiornato.")}).catch(function(){toast("Non riesco ad aggiornare.")})});
+$("marSw").addEventListener("click",function(){
+  ADM_ROOM=ADM_ROOM===ROOM?ROOM+"_dc":ROOM;
+  $("marSw").textContent="Maratona: "+(ADM_ROOM===ROOM?"MCU":"DC");
+  applyMarTitles();
+  toast("Carico i dati della maratona "+(ADM_ROOM===ROOM?"MCU":"DC")+"…");
+  load().then(function(){render()}).catch(function(){toast("Non riesco a caricare questa maratona.")});
+});
 $("lf").addEventListener("submit",function(ev){
   ev.preventDefault();var b=$("lb"),m=$("lm");b.disabled=true;m.textContent="Un attimo…";
   fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key="+KEY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:$("e").value.trim(),password:$("p").value,returnSecureToken:true})})
