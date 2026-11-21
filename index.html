@@ -1146,7 +1146,7 @@ function renderMine(){
   });
   $("app").innerHTML=html;
   drawHero(m,fresh);
-  if(fresh&&!viewing){var fk=Object.keys(fresh);if(fk.length){if(MAR==="mcu")setTimeout(function(){shield(fk[0])},70);else if(MAR==="dc")setTimeout(function(){dcShield(fk[0])},70)}}
+  /* animazione dello scudo volante disattivata: problemi di posizionamento mai risolti del tutto su PC */
 }
 function hm(x){var m=Math.round(x*60);return{h:Math.floor(m/60),m:m%60}}
 function hmTxt(x){var t=hm(x);return t.h+" ore"+(t.m?" e "+t.m+" min":"")}
