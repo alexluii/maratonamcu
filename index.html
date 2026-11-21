@@ -392,7 +392,7 @@ body:has(.tkr:not([hidden])) .adm-pill{top:46px}
 .ph{--era:hsl(var(--eh,40) 82% 52%);--eraT:hsl(var(--eh,40) 74% 36%)}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ph{--eraT:hsl(var(--eh,40) 92% 72%)}}:root[data-theme="dark"] .ph{--eraT:hsl(var(--eh,40) 92% 72%)}.ph .pn{color:var(--eraT)}.ph .pp i{background:var(--era)}.cells i.d{background:hsl(var(--eh,40) 85% 55%)}
 .cm .mt.mme{box-shadow:0 0 0 2px #ffd23f,0 0 12px 2px rgba(255,210,63,.75)}.cm.tag{box-shadow:inset 3px 0 0 #ffd23f,0 0 0 1px #ffd23f,0 0 18px rgba(255,210,63,.4)}.cm.tag.gl{animation:tagb 1.5s ease-in-out 4}.cm.tag.gl .mt.mme{animation:mtg 1.5s ease-in-out 4}@keyframes tagb{50%{box-shadow:inset 3px 0 0 #ffd23f,0 0 0 2px #ffe27a,0 0 32px rgba(255,210,63,.85)}}@keyframes mtg{50%{box-shadow:0 0 0 3px #fff3b0,0 0 24px 7px rgba(255,210,63,1)}}
 #cosmos{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1;opacity:0;transition:opacity .6s}body[data-tab="am"] #cosmos,body[data-tab="gr"] #cosmos{opacity:1}
-.shr{position:fixed;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 14px #ffb627;z-index:259;pointer-events:none;animation:shr .6s ease-out forwards}@keyframes shr{from{transform:scale(.5);opacity:1}to{transform:scale(5);opacity:0}}.shr.dc{box-shadow:0 0 14px #17b4ff}
+.shr{position:fixed;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 14px #ffb627;z-index:259;pointer-events:none;animation:shr .6s ease-out forwards}@keyframes shr{from{transform:scale(.5);opacity:1}to{transform:scale(5);opacity:0}}.shr.dc{box-shadow:0 0 14px #17b4ff}.shr.shr-a{position:absolute}
 @media (hover:hover) and (pointer:fine){.ticket:not(.done) .tk-t{background:linear-gradient(105deg,transparent 38%,rgba(255,255,255,.95) 50%,transparent 62%) no-repeat 160% 0/260% 100%,linear-gradient(currentColor,currentColor);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;transition:background-position .9s ease,filter .35s}.ticket:not(.done):hover .tk-t{background-position:-60% 0,0 0;filter:drop-shadow(0 0 14px rgba(255,255,255,.85))}}
 @media (prefers-reduced-motion:reduce){.ring.rga,.cm.tag.gl,.cm.tag.gl .mt.mme{animation:none!important}#cosmos{display:none}}
 
@@ -2541,12 +2541,29 @@ function flyShield(id,svg,ringCls,hide){
       {transform:"translate(0,0) rotate(1000deg) scale(1)",opacity:1,offset:1}
     ],{duration:950,easing:"cubic-bezier(.3,.7,.35,1)",fill:"forwards"});
     a.onfinish=function(){
-      /* la pagina può essersi mossa (badge, sync amici) durante il volo: ricontrolliamo dove si trova
-         davvero la riga prima di posare l'anello, invece di fidarci della posizione calcolata a inizio volo */
+      /* Annulliamo l'animazione di volo: con lo zoom automatico della pagina (schermi grandi/ultrawide)
+         la rotazione/scala residua può restare visivamente disallineata da quello che impostiamo qui dopo. */
+      try{a.cancel()}catch(e){}
+      var cb2=hide?null:document.querySelector('input[data-i="'+id+'"]'),liveLi=cb2&&cb2.closest("li"),liveR=liveLi&&liveLi.getBoundingClientRect();
+      if(liveLi&&liveR&&liveR.width>0){
+        /* l'atterraggio vero e proprio ancora l'icona DIRETTAMENTE alla riga (posizione relativa al suo
+           elemento, non coordinate calcolate in pixel sullo schermo): cosi è sempre esatto, qualunque
+           sia lo zoom automatico della pagina o il monitor, perché non dipende da nessun calcolo in px */
+        if(getComputedStyle(liveLi).position==="static")liveLi.style.position="relative";
+        el.style.cssText="position:absolute;left:4px;top:50%;width:"+S0+"px;height:"+S0+"px;margin-top:"+(-S0/2)+"px;z-index:260;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));opacity:1;transform:none";
+        liveLi.appendChild(el);
+        var ring=document.createElement("div");ring.className="shr shr-a"+(ringCls?" "+ringCls:"");ring.style.cssText="left:36px;top:50%";liveLi.appendChild(ring);
+        setTimeout(function(){ring.remove()},700);
+        setTimeout(function(){var f=el.animate([{opacity:1,transform:"scale(1)"},{opacity:0,transform:"scale(.7)"}],{duration:320,fill:"forwards"});f.onfinish=function(){el.remove()}},700);
+        return;
+      }
+      /* riga non trovabile (spoiler nascosto, sezione chiusa, fuori schermo): torniamo al fallback a
+         coordinate fisse sullo schermo (rullino, biglietto, intestazione, centro) */
+      el.style.transform="none";
       var fin=shieldLocate(id,hide)||tgt;
       el.style.left=(fin.x-S0/2)+"px";el.style.top=(fin.y-S0/2)+"px";
-      var ring=document.createElement("div");ring.className="shr"+(ringCls?" "+ringCls:"");ring.style.cssText="left:"+fin.x+"px;top:"+fin.y+"px";document.body.appendChild(ring);
-      setTimeout(function(){ring.remove()},700);
+      var ring2=document.createElement("div");ring2.className="shr"+(ringCls?" "+ringCls:"");ring2.style.cssText="left:"+fin.x+"px;top:"+fin.y+"px";document.body.appendChild(ring2);
+      setTimeout(function(){ring2.remove()},700);
       setTimeout(function(){var f=el.animate([{opacity:1,transform:"scale(1)"},{opacity:0,transform:"scale(.7)"}],{duration:320,fill:"forwards"});f.onfinish=function(){el.remove()}},700);
     };
     setTimeout(function(){if(el.parentNode)el.remove()},2600);
