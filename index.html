@@ -609,7 +609,7 @@ body.gated{overflow:hidden}
 <p class="gcnt gfoot" id="gcnt" title="Gruppi aperti in questo momento" hidden><span class="led"></span><span>gruppi: —</span></p>
 <p class="gcnt gfoot" id="ucnt" title="Persone iscritte al sito" hidden><span class="led"></span><span>iscritti: —</span></p>
 <button id="reset" type="button">Azzera i miei progressi</button>
-<div class="adm-foot" id="admFoot" hidden><button type="button" id="admBtn" class="lnk">Accesso amministratore</button><div id="admSlot"></div></div>
+<div class="adm-foot" id="admFoot" hidden><div id="admSlot"></div></div>
 </footer>
 <section id="spons" aria-label="Sponsor" hidden></section>
 <nav class="dock" id="dock" data-tab="io" aria-label="Sezioni">
@@ -4081,13 +4081,11 @@ function renderFriendsCodes(){
 }
 function admExit(){ADM_UNTIL=0;FBT=null;admClear();viewing=null;render();try{renderFriends();renderSponsors()}catch(e){}msg("Sei uscito dall’amministratore.")}
 function admUi(){
-  var b=$("admBtn"),p=$("admPill"),on=fbMode()&&adminOk(),mine=!!(S.acct&&isOwnN(S.acct.name));
-  if(b)b.textContent=on?"Esci dall’amministratore":"Accesso amministratore";
+  var p=$("admPill"),on=fbMode()&&adminOk(),mine=!!(S.acct&&isOwnN(S.acct.name));
   if(!p){p=h("button","adm-pill");p.id="admPill";p.type="button";document.body.appendChild(p)}
   p.onclick=on?admExit:function(){location.href="admin.html"};
   p.hidden=!(on||(fbMode()&&mine));
   if(on)updBadge();else if(!p.hidden)p.textContent="Accesso amministratore";
-  var fa=$("admFoot");if(fa&&fbMode())fa.hidden=on||!mine;
   var rs=$("reset");if(rs)rs.hidden=!!S.acct;
 }
 function flyTitle(ov,ttl,after){
@@ -4339,8 +4337,7 @@ setTimeout(function(){document.body.classList.remove("boot")},2800);
 render();
 if(LEGACY)setTimeout(function(){openMigrate(LEGACY,"")},300);
 if(DB_URL){if(!S.acct)msg("Crea un account nella scheda Amici per condividere i progressi con gli amici.");else{pull()}var pk=0;setInterval(function(){pk++;var need=(tab==="am"||tab==="gr")?1:(liveOK()?6:4);if(pk%need)return;pull()},2500);loadGcnt();setInterval(loadGcnt,30000);loadUcnt();setInterval(loadUcnt,60000);setInterval(pullChat,2000)}
-admLoad();if(fbMode())$("admFoot").hidden=!(S.acct&&isOwnN(S.acct.name));if(adminOk()){render();renderSponsors();loadReports()}
-$("admBtn").addEventListener("click",function(){if(adminOk()){admExit();return}location.href="admin.html"});
+admLoad();if(adminOk()){render();renderSponsors();loadReports()}
 refreshUpcoming();setInterval(refreshUpcoming,3600000);loadSponsors();setInterval(loadSponsors,120000);setInterval(loadReports,15000);if(window.matchMedia)window.matchMedia("(min-width:1080px)").addEventListener("change",placeSp);setInterval(tick,1000);document.addEventListener("visibilitychange",function(){if(!document.hidden){pull();try{bgTick()}catch(e){}}});
 startTr();
 </script>
