@@ -927,7 +927,7 @@ function RAWF(u,o){
   var ac=new AbortController(),oo={},t,isWrite=!!(o&&o.method&&o.method!=="GET");
   if(o)for(var k in o)oo[k]=o[k];
   oo.signal=ac.signal;
-  t=setTimeout(function(){try{ac.abort()}catch(e){}},isWrite?25000:4000);
+  t=setTimeout(function(){try{ac.abort()}catch(e){}},isWrite?25000:10000);
   return RAWF0(u,oo).then(function(r){clearTimeout(t);return r},function(e){clearTimeout(t);throw e});
 }
 function u2save(){try{if(U2)localStorage.setItem(U2K,JSON.stringify(U2));else localStorage.removeItem(U2K)}catch(e){}}
