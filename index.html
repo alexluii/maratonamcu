@@ -539,6 +539,7 @@ body.gated{overflow:hidden}
 .mpk-ago:hover,.mpk-ago:focus-visible{transform:translateY(-2px);box-shadow:0 0 0 1px rgba(255,255,255,.2),0 0 32px rgba(255,255,255,.55);outline:none}
 .mpk-ago:disabled{opacity:.6;cursor:default;transform:none}
 .mpk-ahint,.mpk-arule{margin:0;font:400 12px/1.5 "Instrument Sans",sans-serif;color:#8b84a6}
+.mpk-awrite{margin:2px 0 0;padding:10px 4px;border:0;background:none;color:#b7c1ff;font:600 13px "Instrument Sans",sans-serif;text-decoration:underline;cursor:pointer;text-align:left;min-height:44px}
 .marSwBtn{margin:14px 0 0;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--mute);font:600 12px "Instrument Sans",sans-serif;cursor:pointer}
 .marSwBtn:hover,.marSwBtn:focus-visible{color:var(--ink);border-color:var(--red);outline:none}
 .marfx{position:fixed;inset:0;z-index:10200;pointer-events:none;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,var(--fxc,#ff2d4e) 0%,rgba(0,0,0,0) 70%);opacity:0;animation:marfxb .6s ease both}
@@ -574,6 +575,7 @@ body.gated{overflow:hidden}
 <p class="mpk-aerr" id="mpkAerr" role="alert"></p>
 <button type="button" class="mpk-ago" id="mpkGo">Crea account</button>
 <p class="mpk-ahint" id="mpkHint" hidden>Hai dimenticato la password? Scrivi ad Alessandro: ti sblocca l'account.</p>
+<button type="button" class="mpk-awrite" id="mpkWrite" hidden>✉ Scrivi all'amministratore</button>
 <p class="mpk-arule" id="mpkRule">Creando l'account ti impegni a mantenere un atteggiamento rispettoso e consono con gli altri: chi non lo fa può essere silenziato o rimosso dal sito.</p>
 </div>
 <div class="mpk-spons" id="mpkSpons" aria-label="Sponsor" hidden></div>
@@ -3684,7 +3686,7 @@ function delJ(u){return fetch(u,{method:"DELETE"}).then(function(r){if(!r.ok)thr
 function nkOf(name){return sha("nm:"+String(name).replace(/\s+/g," ").trim().slice(0,24).toLowerCase()).then(function(x){return x.slice(0,20)})}
 var RP={};
 function admCount(){return isAdminAcct()?Object.keys(REQ).length+Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].s==="p"}).length+Object.keys(RP||{}).filter(function(k){return RP[k]&&RP[k].s==="p"}).length:0}
-function updBadge(){try{renderBell()}catch(e){}var a=admCount(),n=frCount(),b=$("tAm"),b2=$("tPr");if(b){if(n)b.setAttribute("data-n",n);else b.removeAttribute("data-n")}if(b2){if(a)b2.setAttribute("data-n",a);else b2.removeAttribute("data-n")}var p=$("admPill");if(p&&!p.hidden)p.textContent=a?"Admin · "+a+" · Esci":"Admin · Esci"}
+function updBadge(){try{renderBell()}catch(e){}var a=admCount(),n=frCount(),b=$("tAm"),b2=$("tPr");if(b){if(n)b.setAttribute("data-n",n);else b.removeAttribute("data-n")}if(b2){if(a)b2.setAttribute("data-n",a);else b2.removeAttribute("data-n")}var p=$("admPill");if(p&&!p.hidden&&fbMode()&&adminOk())p.textContent=a?"Admin · "+a+" · Esci":"Admin · Esci"}
 function forceLogout(){why("Ti ho disconnesso perché il tuo account non risulta più sul server. Accedi di nuovo; se succede ancora, scrivilo ad Alessandro.");u2out();viewing=null;S.cg="";UG={};GM={};UG_READY=false;GM_READY="";S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);MAR_CHOSEN=false;try{localStorage.removeItem("mcu-mar")}catch(e){}msg("Nome o PIN sono stati cambiati. Accedi con le nuove credenziali.");render()}
 function moveAccount(old,newName,newPin){
   moving=true;
@@ -4066,11 +4068,13 @@ function renderFriendsCodes(){
 }
 function admExit(){ADM_UNTIL=0;FBT=null;admClear();viewing=null;render();try{renderFriends();renderSponsors()}catch(e){}msg("Sei uscito dall’amministratore.")}
 function admUi(){
-  var b=$("admBtn"),p=$("admPill"),on=fbMode()&&adminOk();
+  var b=$("admBtn"),p=$("admPill"),on=fbMode()&&adminOk(),mine=!!(S.acct&&isOwnN(S.acct.name));
   if(b)b.textContent=on?"Esci dall’amministratore":"Accesso amministratore";
-  if(!p){p=h("button","adm-pill","Admin · Esci");p.id="admPill";p.type="button";p.addEventListener("click",admExit);document.body.appendChild(p)}
-  p.hidden=!on;if(on)updBadge();
-  var fa=$("admFoot");if(fa&&fbMode())fa.hidden=on||!(S.acct&&isOwnN(S.acct.name));
+  if(!p){p=h("button","adm-pill");p.id="admPill";p.type="button";document.body.appendChild(p)}
+  p.onclick=on?admExit:function(){location.href="admin.html"};
+  p.hidden=!(on||(fbMode()&&mine));
+  if(on)updBadge();else if(!p.hidden)p.textContent="Accesso amministratore";
+  var fa=$("admFoot");if(fa&&fbMode())fa.hidden=on||!mine;
   var rs=$("reset");if(rs)rs.hidden=!!S.acct;
 }
 function flyTitle(ov,ttl,after){
@@ -4271,12 +4275,13 @@ function swapMar(){
 var mpkMode="new";
 function mpkSetMode(m){
   mpkMode=m;
-  var tn=$("mpkTabNew"),tl=$("mpkTabIn"),go=$("mpkGo"),pass=$("mpkPass"),hint=$("mpkHint"),rule=$("mpkRule"),err=$("mpkAerr");
+  var tn=$("mpkTabNew"),tl=$("mpkTabIn"),go=$("mpkGo"),pass=$("mpkPass"),hint=$("mpkHint"),rule=$("mpkRule"),err=$("mpkAerr"),wr=$("mpkWrite");
   if(tn)tn.setAttribute("aria-pressed",String(m==="new"));
   if(tl)tl.setAttribute("aria-pressed",String(m==="in"));
   if(go)go.textContent=m==="new"?ct("Crea account","Create account"):ct("Accedi","Log in");
   if(pass)pass.autocomplete=m==="new"?"new-password":"current-password";
   if(hint)hint.hidden=m==="new";
+  if(wr)wr.hidden=m==="new";
   if(rule)rule.hidden=m!=="new";
   if(err)err.textContent="";
 }
@@ -4311,6 +4316,7 @@ function mpkGo(){
   if(tn)tn.addEventListener("click",function(){mpkSetMode("new")});
   if(tl)tl.addEventListener("click",function(){mpkSetMode("in")});
   if(go)go.addEventListener("click",mpkGo);
+  var wr=$("mpkWrite");if(wr)wr.addEventListener("click",function(){var nm=($("mpkUser")&&$("mpkUser").value||"").replace(/\s+/g," ").trim();if(nm&&!S.me.n)S.me.n=nm;reqModal({})});
   [$("mpkUser"),$("mpkPass")].forEach(function(x){if(x)x.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();mpkGo()}})});
   mpkSetMode(EXP?"in":"new");
   if(!MAR_CHOSEN&&!needsGate()&&!ensureLang())openMarPicker();
