@@ -601,6 +601,85 @@ function pageAltro(){
   var nb=btn("Allinea i nomi","pri");nb.addEventListener("click",function(){
     nb.disabled=true;load().then(function(){return syncNames()}).then(function(n){LOG("Allineati i nomi ("+n+" correzioni)");toast(n?"Fatto: "+n+" nomi aggiornati.":"Era già tutto allineato.");nb.disabled=false}).catch(function(){nb.disabled=false;toast("Operazione non riuscita. Riprova.")});
   });nc.appendChild(nb);main.appendChild(nc);
+  main.appendChild(h("h2",null,"Sponsor"));
+  var spc=h("div","card"),spList=h("div"),spBtnRow=h("div"),spWrap=h("div");
+  spc.appendChild(h("p","m","Loghi sponsor mostrati sul sito, per entrambe le maratone."));
+  spc.appendChild(spList);spc.appendChild(spBtnRow);spc.appendChild(spWrap);main.appendChild(spc);
+  spList.appendChild(h("p","m","Caricamento…"));
+  function okImgA(x){return typeof x==="string"&&x.length<150000&&/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(x)}
+  function okSiteA(u){try{var x=new URL(u);return(x.protocol==="https:"||x.protocol==="http:")?x.href:null}catch(e){return null}}
+  function spKeyA(v){return v&&v.o!=null&&isFinite(v.o)?Number(v.o):1e7+((v&&v.t)||0)}
+  function shrinkLogoA(file){
+    return new Promise(function(res,rej){
+      if(!file||!/^image\/(png|jpeg|webp)$/.test(file.type))return rej(new Error("tipo"));
+      var fr=new FileReader();fr.onerror=function(){rej(new Error("lettura"))};
+      fr.onload=function(){
+        var im=new Image();im.onerror=function(){rej(new Error("immagine"))};
+        im.onload=function(){
+          var M=260,k=Math.min(1,M/Math.max(im.width,im.height)),c=document.createElement("canvas");
+          c.width=Math.max(1,Math.round(im.width*k));c.height=Math.max(1,Math.round(im.height*k));
+          c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+          var out=c.toDataURL(file.type==="image/jpeg"?"image/jpeg":"image/png",0.85);
+          if(out.length>120000)out=c.toDataURL("image/jpeg",0.7);
+          if(!okImgA(out))return rej(new Error("grande"));res(out);
+        };im.src=fr.result;
+      };fr.readAsDataURL(file);
+    });
+  }
+  function spMoveA(ids,i,d,SPX){
+    var j=i+d;if(j<0||j>=ids.length)return;
+    var a=ids.slice();var t=a[i];a[i]=a[j];a[j]=t;
+    Promise.all(a.map(function(k,n){if(SPX[k]&&SPX[k].o===n)return null;return PUT("sponsors/"+ROOM+"/"+k+"/o",n).then(function(){if(SPX[k])SPX[k].o=n})})).then(function(){LOG("Riordinati gli sponsor");spDraw(SPX)}).catch(function(){toast("Non riuscito. Riprova.")});
+  }
+  function spFormA(SPX){
+    var f=h("div");f.style.marginTop="10px";
+    f.appendChild(h("p","m","Nuovo sponsor"));
+    var file=h("input");file.type="file";file.accept="image/png,image/jpeg,image/webp";file.setAttribute("aria-label","Logo dello sponsor");
+    var pv=h("img");pv.alt="";pv.hidden=true;pv.style.cssText="width:64px;height:64px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:10px;margin:8px 0;display:block";
+    var logo=null,errP=h("p","m");
+    file.addEventListener("change",function(){
+      if(!file.files[0])return;
+      shrinkLogoA(file.files[0]).then(function(d){logo=d;pv.src=d;pv.hidden=false;errP.textContent=""}).catch(function(e){logo=null;pv.hidden=true;errP.textContent=e&&e.message==="tipo"?"Il logo deve essere PNG, JPG o WebP.":"Non riesco a leggere questa immagine."});
+    });
+    var si=h("input");si.type="url";si.maxLength=200;si.placeholder="Sito web (https://…)";si.setAttribute("aria-label","Sito web");si.autocomplete="off";si.style.marginTop="8px";
+    var row=h("div","row"),ok=btn("Salva","pri"),no=btn("Annulla");
+    f.appendChild(file);f.appendChild(pv);f.appendChild(si);f.appendChild(errP);row.appendChild(ok);row.appendChild(no);f.appendChild(row);
+    no.addEventListener("click",function(){f.remove()});
+    ok.addEventListener("click",function(){
+      var raw=si.value.trim(),w=okSiteA(/^https?:\/\//i.test(raw)?raw:"https://"+raw);
+      if(!logo){errP.textContent="Scegli il logo.";return}
+      if(!raw||!w){errP.textContent="Scrivi un sito web valido.";return}
+      ok.disabled=no.disabled=true;errP.textContent="Un attimo…";
+      var id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+      PUT("sponsors/"+ROOM+"/"+id,{l:logo,u:w,t:Date.now()}).then(function(){SPX[id]={l:logo,u:w,t:Date.now()};LOG("Aggiunto sponsor: "+w);toast("Sponsor aggiunto.");f.remove();spDraw(SPX)}).catch(function(e){ok.disabled=no.disabled=false;errP.textContent="Non riuscito ("+(e&&e.message||"errore")+")."});
+    });
+    return f;
+  }
+  function spDraw(SPX){
+    spList.textContent="";spWrap.textContent="";
+    var ids=Object.keys(SPX).filter(function(k){return SPX[k]&&okImgA(SPX[k].l)&&okSiteA(SPX[k].u)}).sort(function(a,b){return spKeyA(SPX[a])-spKeyA(SPX[b])});
+    if(!ids.length)spList.appendChild(h("p","m","Ancora nessuno sponsor."));
+    ids.forEach(function(k,ix){
+      var pr=h("div","person flat"),im=h("img");im.alt="";im.src=SPX[k].l;im.style.cssText="width:44px;height:44px;border-radius:10px;object-fit:contain;background:#fff;border:1px solid var(--line);flex:none";
+      pr.appendChild(im);
+      var t=h("div","t");t.appendChild(h("b",null,SPX[k].u.replace(/^https?:\/\/(www\.)?/,"").split("/")[0]));t.appendChild(h("div","m",SPX[k].u));pr.appendChild(t);
+      var rw=h("div","row");rw.style.margin="0";
+      if(ix>0){var mb=btn("‹","sm");mb.setAttribute("aria-label","Sposta indietro");mb.addEventListener("click",function(){spMoveA(ids,ix,-1,SPX)});rw.appendChild(mb)}
+      if(ix<ids.length-1){var mf=btn("›","sm");mf.setAttribute("aria-label","Sposta avanti");mf.addEventListener("click",function(){spMoveA(ids,ix,1,SPX)});rw.appendChild(mf)}
+      var rm=btn("Rimuovi","sm bad");two(rm,"Rimuovi",function(){
+        rm.disabled=true;DEL("sponsors/"+ROOM+"/"+k).then(function(){LOG("Rimosso sponsor: "+SPX[k].u);delete SPX[k];toast("Sponsor rimosso.");spDraw(SPX)}).catch(function(){rm.disabled=false;toast("Non riuscito. Riprova.")});
+      });rw.appendChild(rm);
+      pr.appendChild(rw);spList.appendChild(pr);
+    });
+    spBtnRow.textContent="";spWrap.textContent="";
+    var ab=btn("+ Aggiungi sponsor","pri");
+    ab.addEventListener("click",function(){
+      if(spWrap.firstChild){spWrap.textContent="";return}
+      spWrap.appendChild(spFormA(SPX));
+    });
+    spBtnRow.appendChild(ab);
+  }
+  GET("sponsors/"+ROOM).then(function(o){spDraw(obj(o))}).catch(function(){spList.textContent="";spList.appendChild(h("p","m","Non riesco a leggere gli sponsor."))});
   main.appendChild(h("h2",null,"Backup"));
   var b=h("div","card");b.appendChild(h("p","m","Scarica un file con progressi, squadre e membri. Non contiene le password degli amici."));
   var bb=btn("Scarica il backup","pri");bb.addEventListener("click",function(){
