@@ -2491,8 +2491,23 @@ setInterval(tourCheck,1500);
 /* ===== EFFETTI: scudo, portale, polvere cosmica ===== */
 function rmo(){return window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches}
 var SH_SVG='<svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true"><circle cx="50" cy="50" r="48" fill="#c8102e" stroke="#6f0a1b" stroke-width="2"/><circle cx="50" cy="50" r="36" fill="#f4f4f4"/><circle cx="50" cy="50" r="28" fill="#c8102e"/><circle cx="50" cy="50" r="20" fill="#0a3161"/><polygon fill="#f4f4f4" points="50,34 54.5,45.5 66.6,46 57,53.6 60.4,65.5 50,58.8 39.6,65.5 43,53.6 33.4,46 45.5,45.5"/></svg>';
+function vpBox(){
+  /* innerWidth/innerHeight possono disallinearsi dalle coordinate di getBoundingClientRect() quando la pagina
+     ha uno zoom CSS attivo (qui scatta sopra i 2200px per gli schermi grandi): un div invisibile incollato
+     ai 4 bordi del viewport (position:fixed;inset:0) viene misurato con getBoundingClientRect() - la STESSA
+     unità di ogni riga/cella/biglietto - cosi il confronto resta coerente anche quando c'è il disallineamento */
+  try{
+    var p=document.createElement("div");
+    p.style.cssText="position:fixed;top:0;left:0;right:0;bottom:0;margin:0;padding:0;border:0;visibility:hidden;pointer-events:none";
+    document.body.appendChild(p);
+    var r=p.getBoundingClientRect();
+    p.remove();
+    if(r.width>0&&r.height>0)return{w:r.width,h:r.height};
+  }catch(e){}
+  return{w:innerWidth,h:innerHeight};
+}
 function shieldLocate(id,hide){
-  var vh=innerHeight,cb=hide?null:document.querySelector('input[data-i="'+id+'"]'),tgt=null;
+  var VP=vpBox(),vh=VP.h,cb=hide?null:document.querySelector('input[data-i="'+id+'"]'),tgt=null;
   function ok(e){if(!e)return null;var r=e.getBoundingClientRect();return r.width>0&&r.top>50&&r.bottom<vh-90?r:null}
   if(!hide){
     var r=ok(cb&&cb.closest("li"));if(r)tgt={x:r.left+36,y:r.top+r.height/2};
@@ -2513,7 +2528,7 @@ function flyShield(id,svg,ringCls,hide){
   try{
     if(rmo()||!document.body)return;
     var old=document.getElementById("shld");if(old)old.remove();
-    var vh=innerHeight,vw=innerWidth,tgt=shieldLocate(id,hide)||{x:vw/2,y:vh*.45};
+    var VP=vpBox(),vh=VP.h,vw=VP.w,tgt=shieldLocate(id,hide)||{x:vw/2,y:vh*.45};
     var S0=64,el=document.createElement("div");el.id="shld";el.setAttribute("aria-hidden","true");el.innerHTML=svg;
     el.style.cssText="position:fixed;left:"+(tgt.x-S0/2)+"px;top:"+(tgt.y-S0/2)+"px;width:"+S0+"px;height:"+S0+"px;z-index:260;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));opacity:0";
     document.body.appendChild(el);
