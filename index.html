@@ -1146,7 +1146,7 @@ function renderMine(){
   });
   $("app").innerHTML=html;
   drawHero(m,fresh);
-  if(fresh&&!viewing){var fk=Object.keys(fresh);if(fk.length){if(MAR==="mcu")setTimeout(function(){shield(fk[0])},70);else if(MAR==="dc"&&!SPM)setTimeout(function(){dcShield(fk[0])},70)}}
+  if(fresh&&!viewing){var fk=Object.keys(fresh);if(fk.length){if(MAR==="mcu")setTimeout(function(){shield(fk[0])},70);else if(MAR==="dc")setTimeout(function(){dcShield(fk[0])},70)}}
 }
 function hm(x){var m=Math.round(x*60);return{h:Math.floor(m/60),m:m%60}}
 function hmTxt(x){var t=hm(x);return t.h+" ore"+(t.m?" e "+t.m+" min":"")}
@@ -1706,6 +1706,16 @@ function spRow(id,x){
     return'<div class="spc w" data-nt="1"><i>SPOILER</i>'+esc(ct("Il punto clou arriva il "+ds+" (4 giorni dopo l’uscita).","The key moment arrives on "+ds+" (4 days after release)."))+'</div>';
   }
   return'<div class="spc" data-nt="1"><i>SPOILER</i>'+esc(EN?(e.en||e.it):(e.it||e.en))+'</div>';
+}
+/* true se, con lo stato attuale di Spoiler Mode, il testo reale dello spoiler per questo id è visibile ORA (non bloccato da x.u né dai 4 giorni di attesa) */
+function spExposed(id){
+  if(!SPM||!SPD)return false;
+  var x=byId[id];if(!x||x.u)return false;
+  var e=SPD[id];if(!e)return false;
+  var now=Date.now(),at=0;
+  if(x.r)at=x.r+4*864e5;
+  if(e.from){var f=Date.parse(e.from+"T00:00:00Z");if(f>at)at=f}
+  return!(at&&now<at);
 }
 function spApply(on){
   SPM=!!on;
@@ -2309,7 +2319,8 @@ function avBox(){
 
 /* ===== NOVITA' DEL SITO (popup) ===== */
 /* Ad ogni modifica visibile agli utenti: aumenta NEWS_V e aggiungi una voce in NEWS (it + en). Mai cose che riguardano l'amministratore. */
-var NEWS_V=36,NEWS=[
+var NEWS_V=37,NEWS=[
+ {v:37,d:"2026-11-21",ic:"🔰",ti:{it:"Scudo DC anche in Spoiler Mode",en:"DC shield now in Spoiler Mode too"},tx:{it:"Lo scudo DC (la S di Superman) per i titoli segnati dagli amici ora compare anche in Spoiler Mode: se lo spoiler di quel titolo è già visibile, l'effetto resta generico invece di puntare proprio su quella riga.",en:"The DC shield (Superman's S) for titles your friends mark now appears in Spoiler Mode too: if that title's spoiler is already visible, the effect stays generic instead of pointing right at that row."},chips:{it:["Effetto DC","Spoiler Mode"],en:["DC effect","Spoiler Mode"]}},
  {v:36,d:"2026-11-20",ic:"🫠",ti:{it:"Effetto Clayface nella Maratona DC",en:"Clayface effect in the DC Marathon"},tx:{it:"Nella Maratona DC, quando togli la spunta a un titolo, l'anteprima si deforma come l'argilla di Clayface e poi torna a posto, invece della classica dissolvenza Marvel.",en:"In the DC Marathon, when you untick something, the preview melts and reshapes like Clayface's clay before settling back, instead of the usual Marvel dissolve."},chips:{it:["Effetto DC","Clayface"],en:["DC effect","Clayface"]}},
  {v:35,d:"2026-11-20",ic:"🔰",ti:{it:"Scudo DC per gli amici",en:"DC shield for friends"},tx:{it:"Anche nella Maratona DC, quando un amico segna un titolo come visto compare un effetto: lo stemma della S di Superman che atterra al suo posto, al posto dello scudo di Capitan America. Per ora è attivo solo fuori dalla Spoiler Mode.",en:"In the DC Marathon too, when a friend marks something as watched you now get an effect: Superman's S-shield landing on it, instead of Captain America's shield. For now it's only active outside Spoiler Mode."},chips:{it:["Effetto DC","S di Superman"],en:["DC effect","Superman's S"]}},
  {v:34,d:"2026-11-20",ic:"📺",hero:1,ti:{it:"Arrivano le serie TV DC",en:"DC TV series have arrived"},tx:{it:"Nella Maratona DC c'è una nuova sezione \"Universi TV\": tutto l'Arrowverse (Arrow, The Flash, Supergirl, Legends of Tomorrow, Black Lightning, Batwoman, Superman & Lois, Stargirl) più Smallville, Gotham, Titans, Doom Patrol, Harley Quinn, Pennyworth, Constantine, Swamp Thing, Lucifer, iZombie e Krypton, in ordine di uscita reale.",en:"The DC Marathon has a new \"TV Universes\" section: the whole Arrowverse (Arrow, The Flash, Supergirl, Legends of Tomorrow, Black Lightning, Batwoman, Superman & Lois, Stargirl) plus Smallville, Gotham, Titans, Doom Patrol, Harley Quinn, Pennyworth, Constantine, Swamp Thing, Lucifer, iZombie and Krypton, in real release order."},chips:{it:["90 stagioni","Ordine cronologico"],en:["90 seasons","Chronological order"]}},
@@ -2515,12 +2526,17 @@ function dcShield(id){
   try{
     if(rmo()||!document.body)return;
     var old=document.getElementById("shld");if(old)old.remove();
-    var vh=innerHeight,vw=innerWidth,tgt=null,cb=document.querySelector('input[data-i="'+id+'"]');
+    /* in Spoiler Mode, se lo spoiler di questo titolo è già visibile, evitiamo di puntare proprio su quella riga/cella: l'effetto resta generico per non fare da "spotlight" su un testo non ancora letto */
+    var hide=SPM&&spExposed(id);
+    var vh=innerHeight,vw=innerWidth,tgt=null,cb=hide?null:document.querySelector('input[data-i="'+id+'"]');
     function ok(e){if(!e)return null;var r=e.getBoundingClientRect();return r.width>0&&r.top>50&&r.bottom<vh-90?r:null}
-    var r=ok(cb&&cb.closest("li"));if(r)tgt={x:r.left+36,y:r.top+r.height/2};
-    if(!tgt){var c=document.querySelector("#cells i.pop")||document.querySelector("#cells i.d:last-of-type");r=ok(c);if(r)tgt={x:r.left+r.width/2,y:r.top+r.height/2}}
+    var r=null;
+    if(!hide){
+      r=ok(cb&&cb.closest("li"));if(r)tgt={x:r.left+36,y:r.top+r.height/2};
+      if(!tgt){var c=document.querySelector("#cells i.pop")||document.querySelector("#cells i.d:last-of-type");r=ok(c);if(r)tgt={x:r.left+r.width/2,y:r.top+r.height/2}}
+    }
     if(!tgt){var tb=document.querySelector("#tk .tk-b");r=tb&&tb.getBoundingClientRect();if(r&&r.top>50&&r.bottom<vh-90)tgt={x:r.left+r.width/2,y:r.top+r.height/2}}
-    if(!tgt){var li=cb&&cb.closest("li");r=li&&li.getBoundingClientRect();if(r&&r.bottom>60&&r.top<vh-100)tgt={x:r.left+36,y:Math.min(vh-130,Math.max(80,r.top+r.height/2))}}
+    if(!tgt&&!hide){var li=cb&&cb.closest("li");r=li&&li.getBoundingClientRect();if(r&&r.bottom>60&&r.top<vh-100)tgt={x:r.left+36,y:Math.min(vh-130,Math.max(80,r.top+r.height/2))}}
     if(!tgt)tgt={x:vw/2,y:vh*.45};
     var S0=64,el=document.createElement("div");el.id="shld";el.setAttribute("aria-hidden","true");el.innerHTML=SD_SVG;
     el.style.cssText="position:fixed;left:"+(tgt.x-S0/2)+"px;top:"+(tgt.y-S0/2)+"px;width:"+S0+"px;height:"+S0+"px;z-index:260;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));opacity:0";
