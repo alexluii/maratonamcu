@@ -195,12 +195,24 @@ function migrateGroups(){
     return Promise.all(q).then(function(){setTimeout(function(){toast("Ho sistemato "+q.length+(q.length===1?" gruppo":" gruppi")+" creati prima dell’aggiornamento.")},400)},function(e){setTimeout(function(){toast("Non sono riuscito a sistemare i gruppi ("+(e&&e.message||"errore")+"). Scrivilo ad Alessandro… cioè a Claude.")},400)});
   });
 }
-/* ADM_ROOM: quale maratona sto guardando in admin (persone/progressi/badge). Richieste, segnalazioni e reset PIN restano condivisi tra le maratone (sono legati all'account, non alla maratona), quindi usano sempre ROOM */
+/* ADM_ROOM: quale maratona sto guardando in admin (progressi/badge mostrati per persona). Richieste, segnalazioni e reset PIN restano condivisi tra le maratone (sono legati all'account, non alla maratona), quindi usano sempre ROOM */
 var ADM_ROOM=ROOM;
+/* l'elenco "Persone" deve mostrare TUTTI gli iscritti al sito (come il contatore sul sito), non solo chi ha toccato la maratona aperta in questo momento: tengo quindi pronti i dati di entrambe le maratone e unisco gli elenchi */
+var ROOMS_MCU={},ROOMS_DC={};
+function mergeUsers(){
+  var cur=ADM_ROOM===ROOM?ROOMS_MCU:ROOMS_DC,ids={},out={};
+  Object.keys(ROOMS_MCU).forEach(function(k){ids[k]=1});Object.keys(ROOMS_DC).forEach(function(k){ids[k]=1});
+  Object.keys(ids).forEach(function(k){
+    var m=ROOMS_MCU[k],d=ROOMS_DC[k],c=cur[k];
+    out[k]={n:(c&&c.n)||(m&&m.n)||(d&&d.n)||"",u:Math.max(Number(m&&m.u)||0,Number(d&&d.u)||0),d:(c&&Array.isArray(c.d))?c.d:[]};
+  });
+  return out;
+}
 function load(){
   LOADERR=null;var rd=function(p){return GET(p).catch(function(e){LOADERR=e&&e.message||"errore";return null})};
-  return Promise.all([rd("rooms/"+ADM_ROOM),rd("removed/"+ADM_ROOM),rd("groups"),rd("groupMembers"),rd("mutes"),rd("groupRequests/"+ROOM),rd("reports/"+ROOM),rd("requests/"+ROOM)]).then(function(r){
-    ST={users:obj(r[0]),removed:obj(r[1]),groups:obj(r[2]),members:obj(r[3]),mutes:obj(r[4]),greq:obj(r[5]),reports:obj(r[6]),preq:obj(r[7])};
+  return Promise.all([rd("rooms/"+ROOM),rd("rooms/"+ROOM+"_dc"),rd("removed/"+ADM_ROOM),rd("groups"),rd("groupMembers"),rd("mutes"),rd("groupRequests/"+ROOM),rd("reports/"+ROOM),rd("requests/"+ROOM)]).then(function(r){
+    ROOMS_MCU=obj(r[0]);ROOMS_DC=obj(r[1]);
+    ST={users:mergeUsers(),removed:obj(r[2]),groups:obj(r[3]),members:obj(r[4]),mutes:obj(r[5]),greq:obj(r[6]),reports:obj(r[7]),preq:obj(r[8])};
     return migrateGroups();
   });
 }
