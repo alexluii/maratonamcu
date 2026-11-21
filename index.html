@@ -109,6 +109,11 @@ li.u label{cursor:default;border-left-style:dashed}
 .k{font-weight:700}
 .m{color:var(--mute);font-size:14px}
 #sy.ok::before{content:"";display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;background:#2fd27a;animation:live 2.2s ease-in-out infinite}
+.ld{display:flex;align-items:center;gap:10px;color:var(--mute);font-size:14px;padding:16px 0}
+.ld i{width:18px;height:18px;border-radius:50%;border:3px solid rgba(143,232,255,.25);border-top-color:#8fe8ff;flex:none;animation:ldspin .7s linear infinite}
+#sy.ld{padding:0}
+#sy.ld i{width:13px;height:13px;border-width:2px}
+@keyframes ldspin{to{transform:rotate(360deg)}}
 @keyframes live{50%{opacity:.35}}
 .box input,.box textarea{display:block;width:100%;margin:0 0 10px;padding:13px 14px;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:12px}
 .box textarea{resize:vertical;word-break:break-all;font-size:13px}
@@ -814,6 +819,7 @@ try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}
 function $(id){return document.getElementById(id)}
 function msg(t){$("msg").textContent=t||""}
 function h(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function ldBox(text){var d=h("div","ld");d.appendChild(h("i"));d.appendChild(document.createTextNode(text));return d}
 function save(stamp){if(stamp!==false)S.me.u=Date.now();try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
 function myArr(){return Object.keys(S.me.d).map(Number).sort(function(a,b){return a-b})}
 function valid(a){return a.filter(function(i){return Number.isInteger(i)&&byId[i]&&!byId[i].u})}
@@ -859,6 +865,7 @@ function copy(txt,ta){
 function nextOf(done){for(var i=0;i<items.length;i++){if(!items[i].u&&done.indexOf(items[i].id)<0)return items[i].t}return null}
 var prevD=null,enterNext=true,tearing=false;
 var UG={},GM={},GR=null,GRQ={},gSig=null,remSig=null,reqSig=null,REQ={},moving=false,ADMIN_ID="6cc8a464307af04f0723",viewing=null,REM={},lastAll={};
+var UG_READY=false,GM_READY="";
 function isAdminName(n){return String(n||"").replace(/\s+/g," ").trim().toLowerCase()==="alessandro"}
 var ADM_UNTIL=0;
 function fbMode(){return !!(FB_API_KEY&&ADMIN_EMAIL&&ADMIN_UID)}
@@ -1190,7 +1197,13 @@ function field(box,label,ro,val,rows){
   box.appendChild(ta);return ta;
 }
 function dbUrl(p){return DB_URL.replace(/\/+$/,"")+"/rooms/"+ROOM+marSeg()+(p?"/"+p:"")+".json"}
-function setSync(){var e=$("sy");if(e)e.className=online?"m ok":"m";if(e)e.textContent=!DB_URL?"":(online===null?"Sincronizzazione…":online?"Sincronizzato con gli amici: si aggiorna da solo.":"Connessione non riuscita"+(lastErr?" ("+lastErr+")":"")+", riprovo…")}
+function setSync(){
+  var e=$("sy");if(!e)return;
+  if(!DB_URL){e.className="m";e.textContent="";return}
+  if(online===null){e.className="m ld";e.textContent="";e.appendChild(h("i"));e.appendChild(document.createTextNode("Connessione al server…"))}
+  else if(online){e.className="m ok";e.textContent="Sincronizzato con gli amici: si aggiorna da solo."}
+  else{e.className="m";e.textContent="Connessione non riuscita"+(lastErr?" ("+lastErr+")":"")+", riprovo…"}
+}
 function push(){
   if(!DB_URL||!S.acct)return;
   clearTimeout(pushT);
@@ -1210,6 +1223,7 @@ function pull(force,local){
   (local?Promise.all([liveGet(dbUrl()),Promise.resolve(REM),Promise.resolve(REQ),Promise.resolve(UG),Promise.resolve(GM),Promise.resolve(GR),Promise.resolve(GRQ)]):Promise.all([liveGet(dbUrl()),getJ(remUrl()).catch(function(){return null}),isAdminAcct()?getJ(reqUrl()).catch(function(){return null}):Promise.resolve(null),getJ(ugUrl(S.me.i)).catch(function(){return null}),S.cg?getJ(gmUrl(S.cg)).catch(function(){return null}):Promise.resolve(null),S.cg?getJ(gUrl(S.cg)).catch(function(){return null}):Promise.resolve(null),getJ(grUrl()).catch(function(){return null})])).then(function(res){
     if(S.cg!==cg0){setTimeout(function(){pull(true)},80);return}
     var all=res[0];REM=(res[1]&&typeof res[1]==="object")?res[1]:{};REQ=(res[2]&&typeof res[2]==="object")?res[2]:{};UG=(res[3]&&typeof res[3]==="object")?res[3]:{};GM=(res[4]&&typeof res[4]==="object")?res[4]:{};GR=res[5]||null;GRQ=(res[6]&&typeof res[6]==="object")?res[6]:{};
+    UG_READY=true;if(S.cg){GM_READY=S.cg;setTimeout(pullChat,0)}
     online=true;
     {
       var ch=false;all=(all&&typeof all==="object")?all:{};lastAll=all;
@@ -2124,14 +2138,14 @@ function fillChat(l,arr,meId,onDel){
   });
   if(stick)l.scrollTop=l.scrollHeight;
 }
-function drawChat(){var l=document.getElementById("chl");if(l)fillChat(l,CH.m,S.me.i)}
+function drawChat(){var l=document.getElementById("chl");if(!l)return;if(!CH.loaded&&!CH.m.length){l.textContent="";l.appendChild(ldBox("Caricamento chat…"));return}fillChat(l,CH.m,S.me.i)}
 function pullChat(){
   if(!S.cg||!chOpen||document.hidden||!GM||!GM[S.me.i])return;
   var gid=S.cg;
   getJ(chUrl(gid)+'?orderBy="$key"&limitToLast=60').then(function(o){
     if(S.cg!==gid)return;
     var a=[];if(o&&typeof o==="object")Object.keys(o).sort().forEach(function(k){var x=o[k];if(x&&typeof x.m==="string")a.push({k:k,i:String(x.i||""),n:String(x.n||""),m:x.m.slice(0,300),t:Number(x.t)||0})});
-    CH={gid:gid,m:a,r:CH.gid===gid?CH.r:{},pk:CH.gid===gid?CH.pk:"",pop:CH.gid===gid?CH.pop:null};drawChat();
+    CH={gid:gid,m:a,loaded:true,r:CH.gid===gid?CH.r:{},pk:CH.gid===gid?CH.pk:"",pop:CH.gid===gid?CH.pop:null};drawChat();
     getJ(rxUrl(gid)+'?orderBy="$key"&limitToLast=60').then(function(r){if(S.cg!==gid||CH.gid!==gid)return;var s0=JSON.stringify(CH.r||{}),n0=r&&typeof r==="object"?r:{};if(JSON.stringify(n0)!==s0){CH.r=n0;drawChat()}}).catch(function(){});
   }).catch(function(){});
 }
@@ -2172,7 +2186,7 @@ function chatBox(gid){
     fetch(chUrl(gid),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(m)}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);bgMsg();pullChat()}).catch(function(){msg("Messaggio non inviato. Riprova.")});
     });
   });
-  if(CH.gid===gid)setTimeout(drawChat,0);else{CH={gid:gid,m:[]};}
+  if(CH.gid===gid)setTimeout(drawChat,0);else{CH={gid:gid,m:[],loaded:false};setTimeout(drawChat,0);}
   setTimeout(pullChat,0);
   return w;
 }
@@ -2183,7 +2197,7 @@ function gKeys(name,pass){
   var nm=String(name||"").replace(/\s+/g," ").trim().slice(0,24),code=String(pass).trim(),gid;
   return sha("gc:"+code).then(function(x){gid=x.slice(0,20);return sha("gp:"+gid+":"+code)}).then(function(ph){return{gid:gid,n:nm,ph:ph.slice(0,32)}});
 }
-function enterGroup(gid){S.cg=gid;S.f={};GM={};GR=null;save(false);viewing=null;render();try{pull(true)}catch(e){}} // aggiorna subito membri/gruppo invece di aspettare il prossimo giro periodico
+function enterGroup(gid){S.cg=gid;S.f={};GM={};GR=null;GM_READY="";save(false);viewing=null;render();try{pull(true)}catch(e){}} // aggiorna subito membri/gruppo invece di aspettare il prossimo giro periodico
 function joinGroup(name,pass){
   return gKeys("",pass).then(function(k){
     return getJ(gmUrl(k.gid,S.me.i)).catch(function(){return null}).then(function(mine){
@@ -3590,6 +3604,7 @@ function glLoad(force){
 setInterval(function(){if(tab==="gr"&&!S.cg&&S.acct&&!document.hidden)glLoad(true)},30000);
 function groupsBox(){
   var b=h("section","box gbox");
+  var sy=h("p","m");sy.id="sy";b.appendChild(sy);
   var ng=Object.keys(UG||{}).length,sq=h("div","sqs");
   sq.appendChild(h("p","k sqh","I miei gruppi"));
   function lastTxt(gid){var g=GL[gid],l=g&&g.last;if(!l)return"Nessun messaggio";return(l.i===S.me.i?(EN?"You: ":"Tu: "):dn(curName(l.i,l.n))+": ")+l.m}
@@ -3603,10 +3618,13 @@ function groupsBox(){
     bd.appendChild(tp);bd.appendChild(pv);r.appendChild(bd);r.addEventListener("click",function(){enterGroup(gid||"")});return r;
   }
   Object.keys(UG||{}).forEach(function(g){sq.appendChild(sqRow(UG[g],g))});
-  if(!ng)sq.appendChild(h("p","m","Non fai ancora parte di nessuna squadra."));
+  if(!ng){if(UG_READY)sq.appendChild(h("p","m","Non fai ancora parte di nessuna squadra."));else sq.appendChild(ldBox("Caricamento gruppi…"))}
   if(!S.cg){glLoad(false)}
   if(!S.cg)b.appendChild(sq);
-  if(S.cg){
+  if(S.cg&&GM_READY!==S.cg){
+    var wa0=h("div","wa"),hd0=h("div","wh"),bk0=h("button","wb","‹");bk0.type="button";bk0.setAttribute("aria-label","Torna a tutti gli amici");bk0.addEventListener("click",function(){enterGroup("")});
+    hd0.appendChild(bk0);wa0.appendChild(hd0);wa0.appendChild(ldBox("Caricamento gruppo…"));b.appendChild(wa0);
+  }else if(S.cg){
     var role=myRole(),nm=(GR&&GR.n)||UG[S.cg]||"",cnt=Object.keys(GM||{}).length;
     var wa=h("div","wa"),hd=h("div","wh"),bk=h("button","wb","‹");bk.type="button";bk.setAttribute("aria-label","Torna a tutti gli amici");bk.addEventListener("click",function(){enterGroup("")});
     var ga=h("span","gav",(nm||"?").charAt(0).toUpperCase());ga.style.background="hsl("+hue(S.cg)+" 55% 36%)";
@@ -3667,7 +3685,7 @@ function nkOf(name){return sha("nm:"+String(name).replace(/\s+/g," ").trim().sli
 var RP={};
 function admCount(){return isAdminAcct()?Object.keys(REQ).length+Object.keys(GRQ||{}).filter(function(k){return GRQ[k]&&GRQ[k].s==="p"}).length+Object.keys(RP||{}).filter(function(k){return RP[k]&&RP[k].s==="p"}).length:0}
 function updBadge(){try{renderBell()}catch(e){}var a=admCount(),n=frCount(),b=$("tAm"),b2=$("tPr");if(b){if(n)b.setAttribute("data-n",n);else b.removeAttribute("data-n")}if(b2){if(a)b2.setAttribute("data-n",a);else b2.removeAttribute("data-n")}var p=$("admPill");if(p&&!p.hidden)p.textContent=a?"Admin · "+a+" · Esci":"Admin · Esci"}
-function forceLogout(){why("Ti ho disconnesso perché il tuo account non risulta più sul server. Accedi di nuovo; se succede ancora, scrivilo ad Alessandro.");u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);MAR_CHOSEN=false;try{localStorage.removeItem("mcu-mar")}catch(e){}msg("Nome o PIN sono stati cambiati. Accedi con le nuove credenziali.");render()}
+function forceLogout(){why("Ti ho disconnesso perché il tuo account non risulta più sul server. Accedi di nuovo; se succede ancora, scrivilo ad Alessandro.");u2out();viewing=null;S.cg="";UG={};GM={};UG_READY=false;GM_READY="";S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);MAR_CHOSEN=false;try{localStorage.removeItem("mcu-mar")}catch(e){}msg("Nome o PIN sono stati cambiati. Accedi con le nuove credenziali.");render()}
 function moveAccount(old,newName,newPin){
   moving=true;
   return Promise.all([acctKeys(newName,newPin),nkOf(old.name)]).then(function(r){
@@ -3746,7 +3764,7 @@ function startSession(name,pid,rec){
   var r=rec||{};
   S.acct={name:name,id:pid};
   S.me={i:pid,n:cn(r.n)||name,d:toMap(r.d),u:Number(r.u)||Date.now()};
-  S.f={};S.h={};S.cg="";UG={};GM={};save(false);
+  S.f={};S.h={};S.cg="";UG={};GM={};UG_READY=false;GM_READY="";save(false);
 }
 function cleanName(n){return String(n).replace(/^@/,"").replace(/\s+/g," ").trim().toLowerCase()}
 function doCreate(name,pw){
@@ -3921,7 +3939,7 @@ function renderFriends(){
     var ex=h("button",null,"Esci");ex.type="button";var arm=false;
     ex.addEventListener("click",function(){
       if(!arm){arm=true;ex.textContent="Tocca ancora per uscire";setTimeout(function(){arm=false;ex.textContent="Esci"},4000);return}
-      u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};S.cg="";UG={};GM={};save(false);
+      u2out();viewing=null;S.cg="";UG={};GM={};UG_READY=false;GM_READY="";S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};S.cg="";UG={};GM={};UG_READY=false;GM_READY="";save(false);
       MAR_CHOSEN=false;try{localStorage.removeItem("mcu-mar")}catch(e){} // esci: si riparte dall'accesso e poi dalla scelta della maratona
       msg("Sei uscito. Accedi di nuovo e scegli la maratona.");render();
     });
@@ -4111,7 +4129,7 @@ function touch(){if(U2&&Date.now()-(U2.a||0)>15000){U2.a=Date.now();u2save()}}
 function expireCheck(){
   if(!DB_URL||!S.acct||!U2)return;
   var last=U2.a||0;try{var o=JSON.parse(localStorage.getItem(U2K)||"null");if(o&&o.a>last)last=o.a}catch(e){}
-  if(Date.now()-last>SESS_MIN*60000){EXP=true;why("");u2out();viewing=null;S.cg="";UG={};GM={};S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);MAR_CHOSEN=false;try{localStorage.removeItem("mcu-mar")}catch(e){}msg("");render()}
+  if(Date.now()-last>SESS_MIN*60000){EXP=true;why("");u2out();viewing=null;S.cg="";UG={};GM={};UG_READY=false;GM_READY="";S.acct=null;S.me={i:rid(),n:"",d:{},u:0};S.f={};S.h={};save(false);MAR_CHOSEN=false;try{localStorage.removeItem("mcu-mar")}catch(e){}msg("");render()}
 }
 ["pointerdown","keydown","touchstart","wheel"].forEach(function(ev){window.addEventListener(ev,touch,{passive:true,capture:true})});
 document.addEventListener("visibilitychange",function(){if(!document.hidden)expireCheck()});
