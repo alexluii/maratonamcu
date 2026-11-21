@@ -2073,7 +2073,18 @@ function liveStart(){
 }
 function liveOK(){var l=LS[dbUrl()];return !!(l&&l.ready&&Date.now()-l.t<90000)}
 setInterval(function(){if(!S.acct&&Object.keys(LS).length)lsClose();else if(S.acct&&!document.hidden)liveStart()},3000);
-function getJ(u){return fetch(u).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})}
+/* il sito scarica più volte al minuto gli stessi dati (progressi di tutti, gruppi, amici…): con l'ETag chiediamo al server "è cambiato qualcosa?" e se la risposta è no (304) riusiamo quello che avevamo già, senza riscaricare tutto da capo. Più leggero, nessun cambio di comportamento: se qualcosa va storto si ricade sul normale scaricamento completo */
+var ETC=Object.create(null);
+function getJ(u){
+  var c=ETC[u],hd={"X-Firebase-ETag":"true"};
+  if(c&&c.etag)hd["If-None-Match"]=c.etag;
+  return fetch(u,{headers:hd}).then(function(r){
+    if(r.status===304&&c)return c.data;
+    if(!r.ok)throw new Error("HTTP "+r.status);
+    var et=r.headers.get("etag");
+    return r.json().then(function(j){if(et)ETC[u]={etag:et,data:j};else delete ETC[u];return j});
+  });
+}
 function putJ(u,v){return fetch(u,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(v)}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.json()})}
 function grUrl(id){return DB_URL.replace(/\/+$/,"")+"/groupRequests/"+ROOM+(id?"/"+id:"")+".json"}
 function gsUrl(gid){return DB_URL.replace(/\/+$/,"")+"/groupSec/"+gid+".json"}
