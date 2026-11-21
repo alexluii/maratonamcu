@@ -2541,30 +2541,40 @@ function flyShield(id,svg,ringCls,hide){
       {transform:"translate(0,0) rotate(1000deg) scale(1)",opacity:1,offset:1}
     ],{duration:950,easing:"cubic-bezier(.3,.7,.35,1)",fill:"forwards"});
     a.onfinish=function(){
-      /* Annulliamo l'animazione di volo: con lo zoom automatico della pagina (schermi grandi/ultrawide)
-         la rotazione/scala residua può restare visivamente disallineata da quello che impostiamo qui dopo. */
+      /* Annulliamo l'animazione di volo e BUTTIAMO VIA questo nodo invece di riciclarlo: un nodo che è
+         stato animato con la Web Animations API (transform) può restare "agganciato" a un livello
+         compositato dalla GPU anche dopo aver cambiato stile/genitore nello stesso istante, mostrando a
+         schermo l'ultimo fotogramma animato finché qualcosa non forza un repaint (es. ridimensionare la
+         finestra aprendo i DevTools). Creando un elemento NUOVO, mai toccato dall'animazione, evitiamo
+         questo rischio alla radice. */
       try{a.cancel()}catch(e){}
-      var cb2=hide?null:document.querySelector('input[data-i="'+id+'"]'),liveLi=cb2&&cb2.closest("li"),liveR=liveLi&&liveLi.getBoundingClientRect();
-      if(liveLi&&liveR&&liveR.width>0){
-        /* l'atterraggio vero e proprio ancora l'icona DIRETTAMENTE alla riga (posizione relativa al suo
-           elemento, non coordinate calcolate in pixel sullo schermo): cosi è sempre esatto, qualunque
-           sia lo zoom automatico della pagina o il monitor, perché non dipende da nessun calcolo in px */
-        if(getComputedStyle(liveLi).position==="static")liveLi.style.position="relative";
-        el.style.cssText="position:absolute;left:4px;top:50%;width:"+S0+"px;height:"+S0+"px;margin-top:"+(-S0/2)+"px;z-index:260;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));opacity:1;transform:none";
-        liveLi.appendChild(el);
-        var ring=document.createElement("div");ring.className="shr shr-a"+(ringCls?" "+ringCls:"");ring.style.cssText="left:36px;top:50%";liveLi.appendChild(ring);
-        setTimeout(function(){ring.remove()},700);
-        setTimeout(function(){var f=el.animate([{opacity:1,transform:"scale(1)"},{opacity:0,transform:"scale(.7)"}],{duration:320,fill:"forwards"});f.onfinish=function(){el.remove()}},700);
-        return;
-      }
-      /* riga non trovabile (spoiler nascosto, sezione chiusa, fuori schermo): torniamo al fallback a
-         coordinate fisse sullo schermo (rullino, biglietto, intestazione, centro) */
-      el.style.transform="none";
-      var fin=shieldLocate(id,hide)||tgt;
-      el.style.left=(fin.x-S0/2)+"px";el.style.top=(fin.y-S0/2)+"px";
-      var ring2=document.createElement("div");ring2.className="shr"+(ringCls?" "+ringCls:"");ring2.style.cssText="left:"+fin.x+"px;top:"+fin.y+"px";document.body.appendChild(ring2);
-      setTimeout(function(){ring2.remove()},700);
-      setTimeout(function(){var f=el.animate([{opacity:1,transform:"scale(1)"},{opacity:0,transform:"scale(.7)"}],{duration:320,fill:"forwards"});f.onfinish=function(){el.remove()}},700);
+      el.remove();
+      requestAnimationFrame(function(){
+        var cb2=hide?null:document.querySelector('input[data-i="'+id+'"]'),liveLi=cb2&&cb2.closest("li"),liveR=liveLi&&liveLi.getBoundingClientRect();
+        var fresh=document.createElement("div");fresh.id="shld";fresh.setAttribute("aria-hidden","true");fresh.innerHTML=svg;
+        if(liveLi&&liveR&&liveR.width>0){
+          /* l'atterraggio vero e proprio ancora l'icona DIRETTAMENTE alla riga (posizione relativa al suo
+             elemento, non coordinate calcolate in pixel sullo schermo): cosi è sempre esatto, qualunque
+             sia lo zoom automatico della pagina o il monitor, perché non dipende da nessun calcolo in px */
+          if(getComputedStyle(liveLi).position==="static")liveLi.style.position="relative";
+          fresh.style.cssText="position:absolute;left:4px;top:50%;width:"+S0+"px;height:"+S0+"px;margin-top:"+(-S0/2)+"px;z-index:260;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));opacity:1";
+          liveLi.appendChild(fresh);
+          void fresh.offsetHeight;
+          var ring=document.createElement("div");ring.className="shr shr-a"+(ringCls?" "+ringCls:"");ring.style.cssText="left:36px;top:50%";liveLi.appendChild(ring);
+          setTimeout(function(){ring.remove()},700);
+          setTimeout(function(){var f=fresh.animate([{opacity:1,transform:"scale(1)"},{opacity:0,transform:"scale(.7)"}],{duration:320,fill:"forwards"});f.onfinish=function(){fresh.remove()}},700);
+          return;
+        }
+        /* riga non trovabile (spoiler nascosto, sezione chiusa, fuori schermo): torniamo al fallback a
+           coordinate fisse sullo schermo (rullino, biglietto, intestazione, centro) */
+        var fin=shieldLocate(id,hide)||tgt;
+        fresh.style.cssText="position:fixed;left:"+(fin.x-S0/2)+"px;top:"+(fin.y-S0/2)+"px;width:"+S0+"px;height:"+S0+"px;z-index:260;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45));opacity:1";
+        document.body.appendChild(fresh);
+        void fresh.offsetHeight;
+        var ring2=document.createElement("div");ring2.className="shr"+(ringCls?" "+ringCls:"");ring2.style.cssText="left:"+fin.x+"px;top:"+fin.y+"px";document.body.appendChild(ring2);
+        setTimeout(function(){ring2.remove()},700);
+        setTimeout(function(){var f=fresh.animate([{opacity:1,transform:"scale(1)"},{opacity:0,transform:"scale(.7)"}],{duration:320,fill:"forwards"});f.onfinish=function(){fresh.remove()}},700);
+      });
     };
     setTimeout(function(){if(el.parentNode)el.remove()},2600);
   }catch(e){}
