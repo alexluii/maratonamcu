@@ -1509,14 +1509,20 @@ function testClean(){
   TCL=true;var uid=t.uid,nk=t.nk,tasks=[];
   function del(u){tasks.push(function(){return delJ(u).catch(function(){})})}
   function rd(u){return getJ(u).catch(function(){return null})}
-  Promise.all([rd(fsUrl(uid)),rd(frUrl(uid)),rd(ugUrl(uid)),rd(rtUrl())]).then(function(r){
-    var fs=r[0]||{},fr=r[1]||{},ug=r[2]||{},rt=r[3]||{};
+  /* i progressi, i badge e i voti sono divisi per maratona (MCU/DC): l'account di prova potrebbe aver toccato entrambe, quindi qui li pulisco in tutte e due, non solo in quella aperta in questo momento (altrimenti resta un residuo e il conteggio iscritti non scende) */
+  var SEGS=["","_dc"];
+  function roomsU(seg,p){return DB_URL.replace(/\/+$/,"")+"/rooms/"+ROOM+seg+(p?"/"+p:"")+".json"}
+  function badgesU(seg,p){return DB_URL.replace(/\/+$/,"")+"/badges/"+ROOM+seg+(p?"/"+p:"")+".json"}
+  function ratingsU(seg,f,u){return DB_URL.replace(/\/+$/,"")+"/ratings/"+ROOM+seg+(f?"/"+f:"")+(u?"/"+u:"")+".json"}
+  Promise.all([rd(fsUrl(uid)),rd(frUrl(uid)),rd(ugUrl(uid))].concat(SEGS.map(function(seg){return rd(ratingsU(seg))}))).then(function(r){
+    var fs=r[0]||{},fr=r[1]||{},ug=r[2]||{};
     Object.keys(fs).forEach(function(k){del(fqUrl(k,uid));del(fnUrl(k,uid))});
     Object.keys(fr).forEach(function(k){if(k!=="_i")del(frUrl(k,uid))});
-    Object.keys(rt).forEach(function(f){if(rt[f]&&rt[f][uid]!==undefined)del(rtUrl(f,uid))});
+    SEGS.forEach(function(seg,i){var rt=r[3+i]||{};Object.keys(rt).forEach(function(f){if(rt[f]&&rt[f][uid]!==undefined)del(ratingsU(seg,f,uid))})});
     var gids=Object.keys(ug);
     return Promise.all(gids.map(function(g){return rd(chUrl(g)+'?orderBy="$key"&limitToLast=200').then(function(o){Object.keys(o||{}).forEach(function(k){if(o[k]&&o[k].i===uid)del(chUrl(g,k))});del(gmUrl(g,uid))})})).then(function(){
-      [fsUrl(uid),frUrl(uid),fqUrl(uid),fnUrl(uid),ugUrl(uid),pubUrl(uid),dbUrl(uid),avUrl(uid),prUrl(uid),bgUrl(uid),reqUrl(uid),DB_URL.replace(/\/+$/,"")+"/notifs/"+ROOM+"/"+uid+".json",memUrl(uid)].forEach(del);
+      [fsUrl(uid),frUrl(uid),fqUrl(uid),fnUrl(uid),ugUrl(uid),pubUrl(uid),avUrl(uid),prUrl(uid),reqUrl(uid),DB_URL.replace(/\/+$/,"")+"/notifs/"+ROOM+"/"+uid+".json",memUrl(uid)].forEach(del);
+      SEGS.forEach(function(seg){del(roomsU(seg,uid));del(badgesU(seg,uid))});
       if(nk)del(aUrl(nk));
       var seq=Promise.resolve();tasks.forEach(function(f){seq=seq.then(f)});return seq;
     });
