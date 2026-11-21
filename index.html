@@ -2500,6 +2500,13 @@ function shieldLocate(id,hide){
   if(!tgt){var c=document.querySelector("#cells i.pop")||document.querySelector("#cells i.d:last-of-type");var r2=ok(c);if(r2)tgt={x:r2.left+r2.width/2,y:r2.top+r2.height/2}}
   if(!tgt){var tb=document.querySelector("#tk .tk-b");var r3=tb&&tb.getBoundingClientRect();if(r3&&r3.top>50&&r3.bottom<vh-90)tgt={x:r3.left+r3.width/2,y:r3.top+r3.height/2}}
   if(!tgt&&!hide){var li=cb&&cb.closest("li");var r4=li&&li.getBoundingClientRect();if(r4&&r4.bottom>60&&r4.top<vh-100)tgt={x:r4.left+36,y:Math.min(vh-130,Math.max(80,r4.top+r4.height/2))}}
+  if(!tgt){
+    /* ultima spiaggia prima del centro schermo: l'intestazione/rullino è sticky su desktop (sempre in vista) e in
+       cima alla pagina su mobile, quindi quasi sempre c'è ALMENO un pezzo visibile anche quando riga/cells/ticket falliscono */
+    var hero=document.getElementById("reel")||document.querySelector(".hero");
+    var r5=hero&&hero.getBoundingClientRect();
+    if(r5&&r5.width>0&&r5.bottom>60&&r5.top<vh-60)tgt={x:r5.left+r5.width/2,y:Math.min(vh-130,Math.max(80,r5.top+Math.min(r5.height/2,120)))}
+  }
   return tgt;
 }
 function flyShield(id,svg,ringCls,hide){
