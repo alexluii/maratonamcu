@@ -19,6 +19,12 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+/* sfondo "riflettori da anteprima": due fasci di luce che salgono dal basso, come le luci di una serata di gala al cinema. Solo in tema scuro (sul chiaro sparirebbe nel beige e sporcherebbe la pagina). Dietro a tutto (z-index 0) e senza eventi, quindi non interferisce mai con i click */
+body::before,body::after{content:"";position:fixed;bottom:-25%;width:22vw;height:150vh;pointer-events:none;z-index:0;filter:blur(60px);opacity:0}
+body::before{left:4%;transform:rotate(18deg);transform-origin:bottom center}
+body::after{right:4%;transform:rotate(-18deg);transform-origin:bottom center}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body::before,:root:not([data-theme="light"]) body::after{opacity:.32;background:linear-gradient(to top,color-mix(in srgb,var(--amber) 38%,transparent) 0%,transparent 78%)}}
+:root[data-theme="dark"] body::before,:root[data-theme="dark"] body::after{opacity:.32;background:linear-gradient(to top,color-mix(in srgb,var(--amber) 38%,transparent) 0%,transparent 78%)}
 .wrap{max-width:640px;margin:0 auto}
 .hero{padding:26px 16px 4px}
 h1{margin:0;font:400 clamp(54px,17vw,96px)/.92 "Russo One","Big Shoulders Display",Impact,"Arial Narrow",sans-serif;letter-spacing:0}h1 .ln:last-child>span:first-child{color:var(--red);text-shadow:0 0 22px color-mix(in srgb,var(--red) 55%,transparent),0 0 3px color-mix(in srgb,var(--red) 70%,transparent)}h1:after{content:"";display:block;width:clamp(64px,22vw,120px);height:5px;border-radius:3px;margin-top:.16em;background:var(--red);box-shadow:0 0 14px color-mix(in srgb,var(--red) 60%,transparent)}
@@ -2341,7 +2347,8 @@ function avBox(){
 
 /* ===== NOVITA' DEL SITO (popup) ===== */
 /* Ad ogni modifica visibile agli utenti: aumenta NEWS_V e aggiungi una voce in NEWS (it + en). Mai cose che riguardano l'amministratore. */
-var NEWS_V=37,NEWS=[
+var NEWS_V=38,NEWS=[
+ {v:38,d:"2026-11-21",ic:"🎬",ti:{it:"Riflettori sullo sfondo",en:"Spotlights in the background"},tx:{it:"In tema scuro, dietro ai contenuti ora c'è un leggero gioco di luci che sale dal basso, come i riflettori di una serata di anteprima al cinema. In tema chiaro resta tutto come prima.",en:"In dark theme, there's now a subtle play of light rising from behind the content, like the spotlights of a movie premiere night. Light theme stays exactly as before."}},
  {v:37,d:"2026-11-21",ic:"🔰",ti:{it:"Scudo DC anche in Spoiler Mode",en:"DC shield now in Spoiler Mode too"},tx:{it:"Lo scudo DC (la S di Superman) per i titoli segnati dagli amici ora compare anche in Spoiler Mode: se lo spoiler di quel titolo è già visibile, l'effetto resta generico invece di puntare proprio su quella riga.",en:"The DC shield (Superman's S) for titles your friends mark now appears in Spoiler Mode too: if that title's spoiler is already visible, the effect stays generic instead of pointing right at that row."},chips:{it:["Effetto DC","Spoiler Mode"],en:["DC effect","Spoiler Mode"]}},
  {v:36,d:"2026-11-20",ic:"🫠",ti:{it:"Effetto Clayface nella Maratona DC",en:"Clayface effect in the DC Marathon"},tx:{it:"Nella Maratona DC, quando togli la spunta a un titolo, l'anteprima si deforma come l'argilla di Clayface e poi torna a posto, invece della classica dissolvenza Marvel.",en:"In the DC Marathon, when you untick something, the preview melts and reshapes like Clayface's clay before settling back, instead of the usual Marvel dissolve."},chips:{it:["Effetto DC","Clayface"],en:["DC effect","Clayface"]}},
  {v:35,d:"2026-11-20",ic:"🔰",ti:{it:"Scudo DC per gli amici",en:"DC shield for friends"},tx:{it:"Anche nella Maratona DC, quando un amico segna un titolo come visto compare un effetto: lo stemma della S di Superman che atterra al suo posto, al posto dello scudo di Capitan America. Per ora è attivo solo fuori dalla Spoiler Mode.",en:"In the DC Marathon too, when a friend marks something as watched you now get an effect: Superman's S-shield landing on it, instead of Captain America's shield. For now it's only active outside Spoiler Mode."},chips:{it:["Effetto DC","S di Superman"],en:["DC effect","Superman's S"]}},
