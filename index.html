@@ -4130,7 +4130,7 @@ function render(){admUi();renderTicker();testBar();
 }
 $("app").addEventListener("change",function(e){
   var id=e.target.getAttribute("data-i");if(id===null||viewing)return;
-  if(e.target.checked)S.me.d[id]=1;else{delete S.me.d[id];snap(e.target.closest("li"),id)}
+  if(e.target.checked)S.me.d[id]=1;else delete S.me.d[id];
   try{bgMark(id,e.target.checked)}catch(x){}
   save();push();render();
   if(e.target.checked)setTimeout(function(){milestone(+id)},400);
