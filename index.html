@@ -299,6 +299,10 @@ body{grid-template-columns:minmax(440px,520px) minmax(0,720px);column-gap:96px}
 .nw.nwhero{flex-direction:column;gap:10px;padding:16px;background:linear-gradient(135deg,rgba(47,211,107,.18),rgba(255,182,39,.14));border-color:#2fd36b}
 .nw.nwhero .nwi{width:52px;height:52px;font-size:28px;border-radius:16px;background:#2fd36b}.nw.nwhero .nwt b{font-size:19px}.nw.nwhero .nwx{font-size:14px;opacity:.9}
 .nw.nwhero.nwnew{border-color:#d92d3f;box-shadow:inset 0 4px 0 #d92d3f}
+.nw.nwsec.nwhero{background:linear-gradient(135deg,#2b0a4f,#52106e);flex-direction:column;gap:10px;padding:16px}
+.nw.nwsec.nwhero .nwi{width:52px;height:52px;font-size:28px;border-radius:16px;background:rgba(255,43,214,.3)}
+.nw.nwsec.nwhero .nwt b{font-size:19px}
+.nw.nwsec.nwhero .nwx{font-size:14px;color:#f3ddff;opacity:1}
 .nwc{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.nwc span{padding:4px 10px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font:700 12px "Instrument Sans",sans-serif}
 .nwtog{align-self:flex-start;margin:0 0 12px;background:none;border:1px solid currentColor;border-radius:10px;color:inherit;font:inherit;font-weight:700;font-size:13px;padding:8px 12px;cursor:pointer}
 .nwgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:0 0 14px}.nwgrid[hidden]{display:none}
@@ -2378,7 +2382,7 @@ var NEWS_V=38,NEWS=[
  {v:25,d:"2026-11-20",ic:"🏅",ti:{it:"Badge da collezionare",en:"Collectible badges"},tx:{it:"Nel Profilo trovi i badge da collezionare: 💬 Top chatter, 🔥 Costanza, 🎬 Maratoneta, 🌟 Critico, 🤝 Socievole e 🥚 Cacciatore di segreti. Quelli che ottieni compaiono accanto al tuo nome.",en:"In your Profile you’ll find badges to collect: 💬 Top chatter, 🔥 Consistency, 🎬 Marathoner, 🌟 Critic, 🤝 Sociable and 🥚 Secret hunter. The ones you earn show up next to your name."}},
  {v:24,d:"2026-11-19",ic:"➕",ti:{it:"Amicizie dai gruppi",en:"Friend requests from groups"},tx:{it:"Nei gruppi, accanto alla foto di chi non è ancora tuo amico, trovi un piccolo + per mandargli la richiesta di amicizia. Se la richiesta è già partita compare una spunta.",en:"In groups, next to the photo of anyone who isn’t your friend yet, there’s a small + to send a friend request. If it’s already sent, you’ll see a check mark."}},
  {v:23,d:"2026-11-19",ic:"📌",ti:{it:"Fissa i tuoi amici",en:"Pin your friends"},tx:{it:"Nella scheda Amici puoi fissare in alto fino a 4 amici, come su WhatsApp: tocca “📌 Fissa in alto” sotto il nome. Per toglierlo tocca “Sblocca”.",en:"In the Friends tab you can pin up to 4 friends to the top, like on WhatsApp: tap “📌 Pin to top” under their name. Tap “Unpin” to remove it."}},
- {v:22,d:"2026-11-19",ic:"💓",pin:1,ti:{it:"Qualcosa sta battendo forte",en:"Something is beating hard"},tx:{it:"In prima pagina, in alto a sinistra, c’è qualcosa che sta battendo forte… toccalo più volte, e di fila. Chi lo trova scopre un segreto: ma attenzione, poi non si può dimenticare quello che si legge.",en:"On the first page, at the top left, something is beating hard… tap it several times, in a row. Whoever finds it discovers a secret, but be careful: you can’t unread what you read."}},
+ {v:22,d:"2026-11-19",ic:"💓",pin:1,hero:1,ti:{it:"Qualcosa sta battendo forte",en:"Something is beating hard"},tx:{it:"In prima pagina, in alto a sinistra, c’è qualcosa che sta battendo forte… toccalo più volte, e di fila. Chi lo trova scopre un segreto: ma attenzione, poi non si può dimenticare quello che si legge.",en:"On the first page, at the top left, something is beating hard… tap it several times, in a row. Whoever finds it discovers a secret, but be careful: you can’t unread what you read."}},
  {v:21,d:"2026-11-19",ic:"⭐",ti:{it:"Chi ha dato le stelle",en:"Who gave the stars"},tx:{it:"Tocca “Media amici” sotto un film per vedere chi ha votato e quante stelle ha dato.",en:"Tap “Friends’ average” under a film to see who voted and how many stars they gave."}},
  {v:20,d:"2026-11-19",ic:"🛡️",hero:1,ti:{it:"Più colore, più magia",en:"More colour, more magic"},tx:{it:"Anello di avanzamento attorno alle foto di amici e profilo, un colore diverso per ogni era, @tag che brilla quando il messaggio è per te, polvere cosmica in Amici e Gruppo, titolo che si accende al passaggio del mouse e lo scudo di Capitan America che si ferma sul film che segni.",en:"A progress ring around friends’ and profile photos, a different colour for every era, an @tag that glows when the message is for you, cosmic dust in Friends and Group, a poster title that lights up on hover, and Captain America’s shield landing on the film you mark."},chips:{it:["Anello","Colori per era","Scudo"],en:["Ring","Era colours","Shield"]}},
  {v:19,d:"2026-11-19",ic:"✨",hero:1,ti:{it:"Effetti nuovi",en:"New effects"},tx:{it:"Reazioni con emoji ai messaggi dei gruppi e lo “schiocco” di Thanos: quando togli la spunta a un film o svuoti qualcosa, tutto si dissolve in polvere.",en:"Emoji reactions on group messages, and Thanos’ “snap”: when you untick a film or clear something, it all turns to dust."},chips:{it:["Reazioni","Schiocco"],en:["Reactions","The snap"]}},
@@ -2448,13 +2452,21 @@ function newsPanel(){
   bx.appendChild(h("p","m nwsub",ct("Le più recenti sono in rosso.","The latest ones are in red.")));
   function close(){newsMark();ov.remove();newsOpen=false;newsCheck()}
   x.addEventListener("click",close);ov.addEventListener("click",function(e){if(e.target===ov)close()});
-  /* solo le ultime 2 restano aperte per intero; il resto va in una griglia compatta (5 per riga) dietro un "mostra altri", visto che ormai gli aggiornamenti sono tanti */
+  /* solo le ultime 2 restano aperte per intero; il resto va in una griglia compatta (5 per riga) dietro un "mostra altri", visto che ormai gli aggiornamenti sono tanti. L'indizio dell'easter egg (pin) normalmente finirebbe in fondo (e quindi dentro la griglia): a chi apre le novità per la prima volta (account nuovo, seen=0) lo mostriamo invece per primo e in grande, perché altrimenti nessun nuovo iscritto lo scoprirebbe mai */
   var arr=NEWS.filter(function(n){return !(n.pin&&SPF)}).map(function(n,i){return{n:n,i:i}}).sort(function(a,c){return (a.n.pin?1:0)-(c.n.pin?1:0)||c.n.v-a.n.v||a.i-c.i}).map(function(o){return o.n});
   var rp=h("button","trb nwrp",ct("Rivedi la guida","Replay the tour"));rp.type="button";rp.addEventListener("click",function(){close();setTimeout(function(){tourStart(true)},60)});bx.appendChild(rp);
   var list=h("div","nwl");
-  arr.slice(0,2).forEach(function(n){list.appendChild(nwCard(n,n.v>seen))});
+  var recentFull,older;
+  if(seen<=0){
+    var eggIx=arr.findIndex(function(n){return n.pin}),egg=eggIx>=0?arr[eggIx]:null;
+    var rest=eggIx>=0?arr.slice(0,eggIx).concat(arr.slice(eggIx+1)):arr.slice();
+    recentFull=egg?[egg].concat(rest.slice(0,2)):arr.slice(0,2);
+    older=egg?rest.slice(2):arr.slice(2);
+  }else{
+    recentFull=arr.slice(0,2);older=arr.slice(2);
+  }
+  recentFull.forEach(function(n){list.appendChild(nwCard(n,n.v>seen))});
   bx.appendChild(list);
-  var older=arr.slice(2);
   if(older.length){
     var tog=h("button","nwtog"),grid=h("div","nwgrid");grid.hidden=true;
     function togLabel(open){return open?ct("▴ Nascondi gli aggiornamenti passati","▴ Hide older updates"):ct("▾ Mostra altri "+older.length+" aggiornamenti","▾ Show "+older.length+" more updates")}
