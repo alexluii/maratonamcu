@@ -2452,12 +2452,12 @@ function newsPanel(){
   bx.appendChild(h("p","m nwsub",ct("Le più recenti sono in rosso.","The latest ones are in red.")));
   function close(){newsMark();ov.remove();newsOpen=false;newsCheck()}
   x.addEventListener("click",close);ov.addEventListener("click",function(e){if(e.target===ov)close()});
-  /* solo le ultime 2 restano aperte per intero; il resto va in una griglia compatta (5 per riga) dietro un "mostra altri", visto che ormai gli aggiornamenti sono tanti. L'indizio dell'easter egg (pin) normalmente finirebbe in fondo (e quindi dentro la griglia): a chi apre le novità per la prima volta (account nuovo, seen=0) lo mostriamo invece per primo e in grande, perché altrimenti nessun nuovo iscritto lo scoprirebbe mai */
+  /* solo le ultime 2 restano aperte per intero; il resto va in una griglia compatta (5 per riga) dietro un "mostra altri", visto che ormai gli aggiornamenti sono tanti. L'indizio dell'easter egg (pin) normalmente finirebbe in fondo (e quindi dentro la griglia): a chi ha appena creato l'account lo mostriamo invece per primo e in grande, perché altrimenti nessun nuovo iscritto lo scoprirebbe mai. Nota: non si può usare seen<=0 per capire se l'account è nuovo, perché newsCheck() marca già tutto come "visto" pochi istanti dopo la creazione (per non sommergerlo di badge "Nuovo"); l'unico segnale affidabile è window.__newAcct, impostato in doCreate() e valido per tutta la sessione di pagina */
   var arr=NEWS.filter(function(n){return !(n.pin&&SPF)}).map(function(n,i){return{n:n,i:i}}).sort(function(a,c){return (a.n.pin?1:0)-(c.n.pin?1:0)||c.n.v-a.n.v||a.i-c.i}).map(function(o){return o.n});
   var rp=h("button","trb nwrp",ct("Rivedi la guida","Replay the tour"));rp.type="button";rp.addEventListener("click",function(){close();setTimeout(function(){tourStart(true)},60)});bx.appendChild(rp);
   var list=h("div","nwl");
   var recentFull,older;
-  if(seen<=0){
+  if(window.__newAcct){
     var eggIx=arr.findIndex(function(n){return n.pin}),egg=eggIx>=0?arr[eggIx]:null;
     var rest=eggIx>=0?arr.slice(0,eggIx).concat(arr.slice(eggIx+1)):arr.slice();
     recentFull=egg?[egg].concat(rest.slice(0,2)):arr.slice(0,2);
